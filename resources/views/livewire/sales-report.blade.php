@@ -60,6 +60,11 @@
 
     {{-- Revenue Chart --}}
     @if(!empty($this->daily))
+    @php
+        $chartData = collect($this->daily)->map(fn($r) => array_merge($r, [
+            'label' => \Carbon\Carbon::parse($r['day'])->format('M d'),
+        ]))->values()->toArray();
+    @endphp
     <flux:card class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -68,10 +73,10 @@
             </div>
         </div>
 
-        <flux:chart :value="$this->daily" class="aspect-[3/1]">
+        <flux:chart :value="$chartData" class="h-56">
             <flux:chart.svg>
-                <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="70%" />
-                <flux:chart.axis axis="x" field="day" tick-count="7">
+                <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="60%" />
+                <flux:chart.axis axis="x" field="label" tick-count="7">
                     <flux:chart.axis.tick />
                     <flux:chart.axis.line />
                 </flux:chart.axis>
@@ -79,10 +84,10 @@
                     <flux:chart.axis.grid />
                     <flux:chart.axis.tick />
                 </flux:chart.axis>
-                <flux:chart.cursor type="area" />
+                <flux:chart.cursor />
             </flux:chart.svg>
             <flux:chart.tooltip>
-                <flux:chart.tooltip.heading field="day" />
+                <flux:chart.tooltip.heading field="label" />
                 <flux:chart.tooltip.value field="net_sales" label="Net Sales" prefix="$" />
                 <flux:chart.tooltip.value field="orders_count" label="Orders" />
             </flux:chart.tooltip>
