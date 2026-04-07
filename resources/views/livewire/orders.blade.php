@@ -154,12 +154,16 @@
                                 title="Print Receipt"
                             />
 
-                            <flux:select wire:change="updateStatus({{ $order->id }}, $event.target.value)" size="sm" class="min-w-[110px]">
-                                <flux:select.option value="pending"   {{ $order->status === 'pending'    ? 'selected' : '' }}>Pending</flux:select.option>
-                                <flux:select.option value="processing"{{ $order->status === 'processing' ? 'selected' : '' }}>Processing</flux:select.option>
-                                <flux:select.option value="completed" {{ $order->status === 'completed'  ? 'selected' : '' }}>Completed</flux:select.option>
-                                <flux:select.option value="cancelled" {{ $order->status === 'cancelled'  ? 'selected' : '' }}>Cancelled</flux:select.option>
-                            </flux:select>
+                            @php $orderId = $order->id; @endphp
+                            <select
+                                onchange="@this.call('updateStatus', {{ $orderId }}, this.value)"
+                                class="text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1.5 font-semibold min-w-[110px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                            >
+                                <option value="pending"    @selected($order->status === 'pending')>Pending</option>
+                                <option value="processing" @selected($order->status === 'processing')>Processing</option>
+                                <option value="completed"  @selected($order->status === 'completed')>Completed</option>
+                                <option value="cancelled"  @selected($order->status === 'cancelled')>Cancelled</option>
+                            </select>
                         </div>
                     </flux:table.cell>
                 </flux:table.row>
