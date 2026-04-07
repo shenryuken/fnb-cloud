@@ -1,131 +1,140 @@
 <x-layouts::app :title="__('Dashboard')">
-    <div class="flex flex-col gap-8 p-4 md:p-8 bg-neutral-50 dark:bg-neutral-950 min-h-full font-sans">
+    <div class="flex flex-col gap-8 p-4 md:p-8">
+
         @if(isset($tenant) && $tenant)
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-3xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">
-                        Welcome, {{ auth()->user()->name }}
-                    </h2>
-                    <p class="text-neutral-500 font-medium">Here's what's happening at <span class="text-blue-600 font-bold">{{ $tenant->name }}</span> today</p>
+                    <flux:heading size="xl" level="2">Welcome, {{ auth()->user()->name }}</flux:heading>
+                    <flux:subheading>
+                        Here&apos;s what&apos;s happening at <strong class="text-blue-600">{{ $tenant->name }}</strong> today
+                    </flux:subheading>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span class="px-4 py-2 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm text-xs font-black uppercase tracking-widest text-neutral-400">
-                        {{ $tenant->slug }}
-                    </span>
-                </div>
+                <flux:badge color="zinc" size="lg">{{ $tenant->slug }}</flux:badge>
             </div>
         @endif
 
+        {{-- KPI Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Categories Count -->
-            <div class="group bg-white dark:bg-neutral-900 p-8 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 shadow-xl shadow-neutral-200/50 dark:shadow-none transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                        <flux:icon.layers class="w-6 h-6" />
+            <flux:card class="p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                        <flux:icon.layers class="w-5 h-5" />
                     </div>
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Menu</span>
+                    <flux:badge color="zinc" size="sm">Menu</flux:badge>
                 </div>
-                <p class="text-sm font-bold text-neutral-500 dark:text-neutral-400">Categories</p>
-                <h3 class="text-4xl font-black text-neutral-900 dark:text-neutral-100 tracking-tighter mt-1">{{ $categoryCount ?? 0 }}</h3>
-            </div>
+                <div>
+                    <flux:text size="sm" class="text-zinc-500">Categories</flux:text>
+                    <flux:heading size="xl" class="tracking-tight mt-0.5">{{ $categoryCount ?? 0 }}</flux:heading>
+                </div>
+            </flux:card>
 
-            <!-- Products Count -->
-            <div class="group bg-white dark:bg-neutral-900 p-8 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 shadow-xl shadow-neutral-200/50 dark:shadow-none transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600">
-                        <flux:icon.package class="w-6 h-6" />
+            <flux:card class="p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center text-violet-600">
+                        <flux:icon.package class="w-5 h-5" />
                     </div>
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Inventory</span>
+                    <flux:badge color="zinc" size="sm">Inventory</flux:badge>
                 </div>
-                <p class="text-sm font-bold text-neutral-500 dark:text-neutral-400">Products</p>
-                <h3 class="text-4xl font-black text-neutral-900 dark:text-neutral-100 tracking-tighter mt-1">{{ $productCount ?? 0 }}</h3>
-            </div>
+                <div>
+                    <flux:text size="sm" class="text-zinc-500">Products</flux:text>
+                    <flux:heading size="xl" class="tracking-tight mt-0.5">{{ $productCount ?? 0 }}</flux:heading>
+                </div>
+            </flux:card>
 
-            <!-- Orders Count -->
-            <div class="group bg-white dark:bg-neutral-900 p-8 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 shadow-xl shadow-neutral-200/50 dark:shadow-none transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600">
-                        <flux:icon.shopping-cart class="w-6 h-6" />
+            <flux:card class="p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600">
+                        <flux:icon.shopping-cart class="w-5 h-5" />
                     </div>
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Sales</span>
+                    <flux:badge color="zinc" size="sm">Sales</flux:badge>
                 </div>
-                <p class="text-sm font-bold text-neutral-500 dark:text-neutral-400">Total Orders</p>
-                <h3 class="text-4xl font-black text-neutral-900 dark:text-neutral-100 tracking-tighter mt-1">{{ $orderCount ?? 0 }}</h3>
-            </div>
+                <div>
+                    <flux:text size="sm" class="text-zinc-500">Total Orders</flux:text>
+                    <flux:heading size="xl" class="tracking-tight mt-0.5">{{ $orderCount ?? 0 }}</flux:heading>
+                </div>
+            </flux:card>
 
-            <!-- Total Revenue -->
-            <div class="group bg-white dark:bg-neutral-900 p-8 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 shadow-xl shadow-neutral-200/50 dark:shadow-none transition-all hover:-translate-y-1 bg-gradient-to-br from-white to-blue-50/30 dark:from-neutral-900 dark:to-blue-900/5">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600">
-                        <flux:icon.banknotes class="w-6 h-6" />
+            <flux:card class="p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
+                        <flux:icon.banknotes class="w-5 h-5" />
                     </div>
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Revenue</span>
+                    <flux:badge color="zinc" size="sm">Revenue</flux:badge>
                 </div>
-                <p class="text-sm font-bold text-neutral-500 dark:text-neutral-400">Total Revenue</p>
-                <h3 class="text-4xl font-black text-blue-600 tracking-tighter mt-1">${{ number_format($totalRevenue ?? 0, 2) }}</h3>
-            </div>
+                <div>
+                    <flux:text size="sm" class="text-zinc-500">Total Revenue</flux:text>
+                    <flux:heading size="xl" class="text-blue-600 tracking-tight mt-0.5">${{ number_format($totalRevenue ?? 0, 2) }}</flux:heading>
+                </div>
+            </flux:card>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Recent Orders Table -->
-            <div class="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden">
-                <div class="px-8 py-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                    <h4 class="text-xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Recent Orders</h4>
-                    <a href="{{ route('manage.orders.index') }}" class="text-xs font-black text-blue-600 uppercase tracking-widest hover:underline">View All</a>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-neutral-50/50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800">
-                                <th class="px-8 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest">ID</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Status</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Table</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-neutral-50 dark:divide-neutral-800">
-                            @forelse($recentOrders ?? [] as $order)
-                                <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors group">
-                                    <td class="px-8 py-5 font-bold text-neutral-400 text-sm">#{{ $order->id }}</td>
-                                    <td class="px-6 py-5">
-                                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider
-                                            {{ $order->status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }}">
-                                            {{ $order->status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-5 font-bold text-neutral-700 dark:text-neutral-300 text-sm">{{ $order->table_number ?? 'Walk-in' }}</td>
-                                    <td class="px-6 py-5 text-right font-black text-neutral-900 dark:text-neutral-100 text-sm">${{ number_format($order->total_amount, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-8 py-12 text-center text-sm text-neutral-400 font-medium italic">No transactions yet today.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Quick Actions / System Info -->
-            <div class="bg-neutral-900 dark:bg-blue-600 rounded-[2.5rem] p-8 text-white shadow-2xl flex flex-col justify-between overflow-hidden relative group">
-                <div class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-                <div class="relative z-10">
-                    <h4 class="text-2xl font-black tracking-tight mb-2">Ready to Serve?</h4>
-                    <p class="text-white/60 font-medium text-sm leading-relaxed mb-8">Process orders quickly with our blazing fast Point of Sale system.</p>
-                    
-                    <a href="{{ route('pos.index') }}" class="inline-flex items-center gap-3 px-8 py-4 bg-white text-neutral-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 transition-all transform active:scale-95">
-                        <flux:icon.rocket class="w-5 h-5 text-blue-600" />
-                        LAUNCH POS
-                    </a>
-                </div>
-
-                <div class="relative z-10 pt-12 mt-12 border-t border-white/10">
-                    <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                        <span>Platform Version</span>
-                        <span>v1.0.4</span>
+            {{-- Recent Orders --}}
+            <div class="lg:col-span-2">
+                <flux:card>
+                    <div class="flex items-center justify-between mb-4">
+                        <flux:heading size="lg">Recent Orders</flux:heading>
+                        <flux:button :href="route('manage.orders.index')" wire:navigate variant="ghost" size="sm" icon-trailing="arrow-right">
+                            View All
+                        </flux:button>
                     </div>
-                </div>
+
+                    <flux:table>
+                        <flux:table.columns>
+                            <flux:table.column>ID</flux:table.column>
+                            <flux:table.column>Status</flux:table.column>
+                            <flux:table.column>Table</flux:table.column>
+                            <flux:table.column class="text-right">Total</flux:table.column>
+                        </flux:table.columns>
+                        <flux:table.rows>
+                            @forelse($recentOrders ?? [] as $order)
+                                <flux:table.row>
+                                    <flux:table.cell>
+                                        <flux:text class="font-semibold text-zinc-500">#{{ $order->id }}</flux:text>
+                                    </flux:table.cell>
+                                    <flux:table.cell>
+                                        <flux:badge :color="$order->status === 'completed' ? 'green' : 'yellow'" size="sm">
+                                            {{ $order->status }}
+                                        </flux:badge>
+                                    </flux:table.cell>
+                                    <flux:table.cell>
+                                        <flux:text size="sm">{{ $order->table_number ?? 'Walk-in' }}</flux:text>
+                                    </flux:table.cell>
+                                    <flux:table.cell class="text-right">
+                                        <flux:text class="font-black">${{ number_format($order->total_amount, 2) }}</flux:text>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @empty
+                                <flux:table.row>
+                                    <flux:table.cell colspan="4" class="py-10 text-center">
+                                        <flux:text class="text-zinc-400 italic">No transactions yet today.</flux:text>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @endforelse
+                        </flux:table.rows>
+                    </flux:table>
+                </flux:card>
             </div>
+
+            {{-- Launch POS Card --}}
+            <flux:card class="bg-zinc-900 dark:bg-blue-700 text-white flex flex-col justify-between overflow-hidden relative">
+                <div>
+                    <flux:heading size="xl" class="text-white mb-2">Ready to Serve?</flux:heading>
+                    <flux:text class="text-white/60 leading-relaxed mb-8">
+                        Process orders quickly with our blazing fast Point of Sale system.
+                    </flux:text>
+                    <flux:button :href="route('pos.index')" wire:navigate variant="filled" class="bg-white text-zinc-900 hover:bg-zinc-100 font-black" icon="rocket">
+                        Launch POS
+                    </flux:button>
+                </div>
+
+                <flux:separator class="border-white/10 mt-10" />
+                <div class="flex items-center justify-between mt-4">
+                    <flux:text size="sm" class="text-white/40 uppercase tracking-widest text-[10px] font-black">Platform Version</flux:text>
+                    <flux:text size="sm" class="text-white/40 font-black">v1.0.4</flux:text>
+                </div>
+            </flux:card>
         </div>
+
     </div>
 </x-layouts::app>
