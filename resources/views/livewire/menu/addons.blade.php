@@ -150,13 +150,13 @@
                         <flux:table.rows>
                             @forelse($group->items as $item)
                                 <flux:table.row>
-                                    <flux:table.cell>
+                                    <flux:table.cell class="py-3 px-4">
                                         <flux:text size="sm" class="font-semibold">{{ $item->name }}</flux:text>
                                     </flux:table.cell>
-                                    <flux:table.cell>
+                                    <flux:table.cell class="py-3 px-4">
                                         <flux:text size="sm" class="font-black text-blue-600">${{ number_format($item->price, 2) }}</flux:text>
                                     </flux:table.cell>
-                                    <flux:table.cell class="text-right">
+                                    <flux:table.cell class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end gap-1">
                                             <flux:button size="xs" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
                                             <flux:button size="xs" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />
@@ -190,23 +190,23 @@
         <div class="flex flex-col gap-4">
             <flux:heading size="sm" class="text-zinc-500 uppercase tracking-widest text-xs font-black">Standalone Add-ons</flux:heading>
 
-            <flux:card class="p-0 overflow-hidden">
+                <flux:card class="p-0 overflow-hidden">
                 <flux:table>
                     <flux:table.columns>
-                        <flux:table.column>Name</flux:table.column>
-                        <flux:table.column>Price</flux:table.column>
-                        <flux:table.column class="text-right">Actions</flux:table.column>
+                        <flux:table.column class="py-3 px-4">Name</flux:table.column>
+                        <flux:table.column class="py-3 px-4">Price</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
                         @forelse($standaloneItems as $item)
                             <flux:table.row>
-                                <flux:table.cell>
+                                <flux:table.cell class="py-3 px-4">
                                     <flux:text class="font-semibold">{{ $item->name }}</flux:text>
                                 </flux:table.cell>
-                                <flux:table.cell>
+                                <flux:table.cell class="py-3 px-4">
                                     <flux:text class="font-black text-blue-600">${{ number_format($item->price, 2) }}</flux:text>
                                 </flux:table.cell>
-                                <flux:table.cell class="text-right">
+                                <flux:table.cell class="py-3 px-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
                                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />

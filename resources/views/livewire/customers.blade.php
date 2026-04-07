@@ -67,34 +67,34 @@
     {{-- Table --}}
     <flux:table :paginate="$customers">
         <flux:table.columns>
-            <flux:table.column>Customer</flux:table.column>
-            <flux:table.column>Email</flux:table.column>
-            <flux:table.column>Mobile</flux:table.column>
-            <flux:table.column>Points</flux:table.column>
-            <flux:table.column class="text-right">Actions</flux:table.column>
+            <flux:table.column class="py-3 px-4">Customer</flux:table.column>
+            <flux:table.column class="py-3 px-4">Email</flux:table.column>
+            <flux:table.column class="py-3 px-4">Mobile</flux:table.column>
+            <flux:table.column class="py-3 px-4">Points</flux:table.column>
+            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
             @forelse($customers as $customer)
                 <flux:table.row>
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-semibold">{{ $customer->name }}</flux:text>
                         <flux:text size="sm" class="text-zinc-400">ID: #{{ $customer->id }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text size="sm">{{ $customer->email ?? '—' }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text size="sm">{{ $customer->mobile ?? '—' }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:badge color="blue">{{ (int) $customer->points_balance }} pts</flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell class="text-right">
+                    <flux:table.cell class="py-3 px-4 text-right">
                         <div class="flex items-center justify-end gap-2">
                             <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $customer->id }})" />
                             <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $customer->id }})" wire:confirm="Delete this customer?" class="text-red-500 hover:text-red-600" />

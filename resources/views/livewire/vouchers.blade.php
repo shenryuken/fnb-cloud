@@ -95,29 +95,29 @@
     {{-- Table --}}
     <flux:table :paginate="$vouchers">
         <flux:table.columns>
-            <flux:table.column>Code</flux:table.column>
-            <flux:table.column>Type</flux:table.column>
-            <flux:table.column>Value</flux:table.column>
-            <flux:table.column>Usage</flux:table.column>
-            <flux:table.column>Status</flux:table.column>
-            <flux:table.column class="text-right">Actions</flux:table.column>
+            <flux:table.column class="py-3 px-4">Code</flux:table.column>
+            <flux:table.column class="py-3 px-4">Type</flux:table.column>
+            <flux:table.column class="py-3 px-4">Value</flux:table.column>
+            <flux:table.column class="py-3 px-4">Usage</flux:table.column>
+            <flux:table.column class="py-3 px-4">Status</flux:table.column>
+            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
             @forelse($vouchers as $voucher)
                 <flux:table.row>
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-black uppercase tracking-wider">{{ $voucher->code }}</flux:text>
                         @if($voucher->name)
                             <flux:text size="sm" class="text-zinc-400">{{ $voucher->name }}</flux:text>
                         @endif
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:badge color="zinc" size="sm">{{ $voucher->type === 'fixed' ? 'Fixed' : 'Percent' }}</flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-black text-blue-600">
                             @if($voucher->type === 'fixed')
                                 ${{ number_format((float) $voucher->value, 2) }}
@@ -127,7 +127,7 @@
                         </flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text size="sm" class="tabular-nums">
                             {{ (int) $voucher->usage_count }}@if($voucher->usage_limit) / {{ (int) $voucher->usage_limit }}@endif
                         </flux:text>
@@ -138,13 +138,13 @@
                         @endif
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:badge :color="$voucher->is_active ? 'green' : 'red'" size="sm">
                             {{ $voucher->is_active ? 'Active' : 'Inactive' }}
                         </flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell class="text-right">
+                    <flux:table.cell class="py-3 px-4 text-right">
                         <div class="flex items-center justify-end gap-2">
                             <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $voucher->id }})" />
                             <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $voucher->id }})" wire:confirm="Delete this voucher?" class="text-red-500 hover:text-red-600" />

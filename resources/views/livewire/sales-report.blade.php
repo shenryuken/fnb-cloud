@@ -68,22 +68,22 @@
                 </div>
                 <flux:table>
                     <flux:table.columns>
-                        <flux:table.column>Date</flux:table.column>
-                        <flux:table.column class="text-center">Orders</flux:table.column>
-                        <flux:table.column class="text-right">Gross</flux:table.column>
-                        <flux:table.column class="text-right">Discount</flux:table.column>
-                        <flux:table.column class="text-right">Tax</flux:table.column>
-                        <flux:table.column class="text-right">Net</flux:table.column>
+                        <flux:table.column class="py-3 px-4">Date</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-center">Orders</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-right">Gross</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-right">Discount</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-right">Tax</flux:table.column>
+                        <flux:table.column class="py-3 px-4 text-right">Net</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
                         @forelse($this->daily as $row)
                             <flux:table.row>
-                                <flux:table.cell class="font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</flux:table.cell>
-                                <flux:table.cell class="text-center">{{ $row['orders_count'] }}</flux:table.cell>
-                                <flux:table.cell class="text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 text-center">{{ $row['orders_count'] }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="py-3 px-4 text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</flux:table.cell>
                             </flux:table.row>
                         @empty
                             <flux:table.row>
