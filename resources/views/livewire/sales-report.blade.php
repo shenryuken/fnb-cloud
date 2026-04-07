@@ -85,12 +85,16 @@
                 tooltip: null,
                 tooltipX: 0,
                 tooltipY: 0,
-                chartW: 0,
+                chartW: 800,
                 chartH: 200,
                 padL: 56, padR: 16, padT: 12, padB: 32,
                 init() {
-                    this.chartW = this.$el.offsetWidth;
-                    window.addEventListener('resize', () => { this.chartW = this.$el.offsetWidth; });
+                    this.$nextTick(() => {
+                        this.chartW = this.$el.offsetWidth || 800;
+                    });
+                    window.addEventListener('resize', () => {
+                        this.chartW = this.$el.offsetWidth || 800;
+                    });
                 },
                 innerW() { return Math.max(1, this.chartW - this.padL - this.padR); },
                 innerH() { return this.chartH - this.padT - this.padB; },
@@ -142,7 +146,7 @@
             class="relative select-none"
             :style="`height: ${chartH}px`"
         >
-            <svg x-show="chartW > 0" :width="chartW" :height="chartH" class="overflow-visible w-full">
+            <svg :width="chartW" :height="chartH" class="overflow-visible w-full">
                 <!-- Y-axis gridlines & labels -->
                 <template x-for="tick in yTicks()" :key="tick.y">
                     <g>
