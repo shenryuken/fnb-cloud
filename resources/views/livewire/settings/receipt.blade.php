@@ -6,7 +6,7 @@
             <flux:heading size="xl" level="2">Receipt Settings</flux:heading>
             <flux:subheading>Define your brand identity for customer transactions.</flux:subheading>
         </div>
-        <flux:badge color="blue" size="lg" icon="printer">Printer Config</flux:badge>
+        <flux:badge color="blue" icon="printer">Printer Config</flux:badge>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -189,7 +189,7 @@
                     </div>
                 </flux:card>
 
-                <flux:button type="submit" variant="primary" size="lg" class="w-full" icon="check-circle">
+                <flux:button type="submit" variant="primary" class="w-full" icon="check-circle">
                     Save Receipt Config
                 </flux:button>
             </form>
