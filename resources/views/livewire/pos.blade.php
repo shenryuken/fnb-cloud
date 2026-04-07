@@ -760,26 +760,30 @@
     @if($isPaying)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300">
             <div class="bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-neutral-200 dark:border-neutral-800 flex flex-col">
-                <!-- Top Section: Compact Summary -->
-                <div class="bg-blue-600 dark:bg-blue-700 p-8 text-white relative flex items-center justify-between">
+
+                <!-- Header -->
+                <div class="bg-blue-600 dark:bg-blue-700 p-8 text-white flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
                             <flux:icon.credit-card class="w-6 h-6 text-white" />
                         </div>
                         <div>
                             <h3 class="text-xl font-black tracking-tight">Checkout</h3>
-                            <p class="text-blue-100 text-[10px] font-medium opacity-80 uppercase tracking-widest">Select Payment Method</p>
+                            <p class="text-blue-100 text-[10px] font-medium opacity-80 uppercase tracking-widest">
+                                {{ $isSplitPayment ? 'Split Payment' : 'Select Payment Method' }}
+                            </p>
                         </div>
                     </div>
-
                     <div class="text-right">
                         <span class="block text-[10px] font-bold opacity-60 uppercase tracking-widest">Amount Due</span>
                         <span class="text-4xl font-black tracking-tighter">${{ number_format($totalAmount, 2) }}</span>
                     </div>
                 </div>
 
-                <!-- Bottom Section: Compact Actions -->
-                <div class="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide">
+                <!-- Body -->
+                <div class="p-8 space-y-6 overflow-y-auto max-h-[70vh] scrollbar-hide">
+
+                    {{-- Order Summary --}}
                     <div class="rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/40 p-5 space-y-2">
                         <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
                             <span>Subtotal</span>
@@ -799,10 +803,6 @@
                                         <span class="font-black text-emerald-600">${{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
                                     </div>
                                 @endforeach
-                                <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
-                                    <span>Tax Total</span>
-                                    <span class="font-black text-emerald-600">${{ number_format($taxAmount, 2) }}</span>
-                                </div>
                             @else
                                 <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
                                     <span>Tax ({{ $taxLabel }})</span>
@@ -816,53 +816,63 @@
                         </div>
                     </div>
 
-                    <!-- Payment Method Row -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
-                            {{ $paymentMethod === 'cash' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
-                            <input type="radio" wire:model.live="paymentMethod" value="cash" class="sr-only">
-                            <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
-                                <flux:icon.banknotes class="w-5 h-5 {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}" />
-                            </div>
-                            <span class="font-black text-sm {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-500' }}">CASH</span>
-                        </label>
-                        <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
-                            {{ $paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
-                            <input type="radio" wire:model.live="paymentMethod" value="card" class="sr-only">
-                            <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
-                                <flux:icon.credit-card class="w-5 h-5 {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}" />
-                            </div>
-                            <span class="font-black text-sm {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-500' }}">CARD</span>
-                        </label>
+                    {{-- Split Payment Toggle --}}
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Split Payment</span>
+                        <button type="button"
+                            wire:click="{{ $isSplitPayment ? 'disableSplitPayment' : 'enableSplitPayment' }}"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none
+                                {{ $isSplitPayment ? 'bg-blue-600' : 'bg-neutral-200 dark:bg-neutral-700' }}">
+                            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                                {{ $isSplitPayment ? 'translate-x-6' : 'translate-x-1' }}">
+                            </span>
+                        </button>
                     </div>
 
-                    @if($paymentMethod === 'cash')
-                        <div class="space-y-6 animate-in slide-in-from-top-4 duration-300">
-                            <!-- Quick Amounts Grid -->
-                            <div class="grid grid-cols-4 gap-2">
-                                <button type="button" wire:click="setExactAmount" 
-                                    class="py-3 text-[10px] font-black rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all uppercase tracking-widest">
-                                    Exact
-                                </button>
-                                @foreach([5, 10, 20, 50, 100] as $amount)
-                                    <button type="button" wire:click="addQuickAmount({{ $amount }})" 
-                                        class="py-3 text-[10px] font-black rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 hover:border-blue-500 hover:text-blue-600 transition-all">
-                                        +${{ $amount }}
-                                    </button>
-                                @endforeach
-                            </div>
+                    {{-- ── SINGLE PAYMENT MODE ── --}}
+                    @if(!$isSplitPayment)
+                        {{-- Method selector --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
+                                {{ $paymentMethod === 'cash' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
+                                <input type="radio" wire:model.live="paymentMethod" value="cash" class="sr-only">
+                                <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
+                                    <flux:icon.banknotes class="w-5 h-5 {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                </div>
+                                <span class="font-black text-sm {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-500' }}">CASH</span>
+                            </label>
+                            <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
+                                {{ $paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
+                                <input type="radio" wire:model.live="paymentMethod" value="card" class="sr-only">
+                                <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
+                                    <flux:icon.credit-card class="w-5 h-5 {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                </div>
+                                <span class="font-black text-sm {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-500' }}">CARD</span>
+                            </label>
+                        </div>
 
-                            <!-- Amount Input and Change -->
-                            <div class="flex flex-col gap-4">
+                        @if($paymentMethod === 'cash')
+                            <div class="space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button type="button" wire:click="setExactAmount"
+                                        class="py-3 text-[10px] font-black rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all uppercase tracking-widest">
+                                        Exact
+                                    </button>
+                                    @foreach([5, 10, 20, 50, 100] as $amount)
+                                        <button type="button" wire:click="addQuickAmount({{ $amount }})"
+                                            class="py-3 text-[10px] font-black rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 hover:border-blue-500 hover:text-blue-600 transition-all">
+                                            +${{ $amount }}
+                                        </button>
+                                    @endforeach
+                                </div>
                                 <div class="flex items-center gap-6">
                                     <div class="flex-1 relative group">
                                         <div class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-300 group-focus-within:text-blue-500 transition-colors">$</div>
-                                        <input type="number" step="0.01" wire:model.live="amountReceived" 
+                                        <input type="number" step="0.01" wire:model.live="amountReceived"
                                             class="w-full pl-12 pr-6 py-6 text-4xl font-black rounded-2xl border-none bg-neutral-50 dark:bg-neutral-800 focus:ring-4 focus:ring-blue-500/10 transition-all tracking-tighter text-neutral-800 dark:text-neutral-100 shadow-inner text-right"
                                             onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)) this.value=n.toFixed(2)"
                                             onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)?n.toFixed(2):'0.00'">
                                     </div>
-
                                     <div class="flex-1 flex justify-between items-center p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-100 dark:border-emerald-800/30">
                                         <div class="flex flex-col">
                                             <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Change</span>
@@ -871,31 +881,112 @@
                                         <flux:icon.banknotes class="w-8 h-8 text-emerald-500/30" />
                                     </div>
                                 </div>
-                                
-                                <button type="button" wire:click="resetAmountReceived" 
-                                    class="w-full py-3 text-[10px] font-black rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 border border-red-100 dark:border-red-800/30 hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest flex items-center justify-center gap-2">
-                                    <flux:icon.x-mark class="w-4 h-4" />
-                                    Clear Amount
-                                </button>
                             </div>
+                        @endif
+                    @endif
+
+                    {{-- ── SPLIT PAYMENT MODE ── --}}
+                    @if($isSplitPayment)
+                        <div class="space-y-4 animate-in slide-in-from-top-4 duration-300">
+
+                            {{-- Remaining balance indicator --}}
+                            <div class="flex items-center justify-between p-4 rounded-2xl
+                                {{ $splitRemaining <= 0.001 ? 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30' : 'bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30' }}">
+                                <span class="text-[10px] font-black uppercase tracking-widest
+                                    {{ $splitRemaining <= 0.001 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                    {{ $splitRemaining <= 0.001 ? 'Fully Covered' : 'Remaining' }}
+                                </span>
+                                <span class="text-2xl font-black tracking-tighter
+                                    {{ $splitRemaining <= 0.001 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                    ${{ number_format($splitRemaining, 2) }}
+                                </span>
+                            </div>
+
+                            {{-- Existing splits --}}
+                            @if(!empty($paymentSplits))
+                                <div class="space-y-2">
+                                    @foreach($paymentSplits as $i => $split)
+                                        <div class="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700">
+                                            <div class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-700 flex items-center justify-center shadow-sm shrink-0">
+                                                @if($split['method'] === 'cash')
+                                                    <flux:icon.banknotes class="w-4 h-4 text-blue-600" />
+                                                @elseif($split['method'] === 'card')
+                                                    <flux:icon.credit-card class="w-4 h-4 text-blue-600" />
+                                                @else
+                                                    <flux:icon.device-phone-mobile class="w-4 h-4 text-blue-600" />
+                                                @endif
+                                            </div>
+                                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest w-16 shrink-0">{{ $split['method'] }}</span>
+                                            <span class="flex-1 text-right font-black text-neutral-800 dark:text-neutral-100 tabular-nums">${{ number_format($split['amount'], 2) }}</span>
+                                            <button type="button" wire:click="removeSplit({{ $i }})"
+                                                class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-900/10 flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-all shrink-0">
+                                                <flux:icon.x-mark class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Add split row --}}
+                            @if($splitRemaining > 0.001)
+                                <div class="flex gap-3 items-end">
+                                    {{-- Method selector --}}
+                                    <div class="flex gap-2">
+                                        @foreach(['cash' => 'banknotes', 'card' => 'credit-card', 'ewallet' => 'device-phone-mobile'] as $method => $icon)
+                                            <button type="button" wire:click="$set('splitMethod', '{{ $method }}')"
+                                                class="w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all
+                                                    {{ $splitMethod === $method ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
+                                                <flux:icon.{{ $icon }} class="w-5 h-5 {{ $splitMethod === $method ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                            </button>
+                                        @endforeach
+                                    </div>
+
+                                    {{-- Amount input --}}
+                                    <div class="flex-1 relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-neutral-300">$</span>
+                                        <input type="number" step="0.01" min="0.01" wire:model.live="splitAmount"
+                                            class="w-full pl-8 pr-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-black text-right text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                            onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)&&n>0) this.value=n.toFixed(2)"
+                                            onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)?n.toFixed(2):'0.00'">
+                                    </div>
+
+                                    {{-- Exact remaining button --}}
+                                    <button type="button" wire:click="setSplitExact"
+                                        class="px-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:bg-blue-50 hover:text-blue-600 border border-neutral-200 dark:border-neutral-700 transition-all whitespace-nowrap">
+                                        Full
+                                    </button>
+
+                                    {{-- Add button --}}
+                                    <button type="button" wire:click="addSplit"
+                                        class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shrink-0">
+                                        <flux:icon.plus class="w-4 h-4" />
+                                        Add
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                     @endif
 
-                    <!-- Notes Field -->
+                    {{-- Notes --}}
                     <div class="relative group">
                         <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
                             <flux:icon.pencil-square class="w-5 h-5" />
                         </div>
-                        <input type="text" wire:model="orderNotes" placeholder="Add a quick note..." 
+                        <input type="text" wire:model="orderNotes" placeholder="Add a quick note..."
                             class="w-full rounded-xl border-none bg-neutral-50 dark:bg-neutral-800 p-4 pl-12 font-medium focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                     </div>
                 </div>
 
-                <!-- Footer Actions -->
+                <!-- Footer -->
                 <div class="p-8 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 flex gap-4">
                     <button wire:click="$set('isPaying', false)" class="flex-1 py-4 rounded-2xl font-black text-neutral-400 hover:text-neutral-800 transition-colors uppercase tracking-widest text-[10px]">Back</button>
-                    <button wire:click="checkout" 
-                        {{ $paymentMethod === 'cash' && $amountReceived < $totalAmount ? 'disabled' : '' }}
+                    <button wire:click="checkout"
+                        @php
+                            $checkoutDisabled = $isSplitPayment
+                                ? (empty($paymentSplits) || $splitRemaining > 0.01)
+                                : (!$isSplitPayment && $paymentMethod === 'cash' && $amountReceived < $totalAmount);
+                        @endphp
+                        {{ $checkoutDisabled ? 'disabled' : '' }}
                         class="flex-[2] py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-base shadow-xl shadow-emerald-500/20 disabled:opacity-30 transition-all transform active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2 group">
                         <flux:icon.check-circle class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         Process Payment
@@ -937,15 +1028,24 @@
                                 <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Total</span>
                                 <span class="font-bold text-blue-600">${{ number_format($lastOrder->total_amount, 2) }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Method</span>
-                                <span class="font-bold uppercase">{{ $lastOrder->payment_method }}</span>
-                            </div>
-                            @if($lastOrder->change_amount > 0)
-                                <div class="flex justify-between text-green-600">
-                                    <span>Change</span>
-                                    <span class="font-bold">${{ number_format($lastOrder->change_amount, 2) }}</span>
+                            @if(!empty($lastOrder->payment_splits))
+                                @foreach($lastOrder->payment_splits as $split)
+                                    <div class="flex justify-between">
+                                        <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">{{ $split['method'] }}</span>
+                                        <span class="font-bold">${{ number_format($split['amount'], 2) }}</span>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Method</span>
+                                    <span class="font-bold uppercase">{{ $lastOrder->payment_method }}</span>
                                 </div>
+                                @if($lastOrder->change_amount > 0)
+                                    <div class="flex justify-between text-green-600">
+                                        <span>Change</span>
+                                        <span class="font-bold">${{ number_format($lastOrder->change_amount, 2) }}</span>
+                                    </div>
+                                @endif
                             @endif
                         </div>
 

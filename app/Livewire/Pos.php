@@ -52,10 +52,17 @@ class Pos extends Component
 
     // Payment state
     public bool $isPaying = false;
-    public string $paymentMethod = 'cash';
+    public string $paymentMethod = 'cash';   // kept for single-method fast path
     public float $amountReceived = 0;
     public float $changeAmount = 0;
     public ?Order $lastOrder = null;
+
+    // Split payment state
+    public bool $isSplitPayment = false;
+    public array $paymentSplits = [];        // [['method' => 'cash', 'amount' => 50.00], ...]
+    public string $splitMethod = 'cash';
+    public float $splitAmount = 0;
+    public float $splitRemaining = 0;
     public bool $isKitchenBusy = false;
     public bool $showCartMobile = false;
     public bool $showDiscountModal = false;
@@ -519,6 +526,11 @@ class Pos extends Component
         $this->totalAmount = 0;
         $this->orderNotes = '';
         $this->isPaying = false;
+        $this->isSplitPayment = false;
+        $this->paymentSplits = [];
+        $this->splitMethod = 'cash';
+        $this->splitAmount = 0;
+        $this->splitRemaining = 0;
         $this->amountReceived = 0;
         $this->changeAmount = 0;
 
@@ -625,6 +637,11 @@ class Pos extends Component
         if (empty($this->cart)) return;
         $this->showCartMobile = false;
         $this->isPaying = true;
+        $this->isSplitPayment = false;
+        $this->paymentSplits = [];
+        $this->splitMethod = 'cash';
+        $this->splitAmount = 0;
+        $this->splitRemaining = 0;
         $this->amountReceived = (float) $this->totalAmount;
         $this->calculateChange();
     }
@@ -670,12 +687,103 @@ class Pos extends Component
         $this->calculateChange();
     }
 
+    // ─── Split Payment Methods ─────────────────────────────────────────────────
+
+    public function enableSplitPayment(): void
+    {
+        $this->isSplitPayment = true;
+        $this->paymentSplits = [];
+        $this->splitMethod = 'cash';
+        $this->splitAmount = round((float) $this->totalAmount, 2);
+        $this->recalculateSplitRemaining();
+    }
+
+    public function disableSplitPayment(): void
+    {
+        $this->isSplitPayment = false;
+        $this->paymentSplits = [];
+        $this->splitMethod = 'cash';
+        $this->splitAmount = 0;
+        $this->splitRemaining = 0;
+        $this->amountReceived = (float) $this->totalAmount;
+        $this->calculateChange();
+    }
+
+    public function addSplit(): void
+    {
+        $amount = round(max(0, (float) $this->splitAmount), 2);
+
+        if ($amount <= 0) {
+            $this->dispatch('notify', message: 'Enter an amount greater than 0.', type: 'error');
+            return;
+        }
+
+        $remaining = round((float) $this->splitRemaining, 2);
+        if ($amount > $remaining + 0.001) {
+            $amount = $remaining;
+        }
+
+        if ($amount <= 0) {
+            $this->dispatch('notify', message: 'No remaining balance to allocate.', type: 'error');
+            return;
+        }
+
+        $this->paymentSplits[] = [
+            'method' => $this->splitMethod,
+            'amount' => $amount,
+        ];
+
+        $this->recalculateSplitRemaining();
+        $this->splitAmount = round(max(0, $this->splitRemaining), 2);
+    }
+
+    public function removeSplit(int $index): void
+    {
+        unset($this->paymentSplits[$index]);
+        $this->paymentSplits = array_values($this->paymentSplits);
+        $this->recalculateSplitRemaining();
+        $this->splitAmount = round(max(0, $this->splitRemaining), 2);
+    }
+
+    public function setSplitExact(): void
+    {
+        $this->splitAmount = round(max(0, (float) $this->splitRemaining), 2);
+    }
+
+    private function recalculateSplitRemaining(): void
+    {
+        $allocated = collect($this->paymentSplits)->sum('amount');
+        $this->splitRemaining = round(max(0, (float) $this->totalAmount - (float) $allocated), 2);
+    }
+
+    private function splitIsPaid(): bool
+    {
+        if (!$this->isSplitPayment) {
+            return false;
+        }
+        return $this->splitRemaining <= 0.001;
+    }
+
+    // ─── End Split Payment Methods ─────────────────────────────────────────────
+
     /**
      * Place the order and process payment.
      */
     public function checkout(): void
     {
         if (empty($this->cart)) return;
+
+        // Validate split payment before entering transaction
+        if ($this->isSplitPayment) {
+            if (empty($this->paymentSplits)) {
+                $this->dispatch('notify', message: 'Add at least one payment split.', type: 'error');
+                return;
+            }
+            if ($this->splitRemaining > 0.01) {
+                $this->dispatch('notify', message: 'Split payments do not cover the full amount. Remaining: $' . number_format($this->splitRemaining, 2), type: 'error');
+                return;
+            }
+        }
 
         $this->lastOrder = DB::transaction(function () {
             $voucherCode = filled($this->appliedVoucherCode) ? strtoupper(trim($this->appliedVoucherCode)) : null;
@@ -742,10 +850,15 @@ class Pos extends Component
                 'points_redeemed' => $points,
                 'tax_rate' => $this->taxRate,
                 'tax_amount' => $this->taxAmount,
-                'payment_method' => $this->paymentMethod,
+                'payment_method' => $this->isSplitPayment
+                    ? implode('+', array_unique(array_column($this->paymentSplits, 'method')))
+                    : $this->paymentMethod,
+                'payment_splits' => $this->isSplitPayment ? $this->paymentSplits : null,
                 'payment_status' => 'paid',
-                'amount_paid' => $this->amountReceived,
-                'change_amount' => $this->changeAmount,
+                'amount_paid' => $this->isSplitPayment
+                    ? round(collect($this->paymentSplits)->sum('amount'), 2)
+                    : $this->amountReceived,
+                'change_amount' => $this->isSplitPayment ? 0 : $this->changeAmount,
             ]);
 
             if ($voucherCode) {
@@ -794,7 +907,7 @@ class Pos extends Component
         }
 
         $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'voucherCode', 'appliedVoucherCode', 'pointsToRedeem', 'appliedPoints', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderNotes', 'isPaying', 'showCartMobile']);
-        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod']);
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
         // We keep lastOrder to show receipt/success screen if needed
         $this->dispatch('order-placed');
     }
@@ -804,7 +917,7 @@ class Pos extends Component
      */
     public function newOrder(): void
     {
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'voucherCode', 'appliedVoucherCode', 'pointsToRedeem', 'appliedPoints', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'showCartMobile']);
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'voucherCode', 'appliedVoucherCode', 'pointsToRedeem', 'appliedPoints', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
     }
 
     public function openDiscountModal(): void
