@@ -73,25 +73,27 @@
             </div>
         </div>
 
-        <flux:chart :value="$chartData" class="h-56">
-            <flux:chart.svg>
-                <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="60%" />
-                <flux:chart.axis axis="x" field="label" tick-count="7">
-                    <flux:chart.axis.tick />
-                    <flux:chart.axis.line />
-                </flux:chart.axis>
-                <flux:chart.axis axis="y" tick-count="5" tick-prefix="$">
-                    <flux:chart.axis.grid />
-                    <flux:chart.axis.tick />
-                </flux:chart.axis>
-                <flux:chart.cursor />
-            </flux:chart.svg>
-            <flux:chart.tooltip>
-                <flux:chart.tooltip.heading field="label" />
-                <flux:chart.tooltip.value field="net_sales" label="Net Sales" prefix="$" />
-                <flux:chart.tooltip.value field="orders_count" label="Orders" />
-            </flux:chart.tooltip>
-        </flux:chart>
+        <div class="w-full h-56 relative overflow-hidden">
+            <flux:chart :value="$chartData" class="w-full h-full">
+                <flux:chart.svg>
+                    <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="60%" />
+                    <flux:chart.axis axis="x" field="label" tick-count="7">
+                        <flux:chart.axis.tick />
+                        <flux:chart.axis.line />
+                    </flux:chart.axis>
+                    <flux:chart.axis axis="y" tick-count="5" tick-prefix="$">
+                        <flux:chart.axis.grid />
+                        <flux:chart.axis.tick />
+                    </flux:chart.axis>
+                    <flux:chart.cursor />
+                </flux:chart.svg>
+                <flux:chart.tooltip>
+                    <flux:chart.tooltip.heading field="label" />
+                    <flux:chart.tooltip.value field="net_sales" label="Net Sales" prefix="$" />
+                    <flux:chart.tooltip.value field="orders_count" label="Orders" />
+                </flux:chart.tooltip>
+            </flux:chart>
+        </div>
     </flux:card>
     @endif
 
