@@ -1,140 +1,142 @@
-<div class="flex flex-col gap-6 p-4 md:p-8 bg-neutral-50 dark:bg-neutral-950 min-h-full font-sans">
+<div class="flex flex-col gap-6 p-4 md:p-8">
+    {{-- Header --}}
     <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-            <h2 class="text-3xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Sales Report</h2>
-            <p class="text-neutral-500 font-medium">Track revenue, tax, discounts, and top-selling items</p>
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2">Business day: {{ $businessDayStartTime }} → {{ $businessDayEndTime }}</p>
+            <flux:heading size="xl" level="2">Sales Report</flux:heading>
+            <flux:subheading>Track revenue, tax, discounts, and top-selling items</flux:subheading>
+            <flux:text size="sm" class="text-zinc-400 mt-1">Business day: {{ $businessDayStartTime }} &rarr; {{ $businessDayEndTime }}</flux:text>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
-            <div class="flex items-center gap-2 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 px-4 py-3 shadow-sm">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">From</span>
-                    <input type="date" wire:model.live="fromDate" class="bg-transparent border-none focus:ring-0 text-sm font-black text-neutral-700 dark:text-neutral-200">
+            <flux:card class="p-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <flux:text size="sm" class="font-black text-zinc-400 uppercase tracking-widest">From</flux:text>
+                        <flux:input type="date" wire:model.live="fromDate" size="sm" />
+                    </div>
+                    <flux:separator vertical class="h-6" />
+                    <div class="flex items-center gap-2">
+                        <flux:text size="sm" class="font-black text-zinc-400 uppercase tracking-widest">To</flux:text>
+                        <flux:input type="date" wire:model.live="toDate" size="sm" />
+                    </div>
                 </div>
-                <div class="w-px h-6 bg-neutral-200 dark:bg-neutral-800"></div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">To</span>
-                    <input type="date" wire:model.live="toDate" class="bg-transparent border-none focus:ring-0 text-sm font-black text-neutral-700 dark:text-neutral-200">
-                </div>
-            </div>
+            </flux:card>
 
-            <div class="flex flex-wrap gap-2">
-                <button type="button" wire:click="setRange('today')" class="px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-300 hover:border-blue-500 hover:text-blue-600 transition-all">
-                    Today
-                </button>
-                <button type="button" wire:click="setRange('7d')" class="px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-300 hover:border-blue-500 hover:text-blue-600 transition-all">
-                    7D
-                </button>
-                <button type="button" wire:click="setRange('month')" class="px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-300 hover:border-blue-500 hover:text-blue-600 transition-all">
-                    Month
-                </button>
+            <div class="flex gap-2">
+                <flux:button size="sm" wire:click="setRange('today')" variant="ghost">Today</flux:button>
+                <flux:button size="sm" wire:click="setRange('7d')" variant="ghost">7D</flux:button>
+                <flux:button size="sm" wire:click="setRange('month')" variant="ghost">Month</flux:button>
             </div>
         </div>
     </div>
 
+    {{-- KPI Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Orders</p>
-            <p class="text-3xl font-black text-neutral-900 dark:text-neutral-100 tracking-tighter mt-2">{{ number_format($this->summary['orders_count'] ?? 0) }}</p>
-        </div>
+        <flux:card class="p-6">
+            <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Orders</flux:text>
+            <flux:heading size="xl" class="mt-2 tabular-nums">{{ number_format($this->summary['orders_count'] ?? 0) }}</flux:heading>
+        </flux:card>
 
-        <div class="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Gross Sales</p>
-            <p class="text-3xl font-black text-neutral-900 dark:text-neutral-100 tracking-tighter mt-2">${{ number_format($this->summary['gross_sales'] ?? 0, 2) }}</p>
-        </div>
+        <flux:card class="p-6">
+            <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Gross Sales</flux:text>
+            <flux:heading size="xl" class="mt-2 tabular-nums">${{ number_format($this->summary['gross_sales'] ?? 0, 2) }}</flux:heading>
+        </flux:card>
 
-        <div class="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Discounts</p>
-            <p class="text-3xl font-black text-red-500 tracking-tighter mt-2">- ${{ number_format($this->summary['discounts'] ?? 0, 2) }}</p>
-        </div>
+        <flux:card class="p-6">
+            <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Discounts</flux:text>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-red-500">-${{ number_format($this->summary['discounts'] ?? 0, 2) }}</flux:heading>
+        </flux:card>
 
-        <div class="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Tax</p>
-            <p class="text-3xl font-black text-emerald-500 tracking-tighter mt-2">${{ number_format($this->summary['taxes'] ?? 0, 2) }}</p>
-        </div>
+        <flux:card class="p-6">
+            <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Tax</flux:text>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-emerald-600">${{ number_format($this->summary['taxes'] ?? 0, 2) }}</flux:heading>
+        </flux:card>
 
-        <div class="bg-gradient-to-br from-white to-blue-50/40 dark:from-neutral-900 dark:to-blue-900/10 rounded-[2rem] border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-            <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Net Sales</p>
-            <p class="text-3xl font-black text-blue-600 tracking-tighter mt-2">${{ number_format($this->summary['net_sales'] ?? 0, 2) }}</p>
-        </div>
+        <flux:card class="p-6 ring-1 ring-blue-500/30">
+            <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Net Sales</flux:text>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-blue-600">${{ number_format($this->summary['net_sales'] ?? 0, 2) }}</flux:heading>
+        </flux:card>
     </div>
 
+    {{-- Tables --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden">
-            <div class="px-8 py-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                <h4 class="text-xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Daily Summary</h4>
-            </div>
-            <div class="overflow-x-auto scrollbar-hide">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-neutral-50/50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800">
-                            <th class="px-8 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Date</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-center">Orders</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-right">Gross</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-right">Discount</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-right">Tax</th>
-                            <th class="px-8 py-4 text-[10px] font-black text-neutral-400 uppercase tracking-widest text-right">Net</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-neutral-50 dark:divide-neutral-800">
+        {{-- Daily Summary --}}
+        <div class="lg:col-span-2">
+            <flux:card class="overflow-hidden p-0">
+                <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:heading size="lg">Daily Summary</flux:heading>
+                </div>
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>Date</flux:table.column>
+                        <flux:table.column class="text-center">Orders</flux:table.column>
+                        <flux:table.column class="text-right">Gross</flux:table.column>
+                        <flux:table.column class="text-right">Discount</flux:table.column>
+                        <flux:table.column class="text-right">Tax</flux:table.column>
+                        <flux:table.column class="text-right">Net</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
                         @forelse($this->daily as $row)
-                            <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
-                                <td class="px-8 py-5 font-black text-neutral-700 dark:text-neutral-200 text-sm">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</td>
-                                <td class="px-6 py-5 text-center font-black text-neutral-400 text-sm">{{ $row['orders_count'] }}</td>
-                                <td class="px-6 py-5 text-right font-black text-neutral-900 dark:text-neutral-100 text-sm tabular-nums">${{ number_format($row['gross_sales'], 2) }}</td>
-                                <td class="px-6 py-5 text-right font-black text-red-500 text-sm tabular-nums">- ${{ number_format($row['discounts'], 2) }}</td>
-                                <td class="px-6 py-5 text-right font-black text-emerald-600 text-sm tabular-nums">${{ number_format($row['taxes'], 2) }}</td>
-                                <td class="px-8 py-5 text-right font-black text-blue-600 text-sm tabular-nums">${{ number_format($row['net_sales'], 2) }}</td>
-                            </tr>
+                            <flux:table.row>
+                                <flux:table.cell class="font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</flux:table.cell>
+                                <flux:table.cell class="text-center">{{ $row['orders_count'] }}</flux:table.cell>
+                                <flux:table.cell class="text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</flux:table.cell>
+                                <flux:table.cell class="text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</flux:table.cell>
+                            </flux:table.row>
                         @empty
-                            <tr>
-                                <td colspan="6" class="px-8 py-12 text-center text-sm text-neutral-400 font-medium italic">No sales found in this date range.</td>
-                            </tr>
+                            <flux:table.row>
+                                <flux:table.cell colspan="6" class="py-12 text-center">
+                                    <flux:text class="text-zinc-400 italic">No sales found in this date range.</flux:text>
+                                </flux:table.cell>
+                            </flux:table.row>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    </flux:table.rows>
+                </flux:table>
+            </flux:card>
         </div>
 
         <div class="flex flex-col gap-6">
-            <div class="bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden">
-                <div class="px-8 py-6 border-b border-neutral-100 dark:border-neutral-800">
-                    <h4 class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Payment Methods</h4>
+            {{-- Payment Methods --}}
+            <flux:card class="overflow-hidden p-0">
+                <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:heading>Payment Methods</flux:heading>
                 </div>
-                <div class="p-6 space-y-3">
+                <div class="p-4 space-y-2">
                     @forelse($this->paymentBreakdown as $row)
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800">
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{{ strtoupper($row['payment_method']) }}</span>
-                                <span class="text-xs font-black text-neutral-600 dark:text-neutral-300">{{ $row['orders_count'] }} orders</span>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
+                            <div>
+                                <flux:text class="font-black uppercase tracking-widest text-xs">{{ strtoupper($row['payment_method']) }}</flux:text>
+                                <flux:text size="sm" class="text-zinc-400">{{ $row['orders_count'] }} orders</flux:text>
                             </div>
-                            <span class="text-sm font-black text-blue-600 tabular-nums">${{ number_format($row['net_sales'], 2) }}</span>
+                            <flux:text class="font-black text-blue-600 tabular-nums">${{ number_format($row['net_sales'], 2) }}</flux:text>
                         </div>
                     @empty
-                        <p class="text-sm text-neutral-400 font-medium italic">No payment data.</p>
+                        <flux:text class="text-zinc-400 italic text-sm p-2">No payment data.</flux:text>
                     @endforelse
                 </div>
-            </div>
+            </flux:card>
 
-            <div class="bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden">
-                <div class="px-8 py-6 border-b border-neutral-100 dark:border-neutral-800">
-                    <h4 class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Top Products</h4>
+            {{-- Top Products --}}
+            <flux:card class="overflow-hidden p-0">
+                <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:heading>Top Products</flux:heading>
                 </div>
-                <div class="p-6 space-y-3">
+                <div class="p-4 space-y-2">
                     @forelse($this->topProducts as $row)
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800">
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
                             <div class="min-w-0">
-                                <p class="text-sm font-black text-neutral-800 dark:text-neutral-100 truncate">{{ $row['product_name'] }}</p>
-                                <p class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{{ $row['quantity_sold'] }} sold</p>
+                                <flux:text class="font-semibold truncate">{{ $row['product_name'] }}</flux:text>
+                                <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">{{ $row['quantity_sold'] }} sold</flux:text>
                             </div>
-                            <span class="text-sm font-black text-blue-600 tabular-nums">${{ number_format($row['gross_sales'], 2) }}</span>
+                            <flux:text class="font-black text-blue-600 tabular-nums shrink-0 ml-2">${{ number_format($row['gross_sales'], 2) }}</flux:text>
                         </div>
                     @empty
-                        <p class="text-sm text-neutral-400 font-medium italic">No product data.</p>
+                        <flux:text class="text-zinc-400 italic text-sm p-2">No product data.</flux:text>
                     @endforelse
                 </div>
-            </div>
+            </flux:card>
         </div>
     </div>
 </div>
