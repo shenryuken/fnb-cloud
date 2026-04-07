@@ -66,34 +66,36 @@
                 <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
                     <flux:heading size="lg">Daily Summary</flux:heading>
                 </div>
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column class="py-3 px-4">Date</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-center">Orders</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-right">Gross</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-right">Discount</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-right">Tax</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-right">Net</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @forelse($this->daily as $row)
-                            <flux:table.row>
-                                <flux:table.cell class="py-3 px-4 font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-center">{{ $row['orders_count'] }}</flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</flux:table.cell>
-                            </flux:table.row>
-                        @empty
-                            <flux:table.row>
-                                <flux:table.cell colspan="6" class="py-12 text-center">
-                                    <flux:text class="text-zinc-400 italic">No sales found in this date range.</flux:text>
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforelse
-                    </flux:table.rows>
-                </flux:table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Date</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Orders</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Gross</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Discount</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Tax</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Net</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                            @forelse($this->daily as $row)
+                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="py-3 px-4 font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</td>
+                                    <td class="py-3 px-4 text-center tabular-nums">{{ $row['orders_count'] }}</td>
+                                    <td class="py-3 px-4 text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</td>
+                                    <td class="py-3 px-4 text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</td>
+                                    <td class="py-3 px-4 text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</td>
+                                    <td class="py-3 px-4 text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-12 text-center text-zinc-400 italic">No sales found in this date range.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </flux:card>
         </div>
 

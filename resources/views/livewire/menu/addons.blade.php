@@ -146,32 +146,32 @@
                         </div>
                     </div>
 
-                    <flux:table>
-                        <flux:table.rows>
-                            @forelse($group->items as $item)
-                                <flux:table.row>
-                                    <flux:table.cell class="py-3 px-4">
-                                        <flux:text size="sm" class="font-semibold">{{ $item->name }}</flux:text>
-                                    </flux:table.cell>
-                                    <flux:table.cell class="py-3 px-4">
-                                        <flux:text size="sm" class="font-black text-blue-600">${{ number_format($item->price, 2) }}</flux:text>
-                                    </flux:table.cell>
-                                    <flux:table.cell class="py-3 px-4 text-right">
-                                        <div class="flex items-center justify-end gap-1">
-                                            <flux:button size="xs" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
-                                            <flux:button size="xs" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />
-                                        </div>
-                                    </flux:table.cell>
-                                </flux:table.row>
-                            @empty
-                                <flux:table.row>
-                                    <flux:table.cell colspan="3" class="py-6 text-center">
-                                        <flux:text size="sm" class="text-zinc-400 italic">No options in this group.</flux:text>
-                                    </flux:table.cell>
-                                </flux:table.row>
-                            @endforelse
-                        </flux:table.rows>
-                    </flux:table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                @forelse($group->items as $item)
+                                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                                        <td class="py-3 px-4">
+                                            <span class="font-semibold text-sm">{{ $item->name }}</span>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="font-black text-sm text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                        </td>
+                                        <td class="py-3 px-4 text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <flux:button size="xs" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
+                                                <flux:button size="xs" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="py-6 text-center text-sm text-zinc-400 italic">No options in this group.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </flux:card>
             @empty
                 <flux:card class="py-16 text-center">
@@ -191,41 +191,45 @@
             <flux:heading size="sm" class="text-zinc-500 uppercase tracking-widest text-xs font-black">Standalone Add-ons</flux:heading>
 
                 <flux:card class="p-0 overflow-hidden">
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column class="py-3 px-4">Name</flux:table.column>
-                        <flux:table.column class="py-3 px-4">Price</flux:table.column>
-                        <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @forelse($standaloneItems as $item)
-                            <flux:table.row>
-                                <flux:table.cell class="py-3 px-4">
-                                    <flux:text class="font-semibold">{{ $item->name }}</flux:text>
-                                </flux:table.cell>
-                                <flux:table.cell class="py-3 px-4">
-                                    <flux:text class="font-black text-blue-600">${{ number_format($item->price, 2) }}</flux:text>
-                                </flux:table.cell>
-                                <flux:table.cell class="py-3 px-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
-                                        <flux:button size="sm" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />
-                                    </div>
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @empty
-                            <flux:table.row>
-                                <flux:table.cell colspan="3" class="py-16 text-center">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <flux:icon.tag class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                                        <flux:heading>No standalone add-ons</flux:heading>
-                                        <flux:subheading>Add global extras here.</flux:subheading>
-                                    </div>
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforelse
-                    </flux:table.rows>
-                </flux:table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Name</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Price</th>
+                                <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                            @forelse($standaloneItems as $item)
+                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <span class="font-semibold">{{ $item->name }}</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="font-black text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="editItem({{ $item->id }})" />
+                                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})" class="text-red-500 hover:text-red-600" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="py-16 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <flux:icon.tag class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                            <flux:heading>No standalone add-ons</flux:heading>
+                                            <flux:subheading>Add global extras here.</flux:subheading>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </flux:card>
         </div>
 

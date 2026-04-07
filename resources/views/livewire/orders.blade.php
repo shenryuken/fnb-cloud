@@ -70,123 +70,122 @@
     </flux:card>
 
     {{-- Table --}}
-    <flux:table :paginate="$orders">
-        <flux:table.columns>
-            <flux:table.column class="py-3 px-4">Order</flux:table.column>
-            <flux:table.column class="py-3 px-4">Status</flux:table.column>
-            <flux:table.column class="py-3 px-4">Customer / Table</flux:table.column>
-            <flux:table.column class="py-3 px-4">Items</flux:table.column>
-            <flux:table.column class="py-3 px-4">Amount</flux:table.column>
-            <flux:table.column class="py-3 px-4">Time</flux:table.column>
-            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
-        </flux:table.columns>
-
-        <flux:table.rows>
-            @forelse($orders as $order)
-                <flux:table.row wire:click="openOrder({{ $order->id }})" class="cursor-pointer">
-                    <flux:table.cell class="py-3 px-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
-                                #{{ $order->id }}
-                            </div>
-                        </div>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        @php
-                            $statusColor = match($order->status) {
-                                'completed' => 'green',
-                                'cancelled' => 'red',
-                                'processing' => 'blue',
-                                default => 'yellow',
-                            };
-                        @endphp
-                        <flux:badge :color="$statusColor" size="sm">{{ $order->status }}</flux:badge>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-semibold">
-                            {{ $order->customer?->name ?: ($order->table_number ? 'Table ' . $order->table_number : 'Walk-in') }}
-                        </flux:text>
-                        @if($order->customer)
-                            <flux:text size="sm" class="text-zinc-400">{{ $order->customer->email ?: $order->customer->mobile }}</flux:text>
-                        @endif
-                        <flux:text size="sm" class="text-zinc-400">Server: {{ $order->user?->name ?? 'System' }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <div class="flex flex-wrap gap-1.5 max-w-[180px]">
-                            @foreach($order->items->take(5) as $item)
-                                <div class="relative h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-500 overflow-visible" title="{{ $item->product?->name }}">
-                                    @if($item->product?->image_url)
-                                        <img src="{{ $item->product->image_url }}" class="h-full w-full object-cover rounded-xl" alt="">
-                                    @else
-                                        {{ substr($item->product?->name ?? '?', 0, 1) }}
+    <flux:card class="p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Order</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Customer / Table</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Items</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Amount</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Time</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($orders as $order)
+                        <tr wire:click="openOrder({{ $order->id }})" class="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            <td class="py-3 px-4">
+                                <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
+                                    #{{ $order->id }}
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                @php
+                                    $statusColor = match($order->status) {
+                                        'completed' => 'green',
+                                        'cancelled' => 'red',
+                                        'processing' => 'blue',
+                                        default => 'yellow',
+                                    };
+                                @endphp
+                                <flux:badge :color="$statusColor" size="sm">{{ $order->status }}</flux:badge>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-semibold">
+                                    {{ $order->customer?->name ?: ($order->table_number ? 'Table ' . $order->table_number : 'Walk-in') }}
+                                </span>
+                                @if($order->customer)
+                                    <div class="text-xs text-zinc-400">{{ $order->customer->email ?: $order->customer->mobile }}</div>
+                                @endif
+                                <div class="text-xs text-zinc-400">Server: {{ $order->user?->name ?? 'System' }}</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex flex-wrap gap-1.5 max-w-[180px]">
+                                    @foreach($order->items->take(5) as $item)
+                                        <div class="relative h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-500 overflow-visible" title="{{ $item->product?->name }}">
+                                            @if($item->product?->image_url)
+                                                <img src="{{ $item->product->image_url }}" class="h-full w-full object-cover rounded-xl" alt="">
+                                            @else
+                                                {{ substr($item->product?->name ?? '?', 0, 1) }}
+                                            @endif
+                                            <span class="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-blue-600 text-white text-[8px] flex items-center justify-center font-black">{{ $item->quantity }}</span>
+                                        </div>
+                                    @endforeach
+                                    @if($order->items->count() > 5)
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black text-zinc-400">
+                                            +{{ $order->items->count() - 5 }}
+                                        </div>
                                     @endif
-                                    <span class="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-blue-600 text-white text-[8px] flex items-center justify-center font-black">{{ $item->quantity }}</span>
                                 </div>
-                            @endforeach
-                            @if($order->items->count() > 5)
-                                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black text-zinc-400">
-                                    +{{ $order->items->count() - 5 }}
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-black">${{ number_format($order->total_amount, 2) }}</span>
+                                <div class="text-xs text-zinc-400 uppercase">{{ $order->payment_method }}</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-semibold">{{ $order->created_at->format('M d, H:i') }}</span>
+                                <div class="text-xs text-zinc-400">{{ $order->created_at->diffForHumans() }}</div>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                                    <flux:button
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="printer"
+                                        onclick="window.open('{{ route('pos.receipt', $order) }}', '_blank', 'width=400,height=600')"
+                                        title="Print Receipt"
+                                    />
+                                    @php $orderId = $order->id; @endphp
+                                    <select
+                                        onchange="@this.call('updateStatus', {{ $orderId }}, this.value)"
+                                        class="text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1.5 font-semibold min-w-[110px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                    >
+                                        <option value="pending"    @selected($order->status === 'pending')>Pending</option>
+                                        <option value="processing" @selected($order->status === 'processing')>Processing</option>
+                                        <option value="completed"  @selected($order->status === 'completed')>Completed</option>
+                                        <option value="cancelled"  @selected($order->status === 'cancelled')>Cancelled</option>
+                                    </select>
                                 </div>
-                            @endif
-                        </div>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-black">${{ number_format($order->total_amount, 2) }}</flux:text>
-                        <flux:text size="sm" class="text-zinc-400 uppercase">{{ $order->payment_method }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-semibold">{{ $order->created_at->format('M d, H:i') }}</flux:text>
-                        <flux:text size="sm" class="text-zinc-400">{{ $order->created_at->diffForHumans() }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4 text-right">
-                        <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="printer"
-                                onclick="window.open('{{ route('pos.receipt', $order) }}', '_blank', 'width=400,height=600')"
-                                title="Print Receipt"
-                            />
-
-                            @php $orderId = $order->id; @endphp
-                            <select
-                                onchange="@this.call('updateStatus', {{ $orderId }}, this.value)"
-                                class="text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1.5 font-semibold min-w-[110px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                            >
-                                <option value="pending"    @selected($order->status === 'pending')>Pending</option>
-                                <option value="processing" @selected($order->status === 'processing')>Processing</option>
-                                <option value="completed"  @selected($order->status === 'completed')>Completed</option>
-                                <option value="cancelled"  @selected($order->status === 'cancelled')>Cancelled</option>
-                            </select>
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="7" class="py-24 text-center">
-                        <div class="flex flex-col items-center gap-3">
-                            @if($hasActiveFilters)
-                                <flux:icon.funnel class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                                <flux:heading>No orders match your filters</flux:heading>
-                                <flux:subheading>Try adjusting your search or filter criteria.</flux:subheading>
-                                <flux:button wire:click="clearFilters" variant="ghost" size="sm">Clear all filters</flux:button>
-                            @else
-                                <flux:icon.clipboard-list class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                                <flux:heading>No orders found</flux:heading>
-                                <flux:subheading>Transactions will appear here once they are processed in the POS.</flux:subheading>
-                            @endif
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    @if($hasActiveFilters)
+                                        <flux:icon.funnel class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                        <flux:heading>No orders match your filters</flux:heading>
+                                        <flux:subheading>Try adjusting your search or filter criteria.</flux:subheading>
+                                        <flux:button wire:click="clearFilters" variant="ghost" size="sm">Clear all filters</flux:button>
+                                    @else
+                                        <flux:icon.clipboard-list class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                        <flux:heading>No orders found</flux:heading>
+                                        <flux:subheading>Transactions will appear here once they are processed in the POS.</flux:subheading>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800">
+            {{ $orders->links() }}
+        </div>
+    </flux:card>
 
     {{-- Order Detail Modal --}}
     <flux:modal name="order-detail" :show="$showOrderModal && $viewingOrder !== null" wire:close="closeOrder" class="max-w-3xl w-full">

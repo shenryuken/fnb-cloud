@@ -64,57 +64,56 @@
 
     {{-- Table --}}
     <flux:card class="p-0 overflow-hidden">
-        <flux:table>
-            <flux:table.columns>
-                <flux:table.column class="py-3 px-4">Order</flux:table.column>
-                <flux:table.column class="py-3 px-4">Category</flux:table.column>
-                <flux:table.column class="py-3 px-4">Description</flux:table.column>
-                <flux:table.column class="py-3 px-4 text-center">Status</flux:table.column>
-                <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
-            </flux:table.columns>
-
-            <flux:table.rows>
-                @forelse($categories as $category)
-                    <flux:table.row>
-                        <flux:table.cell class="py-3 px-4">
-                            <flux:badge color="zinc" size="sm">{{ $category->sort_order }}</flux:badge>
-                        </flux:table.cell>
-
-                        <flux:table.cell class="py-3 px-4">
-                            <flux:text class="font-semibold">{{ $category->name }}</flux:text>
-                            <flux:text size="sm" class="text-zinc-400">ID: #{{ $category->id }}</flux:text>
-                        </flux:table.cell>
-
-                        <flux:table.cell class="py-3 px-4">
-                            <flux:text size="sm" class="text-zinc-500">{{ $category->description ?? '—' }}</flux:text>
-                        </flux:table.cell>
-
-                        <flux:table.cell class="py-3 px-4 text-center">
-                            <flux:badge :color="$category->is_active ? 'green' : 'zinc'" size="sm">
-                                {{ $category->is_active ? 'Active' : 'Hidden' }}
-                            </flux:badge>
-                        </flux:table.cell>
-
-                        <flux:table.cell class="py-3 px-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $category->id }})" />
-                                <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $category->id }})" wire:confirm="Permanently delete this category?" class="text-red-500 hover:text-red-600" />
-                            </div>
-                        </flux:table.cell>
-                    </flux:table.row>
-                @empty
-                    <flux:table.row>
-                        <flux:table.cell colspan="5" class="py-24 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <flux:icon.layers class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                                <flux:heading>No categories yet</flux:heading>
-                                <flux:subheading>Create your first category to organise your menu.</flux:subheading>
-                            </div>
-                        </flux:table.cell>
-                    </flux:table.row>
-                @endforelse
-            </flux:table.rows>
-        </flux:table>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Order</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Category</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Description</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($categories as $category)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            <td class="py-3 px-4">
+                                <flux:badge color="zinc" size="sm">{{ $category->sort_order }}</flux:badge>
+                            </td>
+                            <td class="py-3 px-4">
+                                <flux:text class="font-semibold">{{ $category->name }}</flux:text>
+                                <flux:text size="sm" class="text-zinc-400">ID: #{{ $category->id }}</flux:text>
+                            </td>
+                            <td class="py-3 px-4">
+                                <flux:text size="sm" class="text-zinc-500">{{ $category->description ?? '—' }}</flux:text>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <flux:badge :color="$category->is_active ? 'green' : 'zinc'" size="sm">
+                                    {{ $category->is_active ? 'Active' : 'Hidden' }}
+                                </flux:badge>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $category->id }})" />
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $category->id }})" wire:confirm="Permanently delete this category?" class="text-red-500 hover:text-red-600" />
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <flux:icon.layers class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                    <flux:heading>No categories yet</flux:heading>
+                                    <flux:subheading>Create your first category to organise your menu.</flux:subheading>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </flux:card>
 
 </div>
