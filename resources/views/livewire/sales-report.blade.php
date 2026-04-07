@@ -59,65 +59,34 @@
     </div>
 
     {{-- Revenue Chart --}}
-    @php
-        $chartData = collect($this->daily);
-        $maxNet = $chartData->max('net_sales') ?: 1;
-        $chartHeight = 160;
-        $barCount = $chartData->count();
-    @endphp
-
-    @if($chartData->isNotEmpty())
+    @if(!empty($this->daily))
     <flux:card class="p-6">
-        <div class="flex items-center justify-between mb-4">
-            <flux:heading size="lg">Revenue Trend</flux:heading>
-            <flux:text size="sm" class="text-zinc-400">Net sales per day</flux:text>
-        </div>
-
-        <div class="relative" style="height: {{ $chartHeight + 40 }}px;">
-            {{-- Y-axis gridlines --}}
-            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-10">
-                @foreach([100, 75, 50, 25, 0] as $pct)
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] text-zinc-400 tabular-nums w-14 text-right shrink-0">
-                            ${{ number_format($maxNet * $pct / 100, 0) }}
-                        </span>
-                        <div class="flex-1 border-t border-dashed border-zinc-100 dark:border-zinc-800"></div>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Bars --}}
-            <div class="absolute inset-0 pl-16 pb-10 flex items-end gap-1">
-                @foreach($chartData as $row)
-                    @php
-                        $heightPct = $maxNet > 0 ? ($row['net_sales'] / $maxNet) * 100 : 0;
-                        $heightPx = max(2, ($heightPct / 100) * $chartHeight);
-                        $label = \Carbon\Carbon::parse($row['day'])->format($barCount <= 7 ? 'D' : ($barCount <= 31 ? 'd' : 'M d'));
-                    @endphp
-                    <div class="flex-1 flex flex-col items-center gap-1 group" style="min-width: 0;">
-                        {{-- Tooltip on hover --}}
-                        <div class="hidden group-hover:flex flex-col items-center absolute -translate-y-full mb-2 z-10 pointer-events-none">
-                            <div class="bg-zinc-900 text-white text-[10px] font-black px-2 py-1 rounded-lg whitespace-nowrap shadow-lg">
-                                ${{ number_format($row['net_sales'], 2) }}<br>
-                                <span class="font-normal text-zinc-400">{{ $row['orders_count'] }} orders</span>
-                            </div>
-                        </div>
-
-                        {{-- Bar --}}
-                        <div class="w-full relative flex flex-col justify-end" style="height: {{ $chartHeight }}px;">
-                            <div
-                                class="w-full rounded-t-md transition-all bg-blue-500 group-hover:bg-blue-400"
-                                style="height: {{ $heightPx }}px;"
-                                title="${{ number_format($row['net_sales'], 2) }} — {{ $row['orders_count'] }} orders"
-                            ></div>
-                        </div>
-
-                        {{-- X label --}}
-                        <span class="text-[9px] text-zinc-400 truncate w-full text-center">{{ $label }}</span>
-                    </div>
-                @endforeach
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <flux:heading size="lg">Revenue Trend</flux:heading>
+                <flux:text size="sm" class="text-zinc-400">Net sales per day</flux:text>
             </div>
         </div>
+
+        <flux:chart :value="$this->daily" class="aspect-[4/1] min-h-[200px]">
+            <flux:chart.svg>
+                <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="70%" />
+                <flux:chart.axis axis="x" field="day" :format="['month' => 'short', 'day' => 'numeric']" tick-count="7">
+                    <flux:chart.axis.tick />
+                    <flux:chart.axis.line />
+                </flux:chart.axis>
+                <flux:chart.axis axis="y" tick-prefix="$" tick-count="5" :format="['useGrouping' => true, 'maximumFractionDigits' => 0]">
+                    <flux:chart.axis.grid />
+                    <flux:chart.axis.tick />
+                </flux:chart.axis>
+                <flux:chart.cursor type="area" />
+            </flux:chart.svg>
+            <flux:chart.tooltip>
+                <flux:chart.tooltip.heading field="day" :format="['weekday' => 'short', 'month' => 'short', 'day' => 'numeric']" />
+                <flux:chart.tooltip.value field="net_sales" label="Net Sales" prefix="$" :format="['useGrouping' => true, 'minimumFractionDigits' => 2, 'maximumFractionDigits' => 2]" />
+                <flux:chart.tooltip.value field="orders_count" label="Orders" />
+            </flux:chart.tooltip>
+        </flux:chart>
     </flux:card>
     @endif
 
