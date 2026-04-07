@@ -938,13 +938,24 @@
                                 <div class="flex gap-3 items-end">
                                     {{-- Method selector --}}
                                     <div class="flex gap-2">
-                                        @foreach(['cash' => 'banknotes', 'card' => 'credit-card', 'ewallet' => 'device-phone-mobile'] as $method => $icon)
-                                            <button type="button" wire:click="$set('splitMethod', '{{ $method }}')"
-                                                class="w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all
-                                                    {{ $splitMethod === $method ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
-                                                <flux:icon.{{ $icon }} class="w-5 h-5 {{ $splitMethod === $method ? 'text-blue-600' : 'text-neutral-400' }}" />
-                                            </button>
-                                        @endforeach
+                                        <button type="button" wire:click="$set('splitMethod', 'cash')"
+                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
+                                                {{ $splitMethod === 'cash' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
+                                            <flux:icon.banknotes class="w-5 h-5 {{ $splitMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}">Cash</span>
+                                        </button>
+                                        <button type="button" wire:click="$set('splitMethod', 'card')"
+                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
+                                                {{ $splitMethod === 'card' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
+                                            <flux:icon.credit-card class="w-5 h-5 {{ $splitMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}">Card</span>
+                                        </button>
+                                        <button type="button" wire:click="$set('splitMethod', 'ewallet')"
+                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
+                                                {{ $splitMethod === 'ewallet' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
+                                            <flux:icon.device-phone-mobile class="w-5 h-5 {{ $splitMethod === 'ewallet' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'ewallet' ? 'text-blue-600' : 'text-neutral-400' }}">eWallet</span>
+                                        </button>
                                     </div>
 
                                     {{-- Amount input --}}
