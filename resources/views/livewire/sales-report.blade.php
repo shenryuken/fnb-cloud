@@ -59,17 +59,7 @@
     </div>
 
     {{-- Revenue Chart --}}
-    @php
-        $chartRows   = collect($this->daily);
-        $maxNet      = (float) ($chartRows->max('net_sales') ?: 1);
-        $chartJson   = $chartRows->map(fn($r) => [
-            'day'          => $r['day'],
-            'net_sales'    => (float) $r['net_sales'],
-            'orders_count' => (int)   $r['orders_count'],
-        ])->values()->toJson();
-    @endphp
-
-    @if($chartRows->isNotEmpty())
+    @if(!empty($this->daily))
     <flux:card class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -78,126 +68,25 @@
             </div>
         </div>
 
-        <div
-            x-data="{
-                rows: {{ $chartJson }},
-                max: {{ $maxNet }},
-                tooltip: null,
-                tooltipX: 0,
-                tooltipY: 0,
-                chartW: 800,
-                chartH: 200,
-                padL: 56, padR: 16, padT: 12, padB: 32,
-                init() {
-                    this.$nextTick(() => {
-                        this.chartW = this.$el.offsetWidth || 800;
-                    });
-                    window.addEventListener('resize', () => {
-                        this.chartW = this.$el.offsetWidth || 800;
-                    });
-                },
-                innerW() { return Math.max(1, this.chartW - this.padL - this.padR); },
-                innerH() { return this.chartH - this.padT - this.padB; },
-                barW() {
-                    const n = this.rows.length;
-                    if (n === 0) return 0;
-                    const slot = this.innerW() / n;
-                    return Math.max(4, Math.min(slot * 0.55, 40));
-                },
-                barX(i) {
-                    const n = this.rows.length;
-                    const slot = this.innerW() / n;
-                    return this.padL + slot * i + slot / 2 - this.barW() / 2;
-                },
-                barH(val) { return Math.max(2, (val / this.max) * this.innerH()); },
-                barY(val) { return this.padT + this.innerH() - this.barH(val); },
-                yTicks() {
-                    const steps = 5;
-                    return Array.from({length: steps + 1}, (_, i) => ({
-                        val: this.max * i / steps,
-                        y:   this.padT + this.innerH() - (this.innerH() * i / steps),
-                    }));
-                },
-                xTicks() {
-                    const n = this.rows.length;
-                    if (n === 0) return [];
-                    const step = n <= 14 ? 1 : Math.ceil(n / 7);
-                    return this.rows
-                        .map((r, i) => ({ i, r }))
-                        .filter(({ i }) => i % step === 0)
-                        .map(({ i, r }) => ({
-                            x: this.padL + (this.innerW() / n) * i + (this.innerW() / n) / 2,
-                            label: new Date(r.day + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                        }));
-                },
-                showTip(e, row) {
-                    const rect = this.$el.getBoundingClientRect();
-                    this.tooltipX = e.clientX - rect.left;
-                    this.tooltipY = e.clientY - rect.top - 10;
-                    this.tooltip = row;
-                },
-                fmtCurrency(v) {
-                    return '$' + Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                },
-                fmtDate(d) {
-                    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                },
-            }"
-            class="relative select-none"
-            :style="`height: ${chartH}px`"
-        >
-            <svg :width="chartW" :height="chartH" class="overflow-visible w-full">
-                <!-- Y-axis gridlines & labels -->
-                <template x-for="tick in yTicks()" :key="tick.y">
-                    <g>
-                        <line :x1="padL" :x2="chartW - padR" :y1="tick.y" :y2="tick.y"
-                              stroke="currentColor" stroke-width="1" stroke-dasharray="4,4"
-                              class="text-zinc-200 dark:text-zinc-700" />
-                        <text :x="padL - 8" :y="tick.y + 4" text-anchor="end" font-size="11"
-                              class="fill-zinc-400" x-text="'$' + tick.val.toLocaleString('en-US', { maximumFractionDigits: 0 })"></text>
-                    </g>
-                </template>
-
-                <!-- Bars -->
-                <template x-for="(row, i) in rows" :key="i">
-                    <rect
-                        :x="barX(i)"
-                        :y="barY(row.net_sales)"
-                        :width="barW()"
-                        :height="barH(row.net_sales)"
-                        rx="3"
-                        class="fill-blue-500 hover:fill-blue-400 transition-colors cursor-pointer"
-                        @mouseenter="showTip($event, row)"
-                        @mousemove="showTip($event, row)"
-                        @mouseleave="tooltip = null"
-                    />
-                </template>
-
-                <!-- X-axis labels -->
-                <template x-for="tick in xTicks()" :key="tick.x">
-                    <text :x="tick.x" :y="chartH - 6" text-anchor="middle" font-size="11"
-                          class="fill-zinc-400" x-text="tick.label"></text>
-                </template>
-            </svg>
-
-            <!-- Tooltip -->
-            <div
-                x-show="tooltip !== null"
-                x-cloak
-                :style="`left: ${tooltipX + 12}px; top: ${tooltipY - 60}px`"
-                class="absolute pointer-events-none z-20 bg-zinc-900 dark:bg-zinc-800 text-white rounded-xl px-3 py-2 shadow-xl text-xs whitespace-nowrap border border-zinc-700"
-            >
-                <div class="font-bold mb-1" x-text="tooltip ? fmtDate(tooltip.day) : ''"></div>
-                <div class="flex items-center justify-between gap-4">
-                    <span class="text-zinc-400">Net Sales</span>
-                    <span class="font-mono font-bold" x-text="tooltip ? fmtCurrency(tooltip.net_sales) : ''"></span>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <span class="text-zinc-400">Orders</span>
-                    <span class="font-mono font-bold" x-text="tooltip ? tooltip.orders_count : ''"></span>
-                </div>
-            </div>
-        </div>
+        <flux:chart :value="$this->daily" class="aspect-[3/1]">
+            <flux:chart.svg>
+                <flux:chart.bar field="net_sales" class="text-blue-500 dark:text-blue-400" radius="2" width="70%" />
+                <flux:chart.axis axis="x" field="day" tick-count="7">
+                    <flux:chart.axis.tick />
+                    <flux:chart.axis.line />
+                </flux:chart.axis>
+                <flux:chart.axis axis="y" tick-count="5" tick-prefix="$">
+                    <flux:chart.axis.grid />
+                    <flux:chart.axis.tick />
+                </flux:chart.axis>
+                <flux:chart.cursor type="area" />
+            </flux:chart.svg>
+            <flux:chart.tooltip>
+                <flux:chart.tooltip.heading field="day" />
+                <flux:chart.tooltip.value field="net_sales" label="Net Sales" prefix="$" />
+                <flux:chart.tooltip.value field="orders_count" label="Orders" />
+            </flux:chart.tooltip>
+        </flux:chart>
     </flux:card>
     @endif
 
