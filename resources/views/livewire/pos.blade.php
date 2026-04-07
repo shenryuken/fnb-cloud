@@ -868,10 +868,16 @@
                                 <div class="flex items-center gap-6">
                                     <div class="flex-1 relative group">
                                         <div class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-300 group-focus-within:text-blue-500 transition-colors">$</div>
-                                        <input type="number" step="0.01" wire:model.live="amountReceived"
-                                            class="w-full pl-12 pr-6 py-6 text-4xl font-black rounded-2xl border-none bg-neutral-50 dark:bg-neutral-800 focus:ring-4 focus:ring-blue-500/10 transition-all tracking-tighter text-neutral-800 dark:text-neutral-100 shadow-inner text-right"
-                                            onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)) this.value=n.toFixed(2)"
-                                            onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)?n.toFixed(2):'0.00'">
+                                        <input type="number" step="0.01" min="0" wire:model.live="amountReceived"
+                                            class="w-full pl-12 pr-16 py-6 text-4xl font-black rounded-2xl border-none bg-neutral-50 dark:bg-neutral-800 focus:ring-4 focus:ring-blue-500/10 transition-all tracking-tighter text-neutral-800 dark:text-neutral-100 shadow-inner text-right"
+                                            placeholder="0.00"
+                                            onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)&&n>0) this.value=n.toFixed(2); else this.value=''"
+                                            onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)&&n>0?n.toFixed(2):'0.00'">
+                                        <button type="button" wire:click="clearAmountReceived"
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all"
+                                            title="Clear amount">
+                                            <flux:icon.x-mark class="w-4 h-4" />
+                                        </button>
                                     </div>
                                     <div class="flex-1 flex justify-between items-center p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-100 dark:border-emerald-800/30">
                                         <div class="flex flex-col">
