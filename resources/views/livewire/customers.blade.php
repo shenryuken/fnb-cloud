@@ -65,54 +65,54 @@
     @endif
 
     {{-- Table --}}
-    <flux:table :paginate="$customers">
-        <flux:table.columns>
-            <flux:table.column class="py-3 px-4">Customer</flux:table.column>
-            <flux:table.column class="py-3 px-4">Email</flux:table.column>
-            <flux:table.column class="py-3 px-4">Mobile</flux:table.column>
-            <flux:table.column class="py-3 px-4">Points</flux:table.column>
-            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
-        </flux:table.columns>
-
-        <flux:table.rows>
-            @forelse($customers as $customer)
-                <flux:table.row>
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-semibold">{{ $customer->name }}</flux:text>
-                        <flux:text size="sm" class="text-zinc-400">ID: #{{ $customer->id }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text size="sm">{{ $customer->email ?? '—' }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text size="sm">{{ $customer->mobile ?? '—' }}</flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:badge color="blue">{{ (int) $customer->points_balance }} pts</flux:badge>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $customer->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $customer->id }})" wire:confirm="Delete this customer?" class="text-red-500 hover:text-red-600" />
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="5" class="py-24 text-center">
-                        <div class="flex flex-col items-center gap-3">
-                            <flux:icon.users class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                            <flux:heading>No customers yet</flux:heading>
-                            <flux:subheading>Add your first customer to get started.</flux:subheading>
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
+    <flux:card class="p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Customer</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Email</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Mobile</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Points</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($customers as $customer)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            <td class="py-3 px-4">
+                                <span class="font-semibold">{{ $customer->name }}</span>
+                                <div class="text-xs text-zinc-400">ID: #{{ $customer->id }}</div>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-zinc-600 dark:text-zinc-400">{{ $customer->email ?? '—' }}</td>
+                            <td class="py-3 px-4 text-sm text-zinc-600 dark:text-zinc-400">{{ $customer->mobile ?? '—' }}</td>
+                            <td class="py-3 px-4">
+                                <flux:badge color="blue">{{ (int) $customer->points_balance }} pts</flux:badge>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $customer->id }})" />
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $customer->id }})" wire:confirm="Delete this customer?" class="text-red-500 hover:text-red-600" />
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <flux:icon.users class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                    <flux:heading>No customers yet</flux:heading>
+                                    <flux:subheading>Add your first customer to get started.</flux:subheading>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800">
+            {{ $customers->links() }}
+        </div>
+    </flux:card>
 
 </div>

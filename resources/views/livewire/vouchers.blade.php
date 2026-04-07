@@ -93,76 +93,77 @@
     @endif
 
     {{-- Table --}}
-    <flux:table :paginate="$vouchers">
-        <flux:table.columns>
-            <flux:table.column class="py-3 px-4">Code</flux:table.column>
-            <flux:table.column class="py-3 px-4">Type</flux:table.column>
-            <flux:table.column class="py-3 px-4">Value</flux:table.column>
-            <flux:table.column class="py-3 px-4">Usage</flux:table.column>
-            <flux:table.column class="py-3 px-4">Status</flux:table.column>
-            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
-        </flux:table.columns>
-
-        <flux:table.rows>
-            @forelse($vouchers as $voucher)
-                <flux:table.row>
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-black uppercase tracking-wider">{{ $voucher->code }}</flux:text>
-                        @if($voucher->name)
-                            <flux:text size="sm" class="text-zinc-400">{{ $voucher->name }}</flux:text>
-                        @endif
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:badge color="zinc" size="sm">{{ $voucher->type === 'fixed' ? 'Fixed' : 'Percent' }}</flux:badge>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text class="font-black text-blue-600">
-                            @if($voucher->type === 'fixed')
-                                ${{ number_format((float) $voucher->value, 2) }}
-                            @else
-                                {{ rtrim(rtrim(number_format((float) $voucher->value, 2), '0'), '.') }}%
-                            @endif
-                        </flux:text>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:text size="sm" class="tabular-nums">
-                            {{ (int) $voucher->usage_count }}@if($voucher->usage_limit) / {{ (int) $voucher->usage_limit }}@endif
-                        </flux:text>
-                        @if($voucher->usage_limit)
-                            <div class="w-20 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-1 overflow-hidden">
-                                <div class="h-full bg-blue-500 rounded-full" style="width: {{ min(100, ($voucher->usage_count / $voucher->usage_limit) * 100) }}%"></div>
-                            </div>
-                        @endif
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4">
-                        <flux:badge :color="$voucher->is_active ? 'green' : 'red'" size="sm">
-                            {{ $voucher->is_active ? 'Active' : 'Inactive' }}
-                        </flux:badge>
-                    </flux:table.cell>
-
-                    <flux:table.cell class="py-3 px-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $voucher->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $voucher->id }})" wire:confirm="Delete this voucher?" class="text-red-500 hover:text-red-600" />
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="6" class="py-24 text-center">
-                        <div class="flex flex-col items-center gap-3">
-                            <flux:icon.tag class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
-                            <flux:heading>No vouchers yet</flux:heading>
-                            <flux:subheading>Create your first voucher to start offering discounts.</flux:subheading>
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
+    <flux:card class="p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Code</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Type</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Value</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Usage</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($vouchers as $voucher)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            <td class="py-3 px-4">
+                                <span class="font-black uppercase tracking-wider">{{ $voucher->code }}</span>
+                                @if($voucher->name)
+                                    <div class="text-xs text-zinc-400">{{ $voucher->name }}</div>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4">
+                                <flux:badge color="zinc" size="sm">{{ $voucher->type === 'fixed' ? 'Fixed' : 'Percent' }}</flux:badge>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-black text-blue-600">
+                                    @if($voucher->type === 'fixed')
+                                        ${{ number_format((float) $voucher->value, 2) }}
+                                    @else
+                                        {{ rtrim(rtrim(number_format((float) $voucher->value, 2), '0'), '.') }}%
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="text-sm tabular-nums">{{ (int) $voucher->usage_count }}@if($voucher->usage_limit) / {{ (int) $voucher->usage_limit }}@endif</span>
+                                @if($voucher->usage_limit)
+                                    <div class="w-20 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-1 overflow-hidden">
+                                        <div class="h-full bg-blue-500 rounded-full" style="width: {{ min(100, ($voucher->usage_count / $voucher->usage_limit) * 100) }}%"></div>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4">
+                                <flux:badge :color="$voucher->is_active ? 'green' : 'red'" size="sm">
+                                    {{ $voucher->is_active ? 'Active' : 'Inactive' }}
+                                </flux:badge>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $voucher->id }})" />
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $voucher->id }})" wire:confirm="Delete this voucher?" class="text-red-500 hover:text-red-600" />
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <flux:icon.tag class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                    <flux:heading>No vouchers yet</flux:heading>
+                                    <flux:subheading>Create your first voucher to start offering discounts.</flux:subheading>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800">
+            {{ $vouchers->links() }}
+        </div>
+    </flux:card>
 
 </div>
