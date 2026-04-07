@@ -7,10 +7,104 @@
         
         <div class="flex items-center gap-3">
             <div class="px-4 py-2 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex items-center gap-3">
-                <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total Orders</span>
+                <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest">{{ $hasActiveFilters ? 'Filtered' : 'Total Orders' }}</span>
                 <span class="text-xl font-black text-blue-600">{{ $orders->total() }}</span>
             </div>
         </div>
+    </div>
+
+    {{-- Filters Bar --}}
+    <div class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm p-4">
+        <div class="flex flex-col lg:flex-row gap-3">
+            {{-- Search --}}
+            <div class="relative flex-1 min-w-0">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <flux:icon.magnifying-glass class="w-4 h-4 text-neutral-400" />
+                </div>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Search by order ID, customer, table, voucher..."
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                />
+            </div>
+
+            {{-- Status Filter --}}
+            <select
+                wire:model.live="statusFilter"
+                class="appearance-none px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-bold text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all min-w-[140px]">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+
+            {{-- Order Type Filter --}}
+            <select
+                wire:model.live="orderTypeFilter"
+                class="appearance-none px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-bold text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all min-w-[140px]">
+                <option value="">All Types</option>
+                <option value="dine_in">Dine-in</option>
+                <option value="takeaway">Takeaway</option>
+            </select>
+
+            {{-- Date Range --}}
+            <div class="flex items-center gap-2">
+                <input
+                    type="date"
+                    wire:model.live="dateFrom"
+                    class="px-3 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                    title="Date from"
+                />
+                <span class="text-neutral-400 text-sm font-bold shrink-0">to</span>
+                <input
+                    type="date"
+                    wire:model.live="dateTo"
+                    class="px-3 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                    title="Date to"
+                />
+            </div>
+
+            {{-- Clear Filters --}}
+            @if($hasActiveFilters)
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-all shrink-0">
+                    <flux:icon.x-mark class="w-4 h-4" />
+                    Clear
+                </button>
+            @endif
+        </div>
+
+        {{-- Active filter chips --}}
+        @if($hasActiveFilters)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Active Filters:</span>
+                @if($search !== '')
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                        <flux:icon.magnifying-glass class="w-3 h-3" /> "{{ $search }}"
+                    </span>
+                @endif
+                @if($statusFilter !== '')
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        Status: {{ $statusFilter }}
+                    </span>
+                @endif
+                @if($orderTypeFilter !== '')
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/40 text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                        Type: {{ str_replace('_', '-', $orderTypeFilter) }}
+                    </span>
+                @endif
+                @if($dateFrom !== '' || $dateTo !== '')
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 text-[10px] font-black text-green-600 dark:text-green-400 uppercase tracking-wider">
+                        <flux:icon.calendar class="w-3 h-3" />
+                        {{ $dateFrom ?: '...' }} &rarr; {{ $dateTo ?: '...' }}
+                    </span>
+                @endif
+            </div>
+        @endif
     </div>
 
     <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl shadow-neutral-200/50 dark:shadow-none overflow-hidden">
@@ -119,11 +213,23 @@
                             <td colspan="7" class="px-8 py-24 text-center">
                                 <div class="flex flex-col items-center gap-4 max-w-xs mx-auto">
                                     <div class="w-20 h-20 rounded-full bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
-                                        <flux:icon.clipboard-list class="w-10 h-10 text-neutral-200 dark:text-neutral-800" />
+                                        @if($hasActiveFilters)
+                                            <flux:icon.funnel class="w-10 h-10 text-neutral-200 dark:text-neutral-800" />
+                                        @else
+                                            <flux:icon.clipboard-list class="w-10 h-10 text-neutral-200 dark:text-neutral-800" />
+                                        @endif
                                     </div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100">No orders found</h3>
-                                        <p class="text-sm text-neutral-500">Transactions will appear here once they are processed in the POS.</p>
+                                        @if($hasActiveFilters)
+                                            <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100">No orders match your filters</h3>
+                                            <p class="text-sm text-neutral-500">Try adjusting your search or filter criteria.</p>
+                                            <button type="button" wire:click="clearFilters" class="mt-3 text-xs font-black text-blue-600 hover:underline uppercase tracking-widest">
+                                                Clear all filters
+                                            </button>
+                                        @else
+                                            <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100">No orders found</h3>
+                                            <p class="text-sm text-neutral-500">Transactions will appear here once they are processed in the POS.</p>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
