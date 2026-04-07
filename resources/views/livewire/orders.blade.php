@@ -6,7 +6,7 @@
             <flux:heading size="xl" level="2">Order History</flux:heading>
             <flux:subheading>Manage and track all restaurant transactions</flux:subheading>
         </div>
-        <flux:badge color="blue" size="lg">
+        <flux:badge color="blue">
             {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
         </flux:badge>
     </div>
@@ -188,7 +188,7 @@
     </flux:card>
 
     {{-- Order Detail Modal --}}
-    <flux:modal name="order-detail" :show="$showOrderModal && $viewingOrder !== null" wire:close="closeOrder" class="max-w-3xl w-full">
+    <flux:modal name="order-detail" wire:model="showOrderModal" class="max-w-3xl w-full">
         @if($viewingOrder)
             <div class="flex items-center gap-4 mb-6">
                 <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shrink-0">
