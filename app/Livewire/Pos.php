@@ -642,8 +642,14 @@ class Pos extends Component
         $this->splitMethod = 'cash';
         $this->splitAmount = 0;
         $this->splitRemaining = 0;
-        $this->amountReceived = (float) $this->totalAmount;
-        $this->calculateChange();
+        $this->amountReceived = 0.00;
+        $this->changeAmount = 0.00;
+    }
+
+    public function clearAmountReceived(): void
+    {
+        $this->amountReceived = 0.00;
+        $this->changeAmount = 0.00;
     }
 
     public function addQuickAmount(float $amount): void
