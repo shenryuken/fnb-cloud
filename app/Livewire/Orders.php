@@ -85,12 +85,14 @@ class Orders extends Component
             'user',
         ]);
         $this->showOrderModal = true;
+        $this->dispatch('modal:open', name: 'order-detail');
     }
 
     public function closeOrder(): void
     {
         $this->showOrderModal = false;
         $this->viewingOrder = null;
+        $this->dispatch('modal:close', name: 'order-detail');
     }
 
     public function render()
