@@ -72,19 +72,19 @@
     {{-- Table --}}
     <flux:table :paginate="$orders">
         <flux:table.columns>
-            <flux:table.column>Order</flux:table.column>
-            <flux:table.column>Status</flux:table.column>
-            <flux:table.column>Customer / Table</flux:table.column>
-            <flux:table.column>Items</flux:table.column>
-            <flux:table.column>Amount</flux:table.column>
-            <flux:table.column>Time</flux:table.column>
-            <flux:table.column class="text-right">Actions</flux:table.column>
+            <flux:table.column class="py-3 px-4">Order</flux:table.column>
+            <flux:table.column class="py-3 px-4">Status</flux:table.column>
+            <flux:table.column class="py-3 px-4">Customer / Table</flux:table.column>
+            <flux:table.column class="py-3 px-4">Items</flux:table.column>
+            <flux:table.column class="py-3 px-4">Amount</flux:table.column>
+            <flux:table.column class="py-3 px-4">Time</flux:table.column>
+            <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
             @forelse($orders as $order)
                 <flux:table.row wire:click="openOrder({{ $order->id }})" class="cursor-pointer">
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
                                 #{{ $order->id }}
@@ -92,7 +92,7 @@
                         </div>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         @php
                             $statusColor = match($order->status) {
                                 'completed' => 'green',
@@ -104,7 +104,7 @@
                         <flux:badge :color="$statusColor" size="sm">{{ $order->status }}</flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-semibold">
                             {{ $order->customer?->name ?: ($order->table_number ? 'Table ' . $order->table_number : 'Walk-in') }}
                         </flux:text>
@@ -114,7 +114,7 @@
                         <flux:text size="sm" class="text-zinc-400">Server: {{ $order->user?->name ?? 'System' }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <div class="flex flex-wrap gap-1.5 max-w-[180px]">
                             @foreach($order->items->take(5) as $item)
                                 <div class="relative h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-500 overflow-visible" title="{{ $item->product?->name }}">
@@ -134,17 +134,17 @@
                         </div>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-black">${{ number_format($order->total_amount, 2) }}</flux:text>
                         <flux:text size="sm" class="text-zinc-400 uppercase">{{ $order->payment_method }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="py-3 px-4">
                         <flux:text class="font-semibold">{{ $order->created_at->format('M d, H:i') }}</flux:text>
                         <flux:text size="sm" class="text-zinc-400">{{ $order->created_at->diffForHumans() }}</flux:text>
                     </flux:table.cell>
 
-                    <flux:table.cell class="text-right">
+                    <flux:table.cell class="py-3 px-4 text-right">
                         <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
                             <flux:button
                                 size="sm"

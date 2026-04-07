@@ -66,36 +66,36 @@
     <flux:card class="p-0 overflow-hidden">
         <flux:table>
             <flux:table.columns>
-                <flux:table.column>Order</flux:table.column>
-                <flux:table.column>Category</flux:table.column>
-                <flux:table.column>Description</flux:table.column>
-                <flux:table.column class="text-center">Status</flux:table.column>
-                <flux:table.column class="text-right">Actions</flux:table.column>
+                <flux:table.column class="py-3 px-4">Order</flux:table.column>
+                <flux:table.column class="py-3 px-4">Category</flux:table.column>
+                <flux:table.column class="py-3 px-4">Description</flux:table.column>
+                <flux:table.column class="py-3 px-4 text-center">Status</flux:table.column>
+                <flux:table.column class="py-3 px-4 text-right">Actions</flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @forelse($categories as $category)
                     <flux:table.row>
-                        <flux:table.cell>
+                        <flux:table.cell class="py-3 px-4">
                             <flux:badge color="zinc" size="sm">{{ $category->sort_order }}</flux:badge>
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="py-3 px-4">
                             <flux:text class="font-semibold">{{ $category->name }}</flux:text>
                             <flux:text size="sm" class="text-zinc-400">ID: #{{ $category->id }}</flux:text>
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="py-3 px-4">
                             <flux:text size="sm" class="text-zinc-500">{{ $category->description ?? '—' }}</flux:text>
                         </flux:table.cell>
 
-                        <flux:table.cell class="text-center">
+                        <flux:table.cell class="py-3 px-4 text-center">
                             <flux:badge :color="$category->is_active ? 'green' : 'zinc'" size="sm">
                                 {{ $category->is_active ? 'Active' : 'Hidden' }}
                             </flux:badge>
                         </flux:table.cell>
 
-                        <flux:table.cell class="text-right">
+                        <flux:table.cell class="py-3 px-4 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $category->id }})" />
                                 <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $category->id }})" wire:confirm="Permanently delete this category?" class="text-red-500 hover:text-red-600" />
