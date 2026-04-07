@@ -23,8 +23,9 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    /* Flux accent = brand blue */
+    --color-accent: #2563eb;
+    --color-accent-content: #2563eb;
     --color-accent-foreground: var(--color-white);
 }
 
