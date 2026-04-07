@@ -19,15 +19,15 @@
                     <div class="grid grid-cols-2 gap-3">
                         <flux:field>
                             <flux:label>Points</flux:label>
-                            <flux:input type="number" wire:model="earn_points" placeholder="1" class="text-right tabular-nums" />
+                            <flux:input type="number" wire:model="points_earn_points" placeholder="1" class="text-right tabular-nums" />
                         </flux:field>
                         <flux:field>
                             <flux:label>Per RM</flux:label>
-                            <flux:input type="number" step="0.01" wire:model="earn_per_rm" placeholder="1.00" class="text-right tabular-nums" />
+                            <flux:input type="number" step="0.01" wire:model="points_earn_amount" placeholder="1.00" class="text-right tabular-nums" />
                         </flux:field>
                     </div>
                     <flux:text size="xs" class="text-zinc-400">
-                        {{ $earn_points ?? 1 }} pt per RM {{ number_format((float)($earn_per_rm ?? 1), 2) }} spent
+                        {{ $points_earn_points ?? 1 }} pt per RM {{ number_format((float)($points_earn_amount ?? 1), 2) }} spent
                     </flux:text>
                 </div>
 
@@ -37,15 +37,15 @@
                     <div class="grid grid-cols-2 gap-3">
                         <flux:field>
                             <flux:label>Points</flux:label>
-                            <flux:input type="number" wire:model="redeem_points" placeholder="100" class="text-right tabular-nums" />
+                            <flux:input type="number" wire:model="points_redeem_points" placeholder="100" class="text-right tabular-nums" />
                         </flux:field>
                         <flux:field>
                             <flux:label>Equals RM</flux:label>
-                            <flux:input type="number" step="0.01" wire:model="redeem_rm" placeholder="1.00" class="text-right tabular-nums" />
+                            <flux:input type="number" step="0.01" wire:model="points_redeem_amount" placeholder="1.00" class="text-right tabular-nums" />
                         </flux:field>
                     </div>
                     <flux:text size="xs" class="text-zinc-400">
-                        {{ $redeem_points ?? 100 }} pts = RM {{ number_format((float)($redeem_rm ?? 1), 2) }}
+                        {{ $points_redeem_points ?? 100 }} pts = RM {{ number_format((float)($points_redeem_amount ?? 1), 2) }}
                     </flux:text>
                 </div>
 
@@ -54,7 +54,7 @@
                     <flux:heading size="sm">Min. Redemption</flux:heading>
                     <flux:field>
                         <flux:label>Minimum Points</flux:label>
-                        <flux:input type="number" wire:model="min_redeem_points" placeholder="0" class="text-right tabular-nums" />
+                        <flux:input type="number" wire:model="points_min_redeem" placeholder="0" class="text-right tabular-nums" />
                         <flux:description>0 = no minimum</flux:description>
                     </flux:field>
                 </div>
@@ -65,25 +65,25 @@
         <flux:card class="flex flex-col gap-5">
             <div class="flex items-center justify-between">
                 <flux:heading size="sm" class="text-zinc-400 uppercase tracking-widest text-xs font-black">Points Promotion</flux:heading>
-                <flux:switch wire:model.live="promo_enabled" />
+                <flux:switch wire:model.live="points_promo_is_enabled" />
             </div>
 
-            @if($promo_enabled)
+            @if($points_promo_is_enabled)
                 <div class="grid md:grid-cols-3 gap-4">
                     <flux:field>
                         <flux:label>Multiplier</flux:label>
-                        <flux:input type="number" step="0.1" wire:model="promo_multiplier" placeholder="2" />
+                        <flux:input type="number" step="0.1" wire:model="points_promo_multiplier" placeholder="2" />
                         <flux:description>2 = double, 3 = triple</flux:description>
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Starts At</flux:label>
-                        <flux:input type="datetime-local" wire:model="promo_starts_at" />
+                        <flux:input type="datetime-local" wire:model="points_promo_starts_at" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Ends At</flux:label>
-                        <flux:input type="datetime-local" wire:model="promo_ends_at" />
+                        <flux:input type="datetime-local" wire:model="points_promo_ends_at" />
                     </flux:field>
                 </div>
             @endif
