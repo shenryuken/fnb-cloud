@@ -339,17 +339,17 @@
                             <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" square />
                             
                             <flux:menu>
-                                <flux:menu.item icon="clipboard-document" wire:click="copyProduct({{ $product->id }})">
-                                    Copy + View
+                                <flux:menu.item icon="clipboard-document" wire:click="duplicateWithVariants({{ $product->id }})">
+                                    Copy + Variants
                                 </flux:menu.item>
-                                <flux:menu.item icon="document-duplicate" wire:click="duplicateProduct({{ $product->id }})">
-                                    Duplicate
+                                <flux:menu.item icon="document-duplicate" wire:click="duplicateWithoutVariants({{ $product->id }})">
+                                    Copy
                                 </flux:menu.item>
                                 <flux:menu.separator />
                                 <flux:menu.item icon="pencil" wire:click="edit({{ $product->id }})">
                                     Edit
                                 </flux:menu.item>
-                                <flux:menu.item icon="trash" variant="danger" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Are you sure you want to delete this product?">
+                                <flux:menu.item icon="trash" variant="danger" wire:click="delete({{ $product->id }})" wire:confirm="Are you sure you want to delete this product?">
                                     Delete
                                 </flux:menu.item>
                             </flux:menu>
