@@ -234,21 +234,22 @@
                 <flux:tab.panel name="addon-groups">
                     <div class="space-y-2 mt-4">
                         @forelse(\App\Models\AddonGroup::all() as $group)
-                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="addon-group-{{ $group->id }}">
-                                <flux:checkbox wire:model.live="selectedGroups" value="{{ $group->id }}">
-                                    <div class="flex items-center justify-between flex-1">
+                            <flux:card class="p-4 hover:bg-zinc-800/30 transition-colors" wire:key="addon-group-{{ $group->id }}">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <flux:checkbox wire:model.live="selectedGroups" value="{{ $group->id }}" class="mt-1" />
+                                    <div class="flex-1 flex items-center justify-between">
                                         <div>
-                                            <div class="font-semibold text-sm">{{ $group->name }}</div>
+                                            <div class="font-semibold text-white">{{ $group->name }}</div>
                                             <flux:text size="xs" class="text-zinc-400">{{ $group->items->count() }} item(s) in this group</flux:text>
                                         </div>
                                         <flux:badge size="sm" color="zinc">{{ $group->items->count() }}</flux:badge>
                                     </div>
-                                </flux:checkbox>
+                                </label>
                             </flux:card>
                         @empty
                             <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
                                 <flux:icon.squares-2x2 class="w-8 h-8 text-zinc-500 mb-2" />
-                                <flux:text size="xs" class="text-zinc-500">No add-on groups available</flux:text>
+                                <flux:text size="sm" class="text-zinc-500">No add-on groups available</flux:text>
                                 <flux:text size="xs" class="text-zinc-600">Configure groups to get started</flux:text>
                             </div>
                         @endforelse
@@ -258,18 +259,19 @@
                 <flux:tab.panel name="standalone">
                     <div class="space-y-2 mt-4">
                         @forelse(\App\Models\ProductAddon::whereNull('addon_group_id')->get() as $addon)
-                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="standalone-addon-{{ $addon->id }}">
-                                <flux:checkbox wire:model.live="selectedStandaloneAddons" value="{{ $addon->id }}">
-                                    <div class="flex items-center justify-between flex-1">
+                            <flux:card class="p-4 hover:bg-zinc-800/30 transition-colors" wire:key="standalone-addon-{{ $addon->id }}">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <flux:checkbox wire:model.live="selectedStandaloneAddons" value="{{ $addon->id }}" class="mt-1" />
+                                    <div class="flex-1 flex items-center justify-between">
                                         <div>
-                                            <div class="font-semibold text-sm">{{ $addon->name }}</div>
+                                            <div class="font-semibold text-white">{{ $addon->name }}</div>
                                             @if($addon->description)
                                                 <flux:text size="xs" class="text-zinc-400">{{ $addon->description }}</flux:text>
                                             @endif
                                         </div>
                                         <flux:badge size="sm" color="blue">+${{ number_format($addon->price, 2) }}</flux:badge>
                                     </div>
-                                </flux:checkbox>
+                                </label>
                             </flux:card>
                         @empty
                             <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
