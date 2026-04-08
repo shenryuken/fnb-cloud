@@ -114,6 +114,31 @@
                         @endif
                     </div>
 
+                    {{-- Active Status & Display Priority --}}
+                    <flux:separator />
+                    
+                    <div class="space-y-4">
+                        <flux:heading size="md" class="text-zinc-300">Settings</flux:heading>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <flux:field>
+                                <flux:label>Active Status</flux:label>
+                                <flux:switch wire:model.live="is_active" />
+                                <flux:description>
+                                    @if($is_active)
+                                        <span class="text-green-400 font-semibold">Visible in POS</span>
+                                    @else
+                                        <span class="text-red-400 font-semibold">Hidden from POS</span>
+                                    @endif
+                                </flux:description>
+                            </flux:field>
+
+                            <flux:input wire:model="sort_order" type="number" label="Display Order" placeholder="1" />
+                        </div>
+                        @error('is_active') <flux:error>{{ $message }}</flux:error> @enderror
+                        @error('sort_order') <flux:error>{{ $message }}</flux:error> @enderror
+                    </div>
+
                     @if($product_type === 'set')
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
