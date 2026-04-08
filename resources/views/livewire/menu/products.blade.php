@@ -234,23 +234,21 @@
                 <flux:tab.panel name="addon-groups">
                     <div class="space-y-2 mt-4">
                         @forelse(\App\Models\AddonGroup::all() as $group)
-                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="addon-group-{{ $group->id }}">
-                                <flux:checkbox wire:model.live="selectedGroups" value="{{ $group->id }}">
-                                    <flux:checkbox.indicator />
-                                    <div class="flex-1 flex items-center justify-between">
-                                        <div>
-                                            <div class="font-semibold text-sm">{{ $group->name }}</div>
-                                            <flux:text size="xs" class="text-zinc-400">{{ $group->items->count() }} item(s) in this group</flux:text>
-                                        </div>
-                                        <flux:badge size="sm" color="zinc">{{ $group->items->count() }}</flux:badge>
+                            <div class="flex items-center gap-3 p-4 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:bg-zinc-800/50 transition-colors" wire:key="addon-group-{{ $group->id }}">
+                                <flux:checkbox wire:model.live="selectedGroups" value="{{ $group->id }}" />
+                                <div class="flex-1 flex items-center justify-between min-w-0">
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-sm text-white truncate">{{ $group->name }}</div>
+                                        <div class="text-xs text-zinc-400">{{ $group->items->count() }} item(s) in this group</div>
                                     </div>
-                                </flux:checkbox>
-                            </flux:card>
+                                    <flux:badge size="sm" color="zinc" class="ml-3 shrink-0">{{ $group->items->count() }}</flux:badge>
+                                </div>
+                            </div>
                         @empty
                             <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
                                 <flux:icon.squares-2x2 class="w-8 h-8 text-zinc-500 mb-2" />
-                                <flux:text size="sm" class="text-zinc-500">No add-on groups available</flux:text>
-                                <flux:text size="xs" class="text-zinc-600">Configure groups to get started</flux:text>
+                                <div class="text-sm text-zinc-500">No add-on groups available</div>
+                                <div class="text-xs text-zinc-600">Configure groups to get started</div>
                             </div>
                         @endforelse
                     </div>
@@ -259,25 +257,23 @@
                 <flux:tab.panel name="standalone">
                     <div class="space-y-2 mt-4">
                         @forelse(\App\Models\ProductAddon::whereNull('addon_group_id')->get() as $addon)
-                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="standalone-addon-{{ $addon->id }}">
-                                <flux:checkbox wire:model.live="selectedStandaloneAddons" value="{{ $addon->id }}">
-                                    <flux:checkbox.indicator />
-                                    <div class="flex-1 flex items-center justify-between">
-                                        <div>
-                                            <div class="font-semibold text-sm">{{ $addon->name }}</div>
-                                            @if($addon->description)
-                                                <flux:text size="xs" class="text-zinc-400">{{ $addon->description }}</flux:text>
-                                            @endif
-                                        </div>
-                                        <flux:badge size="sm" color="blue">+${{ number_format($addon->price, 2) }}</flux:badge>
+                            <div class="flex items-center gap-3 p-4 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:bg-zinc-800/50 transition-colors" wire:key="standalone-addon-{{ $addon->id }}">
+                                <flux:checkbox wire:model.live="selectedStandaloneAddons" value="{{ $addon->id }}" />
+                                <div class="flex-1 flex items-center justify-between min-w-0">
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-sm text-white truncate">{{ $addon->name }}</div>
+                                        @if($addon->description)
+                                            <div class="text-xs text-zinc-400 truncate">{{ $addon->description }}</div>
+                                        @endif
                                     </div>
-                                </flux:checkbox>
-                            </flux:card>
+                                    <flux:badge size="sm" color="blue" class="ml-3 shrink-0">+${{ number_format($addon->price, 2) }}</flux:badge>
+                                </div>
+                            </div>
                         @empty
                             <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
                                 <flux:icon.plus-circle class="w-8 h-8 text-zinc-500 mb-2" />
-                                <flux:text size="sm" class="text-zinc-500">No standalone extras available</flux:text>
-                                <flux:text size="xs" class="text-zinc-600">Add individual extras from settings</flux:text>
+                                <div class="text-sm text-zinc-500">No standalone extras available</div>
+                                <div class="text-xs text-zinc-600">Add individual extras from settings</div>
                             </div>
                         @endforelse
                     </div>
