@@ -133,26 +133,44 @@
                                             <flux:input wire:model.live="set_groups.{{ $gIndex }}.sort_order" type="number" label="Order" />
                                         </div>
 
-                                        <div class="flex items-center justify-between">
-                                            <flux:text size="sm" class="text-zinc-400 font-bold">Choices</flux:text>
-                                            <flux:button wire:click="addSetGroupItem({{ $gIndex }})" size="xs" variant="ghost">+ Add Item</flux:button>
+                                        <div class="flex items-center justify-between pt-2">
+                                            <flux:heading size="sm" class="text-zinc-300">Choices</flux:heading>
+                                            <flux:button wire:click="addSetGroupItem({{ $gIndex }})" size="sm" icon="plus" variant="primary">Add Item</flux:button>
                                         </div>
 
                                         <div class="space-y-3">
                                             @foreach(($group['items'] ?? []) as $iIndex => $item)
-                                                <div class="flex gap-3 items-end">
-                                                    <flux:select wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.product_id" class="flex-1" placeholder="Select product">
-                                                        @foreach($allProducts as $p)
-                                                            <option value="{{ $p->id }}">{{ $p->name }} (${{ number_format((float) $p->price, 2) }})</option>
-                                                        @endforeach
-                                                    </flux:select>
-                                                    @error("set_groups.$gIndex.items.$iIndex.product_id") <flux:error>{{ $message }}</flux:error> @enderror
+                                                <flux:card class="p-4 bg-zinc-800/50 border-zinc-700">
+                                                    <div class="flex items-start gap-3">
+                                                        <div class="flex-1 space-y-3">
+                                                            <div>
+                                                                <flux:label class="text-xs text-zinc-400 mb-1">Product</flux:label>
+                                                                <flux:select wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.product_id" placeholder="Select product">
+                                                                    @foreach($allProducts as $p)
+                                                                        <option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</option>
+                                                                    @endforeach
+                                                                </flux:select>
+                                                                @error("set_groups.$gIndex.items.$iIndex.product_id") <flux:error class="text-xs mt-1">{{ $message }}</flux:error> @enderror
+                                                            </div>
+                                                            
+                                                            <div class="grid grid-cols-2 gap-3">
+                                                                <flux:input wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.extra_price" type="number" step="0.01" label="Extra Price" placeholder="0.00" icon="currency-dollar" />
+                                                                <flux:input wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.sort_order" type="number" label="Display Order" placeholder="1" />
+                                                            </div>
+                                                        </div>
 
-                                                    <flux:input wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.extra_price" type="number" step="0.01" placeholder="Extra $" class="w-24" />
-                                                    <flux:input wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.sort_order" type="number" class="w-16" />
-                                                    <flux:button wire:click="removeSetGroupItem({{ $gIndex }}, {{ $iIndex }})" icon="x-mark" variant="danger" square />
-                                                </div>
+                                                        <flux:button wire:click="removeSetGroupItem({{ $gIndex }}, {{ $iIndex }})" icon="trash" variant="danger" size="sm" class="mt-6" />
+                                                    </div>
+                                                </flux:card>
                                             @endforeach
+
+                                            @if(empty($group['items'] ?? []))
+                                                <div class="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-zinc-700 rounded-xl">
+                                                    <flux:icon.shopping-bag class="w-8 h-8 text-zinc-500 mb-2" />
+                                                    <flux:text size="sm" class="text-zinc-500">No items added yet</flux:text>
+                                                    <flux:text size="xs" class="text-zinc-600">Click "Add Item" to get started</flux:text>
+                                                </div>
+                                            @endif
                                         </div>
                                     </flux:card>
                                 @endforeach
