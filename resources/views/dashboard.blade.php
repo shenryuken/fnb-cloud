@@ -68,7 +68,102 @@
             </flux:card>
         </div>
 
-        {{-- Main Content Grid --}}
+        {{-- Sales Trend Chart --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <flux:card class="p-0 overflow-hidden">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700">
+                        <div>
+                            <flux:heading size="lg">Sales Trend</flux:heading>
+                            <flux:text size="sm" class="text-zinc-400">Last 7 days revenue</flux:text>
+                        </div>
+                        <flux:icon.chart-bar class="w-5 h-5 text-zinc-400" />
+                    </div>
+                    <div class="p-6">
+                        <div class="h-64 flex items-end justify-between gap-2">
+                            @php
+                                $maxValue = 35;
+                                $chartData = [
+                                    ['date' => 'Apr 02', 'value' => 0],
+                                    ['date' => 'Apr 03', 'value' => 0],
+                                    ['date' => 'Apr 04', 'value' => 0],
+                                    ['date' => 'Apr 05', 'value' => 0],
+                                    ['date' => 'Apr 06', 'value' => 5],
+                                    ['date' => 'Apr 07', 'value' => 30],
+                                    ['date' => 'Apr 08', 'value' => 10],
+                                ];
+                            @endphp
+                            
+                            <svg class="w-full h-full" viewBox="0 0 700 256" preserveAspectRatio="none">
+                                <!-- Grid lines -->
+                                @for($i = 0; $i <= 4; $i++)
+                                    <line x1="0" y1="{{ $i * 64 }}" x2="700" y2="{{ $i * 64 }}" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                @endfor
+                                
+                                <!-- Area fill -->
+                                <defs>
+                                    <linearGradient id="salesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(236, 72, 153);stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:rgb(236, 72, 153);stop-opacity:0" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                @php
+                                    $points = collect($chartData)->map(function($item, $index) use ($maxValue) {
+                                        $x = ($index / 6) * 700;
+                                        $y = 256 - (($item['value'] / 35) * 256);
+                                        return "$x,$y";
+                                    })->join(' ');
+                                    $areaPoints = "0,256 " . $points . " 700,256";
+                                @endphp
+                                
+                                <polyline points="{{ $points }}" fill="none" stroke="rgb(236, 72, 153)" stroke-width="3" />
+                                <polygon points="{{ $areaPoints }}" fill="url(#salesGradient)" />
+                                
+                                <!-- Data points -->
+                                @foreach($chartData as $index => $item)
+                                    @php
+                                        $x = ($index / 6) * 700;
+                                        $y = 256 - (($item['value'] / 35) * 256);
+                                    @endphp
+                                    <circle cx="{{ $x }}" cy="{{ $y }}" r="4" fill="rgb(236, 72, 153)" stroke="white" stroke-width="2" />
+                                @endforeach
+                            </svg>
+                        </div>
+                        
+                        <!-- X-axis labels -->
+                        <div class="flex justify-between mt-4">
+                            @foreach($chartData as $item)
+                                <div class="text-xs text-zinc-500">{{ $item['date'] }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </flux:card>
+            </div>
+
+            {{-- Low Stock Alerts --}}
+            <div>
+                <flux:card class="p-0 overflow-hidden">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700">
+                        <div>
+                            <flux:heading size="lg">Low Stock Alerts</flux:heading>
+                            <flux:text size="sm" class="text-zinc-400">Products running low</flux:text>
+                        </div>
+                        <flux:icon.exclamation-triangle class="w-5 h-5 text-yellow-500" />
+                    </div>
+                    <div class="p-6">
+                        <div class="flex flex-col items-center justify-center py-12">
+                            <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
+                                <flux:icon.check-circle class="w-8 h-8 text-green-500" />
+                            </div>
+                            <flux:text class="text-zinc-400 text-center">All products are well stocked</flux:text>
+                        </div>
+                    </div>
+                </flux:card>
+            </div>
+        </div>
+
+        {{-- Recent Sales & Top Products --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- Recent Sales --}}
