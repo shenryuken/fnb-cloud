@@ -68,6 +68,57 @@
             </flux:card>
         </div>
 
+        {{-- Inventory & Order Stats --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- Categories --}}
+            <flux:card class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <flux:icon.squares-2x2 class="w-5 h-5 text-blue-500" />
+                    </div>
+                    <flux:badge color="blue" size="sm">Menu</flux:badge>
+                </div>
+                <flux:text size="sm" class="text-zinc-400 mb-1">Categories</flux:text>
+                <flux:heading size="xl">{{ $categoryCount ?? 0 }}</flux:heading>
+            </flux:card>
+
+            {{-- Products --}}
+            <flux:card class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <flux:icon.cube class="w-5 h-5 text-violet-500" />
+                    </div>
+                    <flux:badge color="violet" size="sm">Inventory</flux:badge>
+                </div>
+                <flux:text size="sm" class="text-zinc-400 mb-1">Products</flux:text>
+                <flux:heading size="xl">{{ $productCount ?? 0 }}</flux:heading>
+            </flux:card>
+
+            {{-- Total Orders --}}
+            <flux:card class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                        <flux:icon.shopping-cart class="w-5 h-5 text-amber-500" />
+                    </div>
+                    <flux:badge color="amber" size="sm">Sales</flux:badge>
+                </div>
+                <flux:text size="sm" class="text-zinc-400 mb-1">Total Orders</flux:text>
+                <flux:heading size="xl">{{ $orderCount ?? 0 }}</flux:heading>
+            </flux:card>
+
+            {{-- Total Revenue --}}
+            <flux:card class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <flux:icon.currency-dollar class="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <flux:badge color="emerald" size="sm">Revenue</flux:badge>
+                </div>
+                <flux:text size="sm" class="text-zinc-400 mb-1">Total Revenue</flux:text>
+                <flux:heading size="xl">RM {{ number_format($totalRevenue ?? 0, 2) }}</flux:heading>
+            </flux:card>
+        </div>
+
         {{-- Sales Trend Chart --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
