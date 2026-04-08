@@ -220,40 +220,67 @@
             {{-- Add-ons Section --}}
             <flux:separator />
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <flux:heading size="md" class="text-zinc-400">Available Add-on Groups</flux:heading>
-                        <flux:link href="{{ route('manage.addons.index') }}" variant="ghost" size="sm">Configure Groups</flux:link>
-                    </div>
-
-                    <div class="space-y-2">
-                        @foreach(\App\Models\AddonGroup::all() as $group)
-                            <flux:checkbox wire:model="selectedGroups" value="{{ $group->id }}">
-                                <div>
-                                    <div class="font-bold">{{ $group->name }}</div>
-                                    <flux:text size="xs" class="text-zinc-400">{{ $group->items->count() }} OPTIONS</flux:text>
-                                </div>
-                            </flux:checkbox>
-                        @endforeach
-                    </div>
+            <flux:tabs wire:model="activeAddonTab" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <flux:heading size="md" class="text-zinc-300">Product Add-ons</flux:heading>
+                    <flux:link href="{{ route('manage.addons.index') }}" variant="ghost" size="sm" icon="cog-6-tooth">Configure Groups</flux:link>
                 </div>
 
-                <div class="space-y-4">
-                    <flux:heading size="md" class="text-zinc-400">Standalone Extras</flux:heading>
+                <flux:tabs.list>
+                    <flux:tabs.tab name="addon-groups">Available Add-on Groups</flux:tabs.tab>
+                    <flux:tabs.tab name="standalone">Standalone Extras</flux:tabs.tab>
+                </flux:tabs.list>
 
+                <flux:tabs.panel name="addon-groups">
                     <div class="space-y-2">
-                        @foreach(\App\Models\ProductAddon::whereNull('addon_group_id')->get() as $addon)
-                            <flux:checkbox wire:model="selectedStandaloneAddons" value="{{ $addon->id }}">
-                                <div>
-                                    <div class="font-bold">{{ $addon->name }}</div>
-                                    <flux:text size="xs" class="text-blue-600">+${{ number_format($addon->price, 2) }}</flux:text>
-                                </div>
-                            </flux:checkbox>
-                        @endforeach
+                        @forelse(\App\Models\AddonGroup::all() as $group)
+                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="addon-group-{{ $group->id }}">
+                                <flux:checkbox wire:model.live="selectedGroups" value="{{ $group->id }}">
+                                    <div class="flex items-center justify-between flex-1">
+                                        <div>
+                                            <div class="font-semibold text-sm">{{ $group->name }}</div>
+                                            <flux:text size="xs" class="text-zinc-400">{{ $group->items->count() }} item(s) in this group</flux:text>
+                                        </div>
+                                        <flux:badge size="sm" color="zinc">{{ $group->items->count() }}</flux:badge>
+                                    </div>
+                                </flux:checkbox>
+                            </flux:card>
+                        @empty
+                            <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
+                                <flux:icon.squares-2x2 class="w-8 h-8 text-zinc-500 mb-2" />
+                                <flux:text size="sm" class="text-zinc-500">No add-on groups available</flux:text>
+                                <flux:text size="xs" class="text-zinc-600">Configure groups to get started</flux:text>
+                            </div>
+                        @endforelse
                     </div>
-                </div>
-            </div>
+                </flux:tabs.panel>
+
+                <flux:tabs.panel name="standalone">
+                    <div class="space-y-2">
+                        @forelse(\App\Models\ProductAddon::whereNull('addon_group_id')->get() as $addon)
+                            <flux:card class="p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer" wire:key="standalone-addon-{{ $addon->id }}">
+                                <flux:checkbox wire:model.live="selectedStandaloneAddons" value="{{ $addon->id }}">
+                                    <div class="flex items-center justify-between flex-1">
+                                        <div>
+                                            <div class="font-semibold text-sm">{{ $addon->name }}</div>
+                                            @if($addon->description)
+                                                <flux:text size="xs" class="text-zinc-400">{{ $addon->description }}</flux:text>
+                                            @endif
+                                        </div>
+                                        <flux:badge size="sm" color="blue">+${{ number_format($addon->price, 2) }}</flux:badge>
+                                    </div>
+                                </flux:checkbox>
+                            </flux:card>
+                        @empty
+                            <div class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-zinc-700 rounded-xl">
+                                <flux:icon.plus-circle class="w-8 h-8 text-zinc-500 mb-2" />
+                                <flux:text size="sm" class="text-zinc-500">No standalone extras available</flux:text>
+                                <flux:text size="xs" class="text-zinc-600">Add individual extras from settings</flux:text>
+                            </div>
+                        @endforelse
+                    </div>
+                </flux:tabs.panel>
+            </flux:tabs>
 
             <flux:separator />
 
