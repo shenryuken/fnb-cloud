@@ -12,7 +12,7 @@
     {{-- Product Form Modal --}}
     <flux:modal name="product-form" wire:model="isCreating" class="w-full max-w-5xl space-y-6">
         <div class="flex items-center gap-3">
-            <flux:icon.package class="w-8 h-8 text-blue-600" variant="solid" />
+            <flux:icon.package class="w-8 h-8 text-blue-600" />
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Update Item' : 'New Menu Item' }}</flux:heading>
                 <flux:subheading>Configure your product's profile, variants and addons</flux:subheading>
