@@ -248,63 +248,112 @@
         </form>
     </flux:modal>
 
+    {{-- Search & Filters --}}
+    <flux:card class="p-4">
+        <div class="flex items-center gap-3">
+            <div class="flex-1">
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="Search products by name..." icon="magnifying-glass" />
+            </div>
+            <flux:select wire:model.live="categoryFilter" placeholder="All Categories" class="w-48">
+                <option value="">All Categories</option>
+                @foreach(\App\Models\Category::orderBy('name')->get() as $cat)
+                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                @endforeach
+            </flux:select>
+            <flux:select wire:model.live="statusFilter" placeholder="All Status" class="w-40">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </flux:select>
+        </div>
+    </flux:card>
+
     {{-- Products Table --}}
     <flux:table :paginate="$products">
         <flux:table.columns>
             <flux:table.column>Product</flux:table.column>
-            <flux:table.column class="text-center">Order</flux:table.column>
+            <flux:table.column class="text-center w-24">Order</flux:table.column>
             <flux:table.column>Category</flux:table.column>
-            <flux:table.column>Price</flux:table.column>
-            <flux:table.column>Status</flux:table.column>
-            <flux:table.column class="text-right">Actions</flux:table.column>
+            <flux:table.column class="text-right w-32">Price</flux:table.column>
+            <flux:table.column class="text-center w-28">Status</flux:table.column>
+            <flux:table.column class="text-right w-32">Actions</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
             @forelse($products as $product)
-                <flux:table.row :key="$product->id">
+                <flux:table.row :key="$product->id" class="hover:bg-zinc-800/30 transition-colors">
                     <flux:table.cell>
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl overflow-hidden border flex items-center justify-center shrink-0">
+                            <div class="w-14 h-14 rounded-xl overflow-hidden border-2 border-zinc-700 flex items-center justify-center shrink-0 shadow-sm">
                                 @if($product->image_url)
-                                    <img src="{{ $product->image_url }}" class="w-full h-full object-cover">
+                                    <img src="{{ $product->image_url }}" class="w-full h-full object-cover" alt="{{ $product->name }}">
                                 @elseif($product->tile_color)
                                     <div class="w-full h-full flex items-center justify-center" style="background-color: {{ $product->tile_color }};">
-                                        <span class="text-white font-black text-sm">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
+                                        <span class="text-white font-black text-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
                                     </div>
                                 @else
-                                    <flux:icon.package class="w-6 h-6 text-zinc-300" />
+                                    <div class="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                        <flux:icon.cube class="w-7 h-7 text-zinc-400" />
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-sm truncate">{{ $product->name }}</div>
+                                @if($product->description)
+                                    <flux:text size="xs" class="text-zinc-400 truncate">{{ Str::limit($product->description, 40) }}</flux:text>
                                 @endif
                             </div>
                         </div>
                     </flux:table.cell>
 
                     <flux:table.cell class="text-center">
-                        <flux:badge size="sm" color="zinc">{{ $product->sort_order }}</flux:badge>
+                        <flux:badge size="sm" color="zinc" class="font-mono">{{ $product->sort_order }}</flux:badge>
                     </flux:table.cell>
 
                     <flux:table.cell>
-                        {{ $product->category->name ?? 'N/A' }}
+                        <flux:badge size="sm" color="blue" inset="top bottom">
+                            {{ $product->category->name ?? 'Uncategorized' }}
+                        </flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell variant="strong">
-                        ${{ number_format($product->price, 2) }}
+                    <flux:table.cell variant="strong" class="text-right">
+                        <span class="font-mono text-base">${{ number_format($product->price, 2) }}</span>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="text-center">
                         @if($product->is_active)
-                            <flux:badge size="sm" color="green" inset="top bottom">Active</flux:badge>
+                            <flux:badge size="sm" color="green" inset="top bottom">
+                                <flux:icon.check-circle class="w-3.5 h-3.5" />
+                                Active
+                            </flux:badge>
                         @else
-                            <flux:badge size="sm" color="red" inset="top bottom">Inactive</flux:badge>
+                            <flux:badge size="sm" color="red" inset="top bottom">
+                                <flux:icon.x-circle class="w-3.5 h-3.5" />
+                                Inactive
+                            </flux:badge>
                         @endif
                     </flux:table.cell>
 
                     <flux:table.cell class="text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <flux:button size="sm" variant="ghost" icon="clipboard-document" wire:click="copyProduct({{ $product->id }})" tooltip="Copy + View">Copy + View</flux:button>
-                            <flux:button size="sm" variant="ghost" icon="document-duplicate" wire:click="duplicateProduct({{ $product->id }})" tooltip="Copy">Copy</flux:button>
-                            <flux:button size="sm" variant="ghost" icon="pencil" wire:click="edit({{ $product->id }})" tooltip="Edit">Edit</flux:button>
-                            <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Delete this product?" tooltip="Delete">Delete</flux:button>
-                        </div>
+                        <flux:dropdown position="left" align="top">
+                            <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" square />
+                            
+                            <flux:menu>
+                                <flux:menu.item icon="clipboard-document" wire:click="copyProduct({{ $product->id }})">
+                                    Copy + View
+                                </flux:menu.item>
+                                <flux:menu.item icon="document-duplicate" wire:click="duplicateProduct({{ $product->id }})">
+                                    Duplicate
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                <flux:menu.item icon="pencil" wire:click="edit({{ $product->id }})">
+                                    Edit
+                                </flux:menu.item>
+                                <flux:menu.item icon="trash" variant="danger" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Are you sure you want to delete this product?">
+                                    Delete
+                                </flux:menu.item>
+                            </flux:menu>
+                        </flux:dropdown>
                     </flux:table.cell>
                 </flux:table.row>
             @empty
