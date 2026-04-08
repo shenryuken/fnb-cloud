@@ -42,6 +42,11 @@ class Products extends Component
     public ?Product $editing = null;
     public bool $isCreating = false;
 
+    // Search and filters
+    public string $search = '';
+    public string $categoryFilter = '';
+    public string $statusFilter = '';
+
     protected $rules = [
         'product_type' => 'required|in:ala_carte,set',
         'name' => 'required|string|max:255',
@@ -370,8 +375,27 @@ class Products extends Component
      */
     public function render()
     {
+        $query = Product::with(['category']);
+
+        // Apply search filter
+        if (filled($this->search)) {
+            $query->where('name', 'like', '%' . $this->search . '%');
+        }
+
+        // Apply category filter
+        if (filled($this->categoryFilter)) {
+            $query->where('category_id', $this->categoryFilter);
+        }
+
+        // Apply status filter
+        if ($this->statusFilter === 'active') {
+            $query->where('is_active', true);
+        } elseif ($this->statusFilter === 'inactive') {
+            $query->where('is_active', false);
+        }
+
         return view('livewire.menu.products', [
-            'products' => Product::with(['category'])->orderBy('sort_order')->paginate(10),
+            'products' => $query->orderBy('sort_order')->paginate(10),
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get(),
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'price']),
             'addonGroups' => \App\Models\AddonGroup::all(),
