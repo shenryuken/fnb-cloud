@@ -88,24 +88,29 @@
                 {{-- Right Column: Variants & Settings --}}
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
-                        <flux:heading size="md" class="text-zinc-400">Sizing & Variations</flux:heading>
-                        <flux:button wire:click="addVariant" size="sm" icon="plus" variant="ghost">Add Size</flux:button>
+                        <flux:heading size="md" class="text-zinc-300">Sizing & Variations</flux:heading>
+                        <flux:button wire:click="addVariant" size="sm" icon="plus" variant="primary">Add Size</flux:button>
                     </div>
 
                     <div class="space-y-3">
                         @foreach($variants as $index => $variant)
-                            <div class="flex gap-3 items-end">
-                                <flux:input wire:model="variants.{{ $index }}.name" placeholder="Size (e.g. Jumbo)" class="flex-1" />
-                                <flux:input wire:model="variants.{{ $index }}.receipt_label" placeholder="Label" class="w-20" />
-                                <flux:input wire:model="variants.{{ $index }}.price" type="number" step="0.01" placeholder="Price" class="w-28" icon="currency-dollar" />
-                                <flux:button wire:click="removeVariant({{ $index }})" icon="trash" variant="danger" square />
-                            </div>
+                            <flux:card class="p-4 bg-zinc-800/50 border-zinc-700">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-1 grid grid-cols-3 gap-3">
+                                        <flux:input wire:model="variants.{{ $index }}.name" label="Size Name" placeholder="e.g. Regular, Large" />
+                                        <flux:input wire:model="variants.{{ $index }}.receipt_label" label="Receipt Label" placeholder="e.g. L, XL" />
+                                        <flux:input wire:model="variants.{{ $index }}.price" type="number" step="0.01" label="Price" placeholder="0.00" icon="currency-dollar" />
+                                    </div>
+                                    <flux:button wire:click="removeVariant({{ $index }})" icon="trash" variant="danger" size="sm" class="mt-6" />
+                                </div>
+                            </flux:card>
                         @endforeach
                         @if(empty($variants))
-                            <flux:card class="flex flex-col items-center justify-center py-8 text-center">
-                                <flux:icon.arrows-right-left class="w-10 h-10 text-zinc-300 mb-2" />
-                                <flux:text size="sm" class="text-zinc-400">No variations configured</flux:text>
-                            </flux:card>
+                            <div class="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-zinc-700 rounded-xl">
+                                <flux:icon.arrows-right-left class="w-8 h-8 text-zinc-500 mb-2" />
+                                <flux:text size="sm" class="text-zinc-500">No size variations yet</flux:text>
+                                <flux:text size="xs" class="text-zinc-600">Click "Add Size" to create options</flux:text>
+                            </div>
                         @endif
                     </div>
 
