@@ -214,13 +214,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <flux:separator />
-
-                    <div class="flex items-center justify-between">
-                        <flux:switch wire:model="is_active">Active Status</flux:switch>
-                        <flux:input wire:model="sort_order" type="number" label="Display Priority" class="w-24" />
-                    </div>
                 </div>
             </div>
 
