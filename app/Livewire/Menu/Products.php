@@ -46,6 +46,9 @@ class Products extends Component
     public string $search = '';
     public string $categoryFilter = '';
     public string $statusFilter = '';
+    
+    // Add-ons tab state
+    public string $activeAddonTab = 'addon-groups';
 
     protected $rules = [
         'product_type' => 'required|in:ala_carte,set',
