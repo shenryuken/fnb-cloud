@@ -226,20 +226,20 @@
     </flux:modal>
 
     {{-- Products Table --}}
-    <flux:table>
-        <flux:columns>
-            <flux:column>Product</flux:column>
-            <flux:column class="text-center">Order</flux:column>
-            <flux:column>Category</flux:column>
-            <flux:column>Price</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column class="text-right">Actions</flux:column>
-        </flux:columns>
+    <flux:table :paginate="$products">
+        <flux:table.columns>
+            <flux:table.column>Product</flux:table.column>
+            <flux:table.column class="text-center">Order</flux:table.column>
+            <flux:table.column>Category</flux:table.column>
+            <flux:table.column>Price</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column class="text-right">Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @forelse($products as $product)
-                <flux:row>
-                    <flux:cell>
+                <flux:table.row :key="$product->id">
+                    <flux:table.cell>
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 rounded-xl overflow-hidden border flex items-center justify-center shrink-0">
                                 @if($product->image_url)
@@ -252,52 +252,47 @@
                                     <flux:icon.package class="w-6 h-6 text-zinc-300" />
                                 @endif
                             </div>
-                            <div>
-                                <div class="font-bold">{{ $product->name }}</div>
-                                @if($product->badge_text)
-                                    <flux:badge size="sm" color="blue">{{ $product->badge_text }}</flux:badge>
-                                @endif
-                                <flux:text size="xs" class="text-zinc-400">ID: #{{ $product->id }}</flux:text>
-                            </div>
                         </div>
-                    </flux:cell>
-                    <flux:cell class="text-center">
-                        <flux:badge variant="subtle">{{ $product->sort_order }}</flux:badge>
-                    </flux:cell>
-                    <flux:cell>
-                        <flux:text>{{ $product->category->name }}</flux:text>
-                    </flux:cell>
-                    <flux:cell class="font-bold text-blue-600">
+                    </flux:table.cell>
+
+                    <flux:table.cell class="text-center">
+                        <flux:badge size="sm" color="zinc">{{ $product->sort_order }}</flux:badge>
+                    </flux:table.cell>
+
+                    <flux:table.cell>
+                        {{ $product->category->name ?? 'N/A' }}
+                    </flux:table.cell>
+
+                    <flux:table.cell variant="strong">
                         ${{ number_format($product->price, 2) }}
-                    </flux:cell>
-                    <flux:cell>
-                        <flux:badge :color="$product->is_active ? 'green' : 'red'">
-                            {{ $product->is_active ? 'Active' : 'Inactive' }}
-                        </flux:badge>
-                    </flux:cell>
-                    <flux:cell class="text-right">
+                    </flux:table.cell>
+
+                    <flux:table.cell>
+                        @if($product->is_active)
+                            <flux:badge size="sm" color="green" inset="top bottom">Active</flux:badge>
+                        @else
+                            <flux:badge size="sm" color="red" inset="top bottom">Inactive</flux:badge>
+                        @endif
+                    </flux:table.cell>
+
+                    <flux:table.cell class="text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <flux:button wire:click="duplicateWithVariants({{ $product->id }})" size="sm" variant="ghost">Copy + Var</flux:button>
-                            <flux:button wire:click="duplicateWithoutVariants({{ $product->id }})" size="sm" variant="ghost">Copy</flux:button>
-                            <flux:button wire:click="edit({{ $product->id }})" icon="pencil-square" variant="ghost" square />
-                            <flux:button wire:click="delete({{ $product->id }})" wire:confirm="Permanently delete this product?" icon="trash" variant="danger" square />
+                            <flux:button size="sm" variant="ghost" icon="clipboard-document" wire:click="copyProduct({{ $product->id }})" tooltip="Copy + View">Copy + View</flux:button>
+                            <flux:button size="sm" variant="ghost" icon="document-duplicate" wire:click="duplicateProduct({{ $product->id }})" tooltip="Copy">Copy</flux:button>
+                            <flux:button size="sm" variant="ghost" icon="pencil" wire:click="edit({{ $product->id }})" tooltip="Edit">Edit</flux:button>
+                            <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteProduct({{ $product->id }})" wire:confirm="Delete this product?" tooltip="Delete">Delete</flux:button>
                         </div>
-                    </flux:cell>
-                </flux:row>
+                    </flux:table.cell>
+                </flux:table.row>
             @empty
-                <flux:row>
-                    <flux:cell colspan="6" class="text-center py-12">
-                        <div class="flex flex-col items-center gap-4">
-                            <flux:icon.package class="w-16 h-16 text-zinc-200" />
-                            <div>
-                                <flux:heading size="lg">No products added</flux:heading>
-                                <flux:text>Start by creating your first menu item above.</flux:text>
-                            </div>
-                        </div>
-                    </flux:cell>
-                </flux:row>
+                <flux:table.row>
+                    <flux:table.cell colspan="6" class="text-center py-12 text-zinc-400">
+                        <flux:icon.inbox class="w-16 h-16 mx-auto mb-3 text-zinc-300" />
+                        <div>No products found. Create your first menu item!</div>
+                    </flux:table.cell>
+                </flux:table.row>
             @endforelse
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     @if($products->hasPages())
