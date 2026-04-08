@@ -121,7 +121,7 @@ class Products extends Component
                     ->all(),
             ])
             ->all();
-        $this->isCreating = false;
+        $this->isCreating = true; // Open the modal for editing
     }
 
     /**
