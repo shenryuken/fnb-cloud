@@ -25,6 +25,7 @@ class Order extends Model
         'discount_amount',
         'voucher_code',
         'points_redeemed',
+        'points_earned',
         'tax_rate',
         'tax_amount',
         'status', // pending, processing, completed, cancelled
@@ -45,6 +46,7 @@ class Order extends Model
         'discount_value' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'points_redeemed' => 'integer',
+        'points_earned' => 'integer',
         'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'payment_splits' => 'array',

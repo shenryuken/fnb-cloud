@@ -141,6 +141,20 @@
         </div>
     @endif
 
+    @if(($order->points_redeemed ?? 0) > 0)
+        <div class="item-row">
+            <span>Points Used</span>
+            <span>- {{ (int) $order->points_redeemed }} pts</span>
+        </div>
+    @endif
+
+    @if(($order->points_earned ?? 0) > 0)
+        <div class="item-row">
+            <span>Points Earned</span>
+            <span>+ {{ (int) $order->points_earned }} pts</span>
+        </div>
+    @endif
+
     @if(($order->tax_amount ?? 0) > 0)
         @php
             $taxTotal = (float) ($order->tax_amount ?? 0);

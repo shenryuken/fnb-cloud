@@ -128,11 +128,13 @@
                                 </span>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="text-sm tabular-nums">{{ (int) $voucher->usage_count }}@if($voucher->usage_limit) / {{ (int) $voucher->usage_limit }}@endif</span>
+                                <span class="text-sm tabular-nums">{{ (int) $voucher->used_count }}@if($voucher->usage_limit) / {{ (int) $voucher->usage_limit }}@endif</span>
                                 @if($voucher->usage_limit)
                                     <div class="w-20 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-1 overflow-hidden">
-                                        <div class="h-full bg-blue-500 rounded-full" style="width: {{ min(100, ($voucher->usage_count / $voucher->usage_limit) * 100) }}%"></div>
+                                        <div class="h-full bg-blue-500 rounded-full" style="width: {{ min(100, ($voucher->used_count / $voucher->usage_limit) * 100) }}%"></div>
                                     </div>
+                                @else
+                                    <div class="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Unlimited</div>
                                 @endif
                             </td>
                             <td class="py-3 px-4">

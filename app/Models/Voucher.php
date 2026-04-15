@@ -30,5 +30,9 @@ class Voucher extends Model
         'usage_limit' => 'integer',
         'usage_count' => 'integer',
     ];
-}
 
+    public function getUsedCountAttribute(): int
+    {
+        return (int) $this->usage_count;
+    }
+}

@@ -121,6 +121,10 @@
                     <span class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black rounded-2xl tracking-widest uppercase">
                         {{ count($cart) }} Items
                     </span>
+                    <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="mt-2 flex items-center gap-2 px-2.5 py-1 rounded-xl bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 text-[9px] font-black uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-40 disabled:hover:bg-neutral-900/5 disabled:hover:text-neutral-500 transition-all">
+                        <flux:icon.pause class="w-3.5 h-3.5" />
+                        Held ({{ count($this->heldOrders) }})
+                    </button>
                     @if(count($cart) > 0)
                         <button type="button" wire:click="clearCart" class="mt-2 flex items-center gap-2 px-2.5 py-1 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-[9px] font-black uppercase tracking-widest border border-red-200/60 dark:border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                             <flux:icon.trash class="w-3.5 h-3.5" />
@@ -296,6 +300,9 @@
             </button>
 
             @if(count($cart) > 0)
+                <button type="button" wire:click="holdOrder" class="w-full py-2 rounded-[1.75rem] bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-200 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:border-blue-500/40 hover:text-blue-600 transition-all">
+                    Hold Order
+                </button>
                 <button type="button" wire:click="clearCart" class="w-full py-2 rounded-[1.75rem] bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all">
                     Clear Cart
                 </button>
@@ -344,6 +351,10 @@
                                 <span class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black rounded-2xl tracking-widest uppercase">
                                     {{ count($cart) }} Items
                                 </span>
+                                <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 text-[10px] font-black uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-40 disabled:hover:bg-neutral-900/5 disabled:hover:text-neutral-500 transition-all">
+                                    <flux:icon.pause class="w-4 h-4" />
+                                    Held ({{ count($this->heldOrders) }})
+                                </button>
                                 @if(count($cart) > 0)
                                     <button type="button" wire:click="clearCart" class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-200/60 dark:border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                                         <flux:icon.trash class="w-4 h-4" />
@@ -515,6 +526,9 @@
                         </button>
 
                         @if(count($cart) > 0)
+                            <button type="button" wire:click="holdOrder" class="w-full py-2 rounded-[1.75rem] bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-200 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:border-blue-500/40 hover:text-blue-600 transition-all">
+                                Hold Order
+                            </button>
                             <button type="button" wire:click="clearCart" class="w-full py-2 rounded-[1.75rem] bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all">
                                 Clear Cart
                             </button>
@@ -523,6 +537,57 @@
                 </div>
             </div>
         </template>
+    @endif
+
+    @if($showHeldOrdersModal)
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-neutral-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
+                <div class="p-6 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <flux:icon.pause class="w-5 h-5 text-white" />
+                        </div>
+                        <div class="flex flex-col leading-none">
+                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">POS</span>
+                            <span class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Held Orders</span>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeHeldOrders" class="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
+                        <flux:icon.x-mark class="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        @forelse($this->heldOrders as $h)
+                            <div class="p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/40 flex items-center justify-between gap-4">
+                                <div class="min-w-0">
+                                    <div class="font-black text-neutral-800 dark:text-neutral-100 truncate">{{ $h['label'] }}</div>
+                                    <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">
+                                        {{ (int) ($h['items'] ?? 0) }} items • ${{ number_format((float) ($h['total'] ?? 0), 2) }} • {{ $h['created_at'] }}
+                                    </div>
+                                    @if(filled($h['customer_name'] ?? ''))
+                                        <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Customer: {{ $h['customer_name'] }}</div>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" wire:click="recallHeldOrder({{ (int) $h['id'] }})" class="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                        Recall
+                                    </button>
+                                    <button type="button" wire:click="deleteHeldOrder({{ (int) $h['id'] }})" class="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-900/10 text-red-600 hover:bg-red-500 hover:text-white transition-all">
+                                        <flux:icon.trash class="w-4 h-4 mx-auto" />
+                                    </button>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-16 text-center text-sm text-neutral-400 font-medium italic">
+                                No held orders.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     @if(!$isPaying && !$selectingProduct && !$lastOrder && !$showCartMobile)

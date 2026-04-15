@@ -14,12 +14,13 @@
     {{-- Filters --}}
     <flux:card class="p-4">
         <div class="flex flex-col lg:flex-row gap-3">
-            <div class="flex-1">
+            <div class="flex-[2] min-w-[280px]">
                 <flux:input
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search by order ID, customer, table, voucher..."
                     icon="magnifying-glass"
                     clearable
+                    class="w-full text-base"
                 />
             </div>
 
@@ -37,10 +38,22 @@
                 <flux:select.option value="takeaway">Takeaway</flux:select.option>
             </flux:select>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                 <flux:input type="date" wire:model.live="dateFrom" title="From" />
-                <flux:text class="shrink-0 text-sm">to</flux:text>
+                <flux:text class="shrink-0 text-sm hidden sm:block">to</flux:text>
                 <flux:input type="date" wire:model.live="dateTo" title="To" />
+
+                <div class="flex items-center gap-2 sm:ml-2">
+                    <flux:button size="sm" variant="{{ $datePreset === 'today' ? 'primary' : 'ghost' }}" wire:click="setDatePreset('today')">
+                        Today
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $datePreset === 'week' ? 'primary' : 'ghost' }}" wire:click="setDatePreset('week')">
+                        This Week
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $datePreset === 'month' ? 'primary' : 'ghost' }}" wire:click="setDatePreset('month')">
+                        This Month
+                    </flux:button>
+                </div>
             </div>
 
             @if($hasActiveFilters)
@@ -64,6 +77,9 @@
                 @endif
                 @if($dateFrom !== '' || $dateTo !== '')
                     <flux:badge color="green" size="sm" icon="calendar">{{ $dateFrom ?: '...' }} &rarr; {{ $dateTo ?: '...' }}</flux:badge>
+                @endif
+                @if($datePreset !== '')
+                    <flux:badge color="zinc" size="sm">Range: {{ $datePreset }}</flux:badge>
                 @endif
             </div>
         @endif
@@ -334,6 +350,12 @@
                                 <div class="flex justify-between">
                                     <flux:text size="sm" class="text-zinc-500">Points Redeemed</flux:text>
                                     <flux:text size="sm" class="font-semibold tabular-nums">{{ (int) $viewingOrder->points_redeemed }}</flux:text>
+                                </div>
+                            @endif
+                            @if((int) ($viewingOrder->points_earned ?? 0) > 0)
+                                <div class="flex justify-between">
+                                    <flux:text size="sm" class="text-zinc-500">Points Earned</flux:text>
+                                    <flux:text size="sm" class="font-semibold tabular-nums">{{ (int) $viewingOrder->points_earned }}</flux:text>
                                 </div>
                             @endif
                         </flux:card>

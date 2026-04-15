@@ -7,6 +7,7 @@ use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
 
 #[Title('Vouchers')]
 #[Lazy]
@@ -69,7 +70,7 @@ class Vouchers extends Component
         $validated['starts_at'] = filled($validated['starts_at'] ?? null) ? $validated['starts_at'] : null;
         $validated['ends_at'] = filled($validated['ends_at'] ?? null) ? $validated['ends_at'] : null;
 
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = Auth::user()->tenant_id;
 
         $existing = Voucher::where('tenant_id', $tenantId)->where('code', $validated['code']);
         if ($this->editing) {
@@ -99,8 +100,10 @@ class Vouchers extends Component
     public function render()
     {
         return view('livewire.vouchers', [
-            'vouchers' => Voucher::orderByDesc('id')->paginate(10),
-        ])->layout('layouts.app');
+            'vouchers' => Voucher::query()
+                ->select(['id', 'code', 'name', 'type', 'value', 'is_active', 'starts_at', 'ends_at', 'usage_limit', 'usage_count', 'created_at'])
+                ->orderByDesc('id')
+                ->paginate(10),
+        ]);
     }
 }
-
