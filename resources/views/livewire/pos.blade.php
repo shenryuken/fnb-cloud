@@ -1,27 +1,27 @@
-<div x-data="{}" class="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] gap-4 lg:gap-6 p-4 overflow-y-auto lg:overflow-hidden bg-neutral-50 dark:bg-neutral-950 font-sans" wire:poll.15s>
+<div x-data="{}" class="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] gap-4 p-4 overflow-y-auto lg:overflow-hidden bg-zinc-50 dark:bg-zinc-950" wire:poll.15s>
     <!-- Left Side: Product Selection -->
     <div class="w-full lg:flex-1 flex flex-col gap-4 lg:overflow-hidden">
         <!-- Top Bar: Search and Categories -->
-        <div class="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-800 space-y-4">
-            <div class="relative group">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+            <div class="relative">
                 <input type="text" wire:model.live.debounce.300ms="search" 
                     placeholder="Search menu items..." 
-                    class="w-full pl-12 pr-4 py-3 bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all">
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
-                    <flux:icon.magnifying-glass class="w-5 h-5" />
+                    class="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all placeholder:text-zinc-400">
+                <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
+                    <flux:icon.magnifying-glass class="w-4 h-4" />
                 </div>
             </div>
             
-            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
                 <button wire:click="$set('selectedCategoryId', null)" 
-                    class="px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-                    {{ is_null($selectedCategoryId) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 scale-105' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 hover:bg-neutral-200' }}">
+                    class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all
+                    {{ is_null($selectedCategoryId) ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
                     All Menu
                 </button>
                 @foreach($this->categories as $category)
                     <button wire:click="$set('selectedCategoryId', {{ $category->id }})" 
-                        class="px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-                        {{ $selectedCategoryId === $category->id ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 scale-105' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 hover:bg-neutral-200' }}">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all
+                        {{ $selectedCategoryId === $category->id ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
                         {{ $category->name }}
                     </button>
                 @endforeach
@@ -29,53 +29,54 @@
         </div>
 
         <!-- Product Grid -->
-        <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 scrollbar-hide">
+        <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-4 scrollbar-hide">
             @foreach($this->products as $product)
                 <div wire:click="quickAddProduct({{ $product->id }})" 
-                    class="group flex flex-col bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden cursor-pointer hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 transform hover:-translate-y-1 relative">
-                    <div class="aspect-square bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden relative">
+                    class="group flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-pointer hover:border-pink-500/50 hover:shadow-lg transition-all duration-200 relative">
+                    <div class="aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden relative">
                         @if($product->image_url)
-                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @elseif($product->tile_color)
-                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-center px-3" style="background-color: {{ $product->tile_color }};">
-                                <span class="text-white text-lg sm:text-xl font-black tracking-tight leading-tight">{{ $product->name }}</span>
-                                <span class="text-white/90 text-lg font-black tracking-tighter">${{ number_format($product->price, 2) }}</span>
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-center px-3 py-4" style="background-color: {{ $product->tile_color }};">
+                                <span class="text-white text-sm sm:text-base font-semibold leading-tight line-clamp-2">{{ $product->name }}</span>
+                                <span class="text-white/90 text-base font-bold">RM {{ number_format($product->price, 2) }}</span>
                             </div>
                         @else
-                            <flux:icon.package class="w-12 h-12 text-neutral-300 dark:text-neutral-700" />
+                            <flux:icon.package class="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
                         @endif
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
 
-                        <div class="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
+                        {{-- Badges --}}
+                        <div class="absolute top-2 left-2 flex flex-col gap-1.5 pointer-events-none">
                             @if(isset($this->autoBadges[$product->id]))
-                                <span class="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg
-                                    {{ $this->autoBadges[$product->id] === 'Top Sale' ? 'bg-red-600 text-white' : 'bg-orange-600 text-white' }}">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                                    {{ $this->autoBadges[$product->id] === 'Top Sale' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white' }}">
                                     {{ $this->autoBadges[$product->id] }}
                                 </span>
                             @endif
 
                             @if($product->badge_text)
-                                <span class="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg bg-blue-600 text-white">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500 text-white">
                                     {{ $product->badge_text }}
                                 </span>
                             @endif
                         </div>
 
+                        {{-- Customize button --}}
                         @if(($product->product_type ?? 'ala_carte') === 'set' || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
                             <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
-                                class="absolute bottom-3 left-3 right-3 py-2 rounded-xl bg-neutral-900/80 text-white text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-blue-600 transition-all">
+                                class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
                                 Customize
                             </button>
                         @endif
                     </div>
                     @if(!$product->tile_color || $product->image_url)
-                        <div class="p-4">
-                            <h3 class="font-bold text-neutral-800 dark:text-neutral-100 truncate group-hover:text-blue-600 transition-colors">
+                        <div class="p-3">
+                            <h3 class="font-semibold text-zinc-800 dark:text-zinc-100 truncate text-sm">
                                 {{ $product->name }}
                             </h3>
                             <div class="flex items-center justify-between mt-1">
-                                <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">{{ $product->category->name }}</span>
-                                <span class="text-sm font-black text-blue-600 dark:text-blue-400">${{ number_format($product->price, 2) }}</span>
+                                <span class="text-xs text-zinc-400">{{ $product->category->name }}</span>
+                                <span class="text-sm font-bold text-pink-500">RM {{ number_format($product->price, 2) }}</span>
                             </div>
                         </div>
                     @endif
@@ -85,7 +86,7 @@
     </div>
 
     <!-- Right Side: Current Cart -->
-    <div class="hidden lg:flex w-[420px] flex-col bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden relative">
+    <div class="hidden lg:flex w-[380px] flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden relative">
         @if($isKitchenBusy)
             <div class="absolute inset-x-0 top-0 z-50 bg-red-600/90 backdrop-blur-md px-4 sm:px-6 py-2 flex items-center justify-between border-b border-red-500 shadow-xl shadow-red-600/20 animate-in slide-in-from-top duration-500">
                 <div class="flex items-center gap-3">
@@ -104,215 +105,188 @@
             </div>
         @endif
         
-        <div class="p-4 sm:p-5 lg:p-6 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/50 {{ $isKitchenBusy ? 'mt-12' : '' }} transition-all duration-500">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <button type="button" wire:click="$set('showCartMobile', false)" class="lg:hidden w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
-                        <flux:icon.x-mark class="w-5 h-5" />
-                    </button>
-                    <h3 class="text-xl sm:text-2xl font-black text-neutral-800 dark:text-neutral-100 flex items-center gap-3 tracking-tight">
-                        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <flux:icon.shopping-bag class="w-5 h-5 text-white" />
-                        </div>
-                        Current Order
-                    </h3>
+        <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 {{ $isKitchenBusy ? 'mt-12' : '' }} transition-all duration-500">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-pink-500 flex items-center justify-center">
+                        <flux:icon.shopping-bag class="w-4 h-4 text-white" />
+                    </div>
+                    <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100">Current Order</h3>
                 </div>
-                <div class="flex flex-col items-end">
-                    <span class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black rounded-2xl tracking-widest uppercase">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 text-xs font-semibold rounded-lg">
                         {{ count($cart) }} Items
                     </span>
-                    <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="mt-2 flex items-center gap-2 px-2.5 py-1 rounded-xl bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 text-[9px] font-black uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-40 disabled:hover:bg-neutral-900/5 disabled:hover:text-neutral-500 transition-all">
-                        <flux:icon.pause class="w-3.5 h-3.5" />
+                    <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-xs font-semibold hover:bg-pink-500 hover:text-white disabled:opacity-40 transition-all">
                         Held ({{ count($this->heldOrders) }})
                     </button>
-                    @if(count($cart) > 0)
-                        <button type="button" wire:click="clearCart" class="mt-2 flex items-center gap-2 px-2.5 py-1 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-[9px] font-black uppercase tracking-widest border border-red-200/60 dark:border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
-                            <flux:icon.trash class="w-3.5 h-3.5" />
-                            Clear
-                        </button>
-                    @endif
                 </div>
             </div>
 
             <!-- Order Type Selection -->
-            <div class="flex p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
+            <div class="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
                 <button wire:click="$set('orderType', 'dine_in')" 
-                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all
-                    {{ $orderType === 'dine_in' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600' }}">
+                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold transition-all
+                    {{ $orderType === 'dine_in' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600' }}">
                     <flux:icon.building-storefront class="w-4 h-4" />
                     DINE IN
                 </button>
                 <button wire:click="$set('orderType', 'takeaway')" 
-                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all
-                    {{ $orderType === 'takeaway' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600' }}">
+                    class="flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold transition-all
+                    {{ $orderType === 'takeaway' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600' }}">
                     <flux:icon.shopping-bag class="w-4 h-4" />
                     TAKE AWAY
                 </button>
             </div>
 
             @if($orderType === 'dine_in')
-                <div class="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div class="relative group">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                <div class="mt-3">
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
                             <flux:icon.hashtag class="w-4 h-4" />
                         </div>
                         <input type="text" wire:model.live="tableNumber" placeholder="Table Number" 
-                            class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
+                            class="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                     </div>
                 </div>
             @endif
         </div>
 
-        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 scrollbar-hide">
+        <div class="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-hide">
             @forelse($cart as $index => $item)
                 @php
                     $eachPrice = (float) ($item['unit_price'] ?? 0) + (float) ($item['addons_total'] ?? 0) + (float) ($item['set_total'] ?? 0);
                 @endphp
-                <div class="group p-2.5 sm:p-3 bg-white dark:bg-neutral-800/40 rounded-2xl border border-neutral-100 dark:border-neutral-800 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:border-pink-500/30 transition-all">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-semibold text-zinc-800 dark:text-zinc-100 text-sm truncate">
+                                {{ $item['product_name'] }}
+                                @if(!empty($item['variant_name']))
+                                    <span class="text-zinc-400">({{ $item['variant_name'] }})</span>
+                                @endif
+                            </h4>
+                            @if(!empty($item['addon_names']))
+                                <p class="text-xs text-zinc-400 truncate mt-0.5">+ {{ implode(', ', $item['addon_names']) }}</p>
+                            @endif
+                            @if(!empty($item['set_summary']))
+                                <p class="text-xs text-zinc-400 truncate mt-0.5">Set: {{ $item['set_summary'] }}</p>
+                            @endif
+                            @if(!empty($item['notes']))
+                                <p class="text-xs text-zinc-400 truncate mt-0.5 italic">{{ $item['notes'] }}</p>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="removeFromCart({{ $index }})" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:bg-red-500 hover:text-white transition-all">
+                            <flux:icon.x-mark class="w-4 h-4" />
+                        </button>
+                    </div>
 
-                    <div class="flex items-start gap-3">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <h4 class="font-black text-neutral-800 dark:text-neutral-100 leading-tight tracking-tight text-[13px] sm:text-sm truncate">
-                                        {{ $item['product_name'] }}
-                                        @if(!empty($item['variant_name']))
-                                            <span class="text-neutral-400 font-black">({{ $item['variant_name'] }})</span>
-                                        @endif
-                                    </h4>
-                                    @if(!empty($item['addon_names']))
-                                        <div class="mt-1 text-[10px] font-bold text-neutral-400 truncate">
-                                            Extras: {{ implode(', ', $item['addon_names']) }}
-                                        </div>
-                                    @endif
-                                    @if(!empty($item['set_summary']))
-                                        <div class="mt-1 text-[10px] font-bold text-neutral-400 truncate">
-                                            Set: {{ $item['set_summary'] }}
-                                        </div>
-                                    @endif
-                                    @if(!empty($item['notes']))
-                                        <div class="mt-1 text-[10px] font-bold text-neutral-400 truncate">
-                                            Note: {{ $item['notes'] }}
-                                        </div>
-                                    @endif
-                                </div>
-                                <button type="button" wire:click="removeFromCart({{ $index }})" class="w-7 h-7 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                                    <flux:icon.x-mark class="w-4 h-4" />
-                                </button>
-                            </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                            <button wire:click="updateQuantity({{ $index }}, -1)" class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors">
+                                <flux:icon.minus class="w-3.5 h-3.5" />
+                            </button>
+                            <span class="w-8 text-center font-semibold text-sm text-zinc-800 dark:text-zinc-100 tabular-nums">{{ $item['quantity'] }}</span>
+                            <button wire:click="updateQuantity({{ $index }}, 1)" class="w-8 h-8 flex items-center justify-center text-pink-500 hover:text-pink-600 transition-colors">
+                                <flux:icon.plus class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
 
-                            <div class="mt-2.5 flex items-center justify-between gap-3">
-                                <div class="flex items-center bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 p-1 shadow-inner">
-                                    <button wire:click="updateQuantity({{ $index }}, -1)" class="w-7 h-7 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md rounded-xl transition-all duration-200 text-neutral-400 hover:text-red-500">
-                                        <flux:icon.minus class="w-4 h-4" />
-                                    </button>
-                                    <span class="w-10 text-center font-black text-sm tracking-tighter text-neutral-800 dark:text-neutral-100 tabular-nums">{{ $item['quantity'] }}</span>
-                                    <button wire:click="updateQuantity({{ $index }}, 1)" class="w-7 h-7 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md rounded-xl transition-all duration-200 text-blue-600">
-                                        <flux:icon.plus class="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div class="text-right leading-none">
-                                    <div class="text-[9px] font-black text-neutral-400 uppercase tracking-widest tabular-nums">${{ number_format($eachPrice, 2) }} each</div>
-                                    <div class="mt-1 font-black text-[15px] sm:text-base text-neutral-900 dark:text-neutral-100 tracking-tighter tabular-nums">${{ number_format($item['subtotal'], 2) }}</div>
-                                </div>
-                            </div>
+                        <div class="text-right">
+                            <div class="text-xs text-zinc-400 tabular-nums">RM {{ number_format($eachPrice, 2) }} ea</div>
+                            <div class="font-bold text-sm text-zinc-900 dark:text-zinc-100 tabular-nums">RM {{ number_format($item['subtotal'], 2) }}</div>
                         </div>
                     </div>
                 </div>
             @empty
-                <div class="h-full flex flex-col items-center justify-center text-neutral-400 p-12 text-center">
-                    <div class="relative mb-6">
-                        <div class="w-24 h-24 bg-neutral-50 dark:bg-neutral-800 rounded-[2rem] flex items-center justify-center animate-pulse">
-                            <flux:icon.shopping-cart class="w-12 h-12 opacity-10" />
-                        </div>
-                        <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white dark:bg-neutral-900 rounded-2xl shadow-xl flex items-center justify-center">
-                            <flux:icon.plus class="w-5 h-5 text-blue-600" />
-                        </div>
+                <div class="h-full flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                        <flux:icon.shopping-cart class="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
                     </div>
-                    <h4 class="font-black text-neutral-800 dark:text-neutral-100 text-xl tracking-tight">Your cart is empty</h4>
-                    <p class="text-sm mt-2 font-medium text-neutral-500">Add delicious items from the menu to start an order</p>
+                    <h4 class="font-semibold text-zinc-800 dark:text-zinc-100 text-lg">Your cart is empty</h4>
+                    <p class="text-sm text-zinc-400 mt-1">Add items from the menu to start an order</p>
                 </div>
             @endforelse
         </div>
 
-        <div class="p-3 sm:p-4 bg-neutral-50 dark:bg-neutral-800/50 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
+        <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
             <div class="space-y-1.5">
-                <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
+                <div class="flex justify-between text-zinc-500 text-sm">
                     <span>Subtotal</span>
-                    <span class="font-black">${{ number_format($subTotalAmount, 2) }}</span>
+                    <span class="font-semibold">RM {{ number_format($subTotalAmount, 2) }}</span>
                 </div>
 
-                <button type="button" wire:click="openDiscountModal" class="w-full flex items-center justify-between gap-3 text-neutral-500 font-black tracking-tight text-sm rounded-xl hover:bg-white/60 dark:hover:bg-neutral-900/40 px-2 py-2 transition-all">
+                <button type="button" wire:click="openDiscountModal" class="w-full flex items-center justify-between text-zinc-500 text-sm rounded-lg hover:bg-white dark:hover:bg-zinc-900 px-2 py-1.5 -mx-2 transition-all">
                     <span>Discount / Voucher / Points</span>
-                    <span class="{{ $discountAmount > 0 ? 'text-red-500' : 'text-blue-600 dark:text-blue-400' }}">
-                        {{ $discountAmount > 0 ? '- $' . number_format($discountAmount, 2) : 'Add' }}
+                    <span class="{{ $discountAmount > 0 ? 'text-red-500 font-semibold' : 'text-pink-500' }}">
+                        {{ $discountAmount > 0 ? '- RM ' . number_format($discountAmount, 2) : 'Add' }}
                     </span>
                 </button>
 
                 @if(($manualDiscountAmount ?? 0) > 0)
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                    <div class="flex justify-between text-zinc-400 text-xs">
                         <span>Manual Discount</span>
-                        <span class="font-black text-neutral-400 tabular-nums">- ${{ number_format((float) $manualDiscountAmount, 2) }}</span>
+                        <span class="tabular-nums">- RM {{ number_format((float) $manualDiscountAmount, 2) }}</span>
                     </div>
                 @endif
                 @if(filled($appliedVoucherCode))
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                    <div class="flex justify-between text-zinc-400 text-xs">
                         <span>Voucher</span>
-                        <span class="font-black text-neutral-400 uppercase tracking-widest">{{ $appliedVoucherCode }}</span>
+                        <span class="uppercase">{{ $appliedVoucherCode }}</span>
                     </div>
                 @endif
                 @if(($appliedPoints ?? 0) > 0)
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                    <div class="flex justify-between text-zinc-400 text-xs">
                         <span>Points Redeemed</span>
-                        <span class="font-black text-neutral-400 tabular-nums">{{ (int) $appliedPoints }}</span>
+                        <span class="tabular-nums">{{ (int) $appliedPoints }}</span>
                     </div>
                 @endif
                 @if($this->customer)
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                    <div class="flex justify-between text-zinc-400 text-xs">
                         <span>Customer</span>
-                        <span class="font-black text-neutral-400">{{ $this->customer->name }}</span>
+                        <span>{{ $this->customer->name }}</span>
                     </div>
                 @endif
                 @if(count($taxBreakdown) > 1)
                     @foreach($taxBreakdown as $row)
-                        <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
+                        <div class="flex justify-between text-zinc-500 text-sm">
                             <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                            <span class="font-black text-emerald-600 tabular-nums">${{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                            <span class="text-green-600 tabular-nums">RM {{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
                         </div>
                     @endforeach
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
+                    <div class="flex justify-between text-zinc-500 text-sm">
                         <span>Tax Total</span>
-                        <span class="font-black text-emerald-600 tabular-nums">${{ number_format($taxAmount, 2) }}</span>
+                        <span class="text-green-600 tabular-nums">RM {{ number_format($taxAmount, 2) }}</span>
                     </div>
                 @else
-                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
+                    <div class="flex justify-between text-zinc-500 text-sm">
                         <span>Tax ({{ $taxLabel }})</span>
-                        <span class="font-black text-emerald-600 tabular-nums">${{ number_format($taxAmount, 2) }}</span>
+                        <span class="text-green-600 tabular-nums">RM {{ number_format($taxAmount, 2) }}</span>
                     </div>
                 @endif
 
-                <div class="flex justify-between items-baseline pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                    <span class="text-sm font-black text-neutral-900 dark:text-neutral-100 tracking-widest uppercase">Total</span>
-                    <span class="text-2xl font-black text-blue-600 tracking-tighter shadow-blue-500/10 tabular-nums">${{ number_format($totalAmount, 2) }}</span>
+                <div class="flex justify-between items-baseline pt-3 mt-2 border-t border-zinc-200 dark:border-zinc-700">
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase">Total</span>
+                    <span class="text-xl font-bold text-pink-500 tabular-nums">RM {{ number_format($totalAmount, 2) }}</span>
                 </div>
             </div>
 
             <button wire:click="startPayment" 
                 @disabled(empty($cart))
-                class="w-full py-3 rounded-[1.75rem] bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-base shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-3 group">
-                <flux:icon.credit-card class="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                class="w-full py-3 rounded-lg bg-pink-500 hover:bg-pink-600 disabled:bg-zinc-200 disabled:dark:bg-zinc-800 disabled:text-zinc-400 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                <flux:icon.credit-card class="w-5 h-5" />
                 CHECKOUT
             </button>
 
             @if(count($cart) > 0)
-                <button type="button" wire:click="holdOrder" class="w-full py-2 rounded-[1.75rem] bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-200 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:border-blue-500/40 hover:text-blue-600 transition-all">
-                    Hold Order
-                </button>
-                <button type="button" wire:click="clearCart" class="w-full py-2 rounded-[1.75rem] bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all">
-                    Clear Cart
-                </button>
+                <div class="flex gap-2">
+                    <button type="button" wire:click="holdOrder" class="flex-1 py-2 rounded-lg bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 hover:border-pink-500 hover:text-pink-500 transition-all">
+                        Hold Order
+                    </button>
+                    <button type="button" wire:click="clearCart" class="flex-1 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all">
+                        Clear Cart
+                    </button>
+                </div>
             @endif
         </div>
     </div>
@@ -606,7 +580,7 @@
 
     @if(!$isPaying && !$selectingProduct && !$lastOrder && !$showCartMobile)
         <template x-teleport="body">
-            <button type="button" wire:click="$set('showCartMobile', true)" class="lg:hidden fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl shadow-blue-500/30 flex items-center justify-center">
+            <button type="button" wire:click="$set('showCartMobile', true)" class="lg:hidden fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-pink-500 text-white shadow-lg flex items-center justify-center">
                 <div class="relative w-full h-full flex items-center justify-center">
                     <flux:icon.shopping-cart class="w-6 h-6" />
                     @if(count($cart) > 0)
