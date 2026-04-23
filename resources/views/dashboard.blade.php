@@ -161,7 +161,7 @@
                             },
                             descriptions: {
                                 weekly: 'Last 7 days revenue',
-                                monthly: 'Last 4 weeks revenue',
+                                monthly: '52 weeks of ' + new Date().getFullYear(),
                                 yearly: 'Last 12 months revenue'
                             },
                             get currentData() { return this.chartData[this.period] || []; },
@@ -223,17 +223,25 @@
                                         {{-- Line --}}
                                         <polyline :points="polylinePoints" fill="none" stroke="rgb(236, 72, 153)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                                         
-                                        {{-- Data points --}}
-                                        <template x-for="(item, index) in currentData" :key="index">
-                                            <circle :cx="getX(index)" :cy="getY(item.value)" r="5" fill="rgb(236, 72, 153)" stroke="white" stroke-width="2" />
+                                        {{-- Data points (hidden for large datasets) --}}
+                                        <template x-if="currentData.length <= 14">
+                                            <g>
+                                                <template x-for="(item, index) in currentData" :key="index">
+                                                    <circle :cx="getX(index)" :cy="getY(item.value)" r="5" fill="rgb(236, 72, 153)" stroke="white" stroke-width="2" />
+                                                </template>
+                                            </g>
                                         </template>
                                     </svg>
                                 </div>
                                 
-                                {{-- X-axis labels --}}
-                                <div class="flex justify-between mt-3 px-2">
+                                {{-- X-axis labels (show every 4th for large datasets) --}}
+                                <div class="flex justify-between mt-3 px-2 overflow-hidden">
                                     <template x-for="(item, index) in currentData" :key="'label-' + index">
-                                        <div class="text-xs text-zinc-500 text-center" x-text="item.label"></div>
+                                        <div class="text-xs text-zinc-500 text-center"
+                                             x-show="currentData.length <= 14 || index % 4 === 0"
+                                             :class="item.isCurrent ? 'text-pink-400 font-semibold' : ''"
+                                             x-text="item.label">
+                                        </div>
                                     </template>
                                 </div>
                             </div>
