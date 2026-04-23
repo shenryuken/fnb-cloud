@@ -37,7 +37,7 @@
                         @if($product->image_url)
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @elseif($product->tile_color)
-                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-center px-3 py-4" style="background-color: {{ $product->tile_color }};">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-center px-3" style="background-color: {{ $product->tile_color }};">
                                 <span class="text-white text-sm sm:text-base font-semibold leading-tight line-clamp-2">{{ $product->name }}</span>
                                 <span class="text-white/90 text-base font-bold">RM {{ number_format($product->price, 2) }}</span>
                             </div>
