@@ -141,6 +141,13 @@
         </div>
     @endif
 
+    @if($order->voucher_code)
+        <div class="item-row">
+            <span>Voucher</span>
+            <span class="bold">{{ $order->voucher_code }}</span>
+        </div>
+    @endif
+
     @if(($order->points_redeemed ?? 0) > 0)
         <div class="item-row">
             <span>Points Used</span>
@@ -153,6 +160,25 @@
             <span>Points Earned</span>
             <span>+ {{ (int) $order->points_earned }} pts</span>
         </div>
+    @endif
+
+    @if(isset($issuedVouchers) && $issuedVouchers->count() > 0)
+        <div class="divider"></div>
+        <div class="bold item-row">
+            <span>Next Purchase Voucher</span>
+        </div>
+        @foreach($issuedVouchers as $v)
+            <div class="item-row">
+                <span class="bold">{{ $v->code }}</span>
+                <span>
+                    @if($v->expires_at)
+                        Exp: {{ $v->expires_at->format('d/m/Y') }}
+                    @else
+                        No Expiry
+                    @endif
+                </span>
+            </div>
+        @endforeach
     @endif
 
     @if(($order->tax_amount ?? 0) > 0)
