@@ -82,33 +82,31 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get weekly sales data for the last 4 weeks
+     * Get weekly sales data for all 52 weeks of the current year
      */
     private function getMonthlyChartData($baseQuery): array
     {
         $data = [];
-        $weeks = [];
-        
-        // Collect 4 weeks backwards
-        for ($i = 3; $i >= 0; $i--) {
-            $startOfWeek = now()->subWeeks($i)->startOfWeek();
-            $endOfWeek = now()->subWeeks($i)->endOfWeek();
-            $weeks[] = [
-                'start' => $startOfWeek,
-                'end' => $endOfWeek,
-            ];
-        }
-        
-        // Process weeks in order (oldest to newest)
-        foreach ($weeks as $index => $week) {
+        $year = now()->year;
+        $startOfYear = now()->startOfYear();
+        $currentWeek = now()->weekOfYear;
+
+        for ($week = 1; $week <= 52; $week++) {
+            // Calculate start and end of this ISO week in the current year
+            $startOfWeek = (clone $startOfYear)->setISODate($year, $week)->startOfDay();
+            $endOfWeek = (clone $startOfWeek)->addDays(6)->endOfDay();
+
             $sales = (clone $baseQuery)
-                ->whereBetween('created_at', [$week['start'], $week['end']])
+                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->sum('total_amount');
+
             $data[] = [
-                'label' => 'Week ' . ($index + 1),
+                'label' => 'W' . $week,
                 'value' => (float) $sales,
+                'isCurrent' => $week === $currentWeek,
             ];
         }
+
         return $data;
     }
 
