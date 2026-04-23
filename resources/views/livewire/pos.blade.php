@@ -33,7 +33,7 @@
             @foreach($this->products as $product)
                 <div wire:click="quickAddProduct({{ $product->id }})" 
                     class="group flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-pointer hover:border-pink-500/50 hover:shadow-lg transition-all duration-200 relative">
-                    <div class="aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden relative">
+                    <div class="{{ $product->tile_color ? 'flex-1' : 'aspect-[4/3]' }} bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden relative">
                         @if($product->image_url)
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @elseif($product->tile_color)
