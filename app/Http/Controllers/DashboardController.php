@@ -52,8 +52,72 @@ class DashboardController extends Controller
 
             'recentOrders' => Order::with(['user', 'customer'])->latest()->take(5)->get(),
             'tenant' => $request->user()->tenant,
+
+            // Chart data for different time periods
+            'weeklyChartData' => $this->getWeeklyChartData($completedOrders),
+            'monthlyChartData' => $this->getMonthlyChartData($completedOrders),
+            'yearlyChartData' => $this->getYearlyChartData($completedOrders),
         ];
 
         return view('dashboard', $data);
+    }
+
+    /**
+     * Get daily sales data for the last 7 days
+     */
+    private function getWeeklyChartData($baseQuery): array
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $sales = (clone $baseQuery)
+                ->whereDate('created_at', $date)
+                ->sum('total_amount');
+            $data[] = [
+                'label' => $date->format('M d'),
+                'value' => (float) $sales,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get weekly sales data for the last 4 weeks
+     */
+    private function getMonthlyChartData($baseQuery): array
+    {
+        $data = [];
+        for ($i = 3; $i >= 0; $i--) {
+            $startOfWeek = now()->subWeeks($i)->startOfWeek();
+            $endOfWeek = now()->subWeeks($i)->endOfWeek();
+            $sales = (clone $baseQuery)
+                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->sum('total_amount');
+            $data[] = [
+                'label' => 'Week ' . $startOfWeek->weekOfMonth,
+                'value' => (float) $sales,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get monthly sales data for the last 12 months
+     */
+    private function getYearlyChartData($baseQuery): array
+    {
+        $data = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $sales = (clone $baseQuery)
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->sum('total_amount');
+            $data[] = [
+                'label' => $date->format('M'),
+                'value' => (float) $sales,
+            ];
+        }
+        return $data;
     }
 }
