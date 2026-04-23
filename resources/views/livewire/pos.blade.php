@@ -594,99 +594,97 @@
     @endif
 
     @if($showDiscountModal)
-        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-200">
-            <div class="bg-white dark:bg-neutral-900 rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
-                <div class="p-6 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 flex items-center justify-between">
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <div class="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center">
                             <flux:icon.tag class="w-5 h-5 text-white" />
                         </div>
-                        <div class="flex flex-col leading-none">
-                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Promotions</span>
-                            <span class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Discount / Voucher / Points</span>
+                        <div>
+                            <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100">Promotions</h3>
+                            <p class="text-xs text-zinc-400">Apply discount, voucher or points</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeDiscountModal" class="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
+                    <button type="button" wire:click="closeDiscountModal" class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors">
                         <flux:icon.x-mark class="w-5 h-5" />
                     </button>
                 </div>
 
-                <div class="p-6 space-y-6">
-                    <div class="grid grid-cols-4 gap-2">
-                        <button type="button" wire:click="setDiscountTab('discount')" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all {{ $discountTab === 'discount' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/60 dark:bg-neutral-900/40 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-500/40' }}">
+                <div class="p-4 space-y-4">
+                    <div class="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                        <button type="button" wire:click="setDiscountTab('discount')" class="flex-1 py-2 rounded-md text-xs font-semibold transition-all {{ $discountTab === 'discount' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700' }}">
                             Discount
                         </button>
-                        <button type="button" wire:click="setDiscountTab('voucher')" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all {{ $discountTab === 'voucher' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/60 dark:bg-neutral-900/40 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-500/40' }}">
+                        <button type="button" wire:click="setDiscountTab('voucher')" class="flex-1 py-2 rounded-md text-xs font-semibold transition-all {{ $discountTab === 'voucher' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700' }}">
                             Voucher
                         </button>
-                        <button type="button" wire:click="setDiscountTab('points')" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all {{ $discountTab === 'points' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/60 dark:bg-neutral-900/40 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-500/40' }}">
+                        <button type="button" wire:click="setDiscountTab('points')" class="flex-1 py-2 rounded-md text-xs font-semibold transition-all {{ $discountTab === 'points' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700' }}">
                             Points
                         </button>
-                        <button type="button" wire:click="setDiscountTab('customer')" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all {{ $discountTab === 'customer' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/60 dark:bg-neutral-900/40 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-500/40' }}">
+                        <button type="button" wire:click="setDiscountTab('customer')" class="flex-1 py-2 rounded-md text-xs font-semibold transition-all {{ $discountTab === 'customer' ? 'bg-white dark:bg-zinc-700 text-pink-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700' }}">
                             Customer
                         </button>
                     </div>
 
                     @if($discountTab === 'discount')
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Manual Discount</span>
-                                <button type="button" wire:click="clearPromotion" class="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors">
+                                <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Manual Discount</span>
+                                <button type="button" wire:click="clearPromotion" class="text-xs text-zinc-400 hover:text-red-500 transition-colors">
                                     Clear
                                 </button>
                             </div>
 
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-2 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 px-2 py-1">
-                                    <div class="flex p-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-                                        <button type="button" wire:click="$set('discountInputType', 'percent')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountInputType === 'percent' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">%</button>
-                                        <button type="button" wire:click="$set('discountInputType', 'fixed')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountInputType === 'fixed' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">$</button>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-1 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-2">
+                                    <div class="flex p-0.5 bg-zinc-100 dark:bg-zinc-700 rounded-md">
+                                        <button type="button" wire:click="$set('discountInputType', 'percent')" class="px-2.5 py-1 rounded text-xs font-semibold transition-all {{ $discountInputType === 'percent' ? 'bg-white dark:bg-zinc-600 text-pink-600 shadow-sm' : 'text-zinc-400' }}">%</button>
+                                        <button type="button" wire:click="$set('discountInputType', 'fixed')" class="px-2.5 py-1 rounded text-xs font-semibold transition-all {{ $discountInputType === 'fixed' ? 'bg-white dark:bg-zinc-600 text-pink-600 shadow-sm' : 'text-zinc-400' }}">RM</button>
                                     </div>
-                                    <input type="number" step="0.01" wire:model.live="discountInputValue" class="w-24 bg-transparent border-none focus:ring-0 text-lg font-black text-neutral-700 dark:text-neutral-200 text-right tabular-nums p-0" placeholder="0">
+                                    <input type="number" step="0.01" wire:model.live="discountInputValue" class="flex-1 bg-transparent border-none focus:ring-0 text-lg font-bold text-zinc-700 dark:text-zinc-200 text-right tabular-nums p-0" placeholder="0">
                                 </div>
                                 <button type="button" wire:click="applyManualDiscount"
                                     @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
-                                    class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30">
+                                    class="px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all text-sm disabled:opacity-40">
                                     Apply
                                 </button>
                             </div>
 
                             @if(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
-                                <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
-                                    Manual discount disabled by voucher rules.
-                                </div>
+                                <p class="text-xs text-zinc-400">Manual discount disabled by voucher rules.</p>
                             @endif
                         </div>
                     @endif
 
                     @if($discountTab === 'voucher')
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Voucher Code</span>
-                                <button type="button" wire:click="clearPromotion" class="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors">
+                                <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Voucher Code</span>
+                                <button type="button" wire:click="clearPromotion" class="text-xs text-zinc-400 hover:text-red-500 transition-colors">
                                     Clear
                                 </button>
                             </div>
 
-                            <div class="flex items-center gap-3">
-                                <input type="text" wire:model.live="voucherCode" class="flex-1 rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-black focus:ring-4 focus:ring-blue-500/10 transition-all uppercase" placeholder="ENTER CODE">
-                                <button type="button" wire:click="applyVoucher" class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px]">
+                            <div class="flex items-center gap-2">
+                                <input type="text" wire:model.live="voucherCode" class="flex-1 rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-semibold focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all uppercase text-sm" placeholder="ENTER CODE">
+                                <button type="button" wire:click="applyVoucher" class="px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all text-sm">
                                     Apply
                                 </button>
                             </div>
 
                             @if(filled($appliedVoucherCode))
-                                <div class="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/60 dark:border-emerald-800/30">
-                                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Applied</span>
-                                    <span class="font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">{{ $appliedVoucherCode }}</span>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
+                                    <span class="text-sm font-medium text-green-600">Applied</span>
+                                    <span class="font-bold text-green-700 dark:text-green-400 uppercase">{{ $appliedVoucherCode }}</span>
                                 </div>
 
-                                <div class="flex flex-wrap gap-2">
+                                <div class="flex flex-wrap gap-1.5">
                                     @if(!(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[9px] font-black text-neutral-500 uppercase tracking-widest">No Manual Discount</span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-500">No Manual Discount</span>
                                     @endif
                                     @if(!(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[9px] font-black text-neutral-500 uppercase tracking-widest">No Points</span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-500">No Points</span>
                                     @endif
                                 </div>
                             @endif
@@ -694,61 +692,59 @@
                     @endif
 
                     @if($discountTab === 'points')
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Redeem Points</span>
-                                <button type="button" wire:click="clearPromotion" class="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors">
+                                <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Redeem Points</span>
+                                <button type="button" wire:click="clearPromotion" class="text-xs text-zinc-400 hover:text-red-500 transition-colors">
                                     Clear
                                 </button>
                             </div>
 
                             @if($this->customer)
-                                <div class="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Customer</span>
-                                        <span class="font-black text-neutral-800 dark:text-neutral-100">{{ $this->customer->name }}</span>
-                                        <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Points: {{ (int) $this->customer->points_balance }}</span>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                                    <div>
+                                        <span class="text-xs text-zinc-400 block">Customer</span>
+                                        <span class="font-semibold text-zinc-800 dark:text-zinc-100">{{ $this->customer->name }}</span>
+                                        <span class="text-xs text-zinc-400 block mt-0.5">Points: {{ (int) $this->customer->points_balance }}</span>
                                     </div>
-                                    <button type="button" wire:click="clearCustomer" class="px-3 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-[10px] font-black text-neutral-500 uppercase tracking-widest hover:border-red-500/50 hover:text-red-500 transition-all">
+                                    <button type="button" wire:click="clearCustomer" class="px-2 py-1 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 hover:border-red-300 hover:text-red-500 transition-all">
                                         Clear
                                     </button>
                                 </div>
 
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-2">
                                     <input type="number" wire:model.live="pointsToRedeem"
                                         @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
-                                        class="flex-1 rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-black focus:ring-4 focus:ring-blue-500/10 transition-all disabled:opacity-50" placeholder="Points ({{ (int) $pointsRedeemPoints }} = RM {{ number_format((float) $pointsRedeemAmount, 2) }})">
+                                        class="flex-1 rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-semibold focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all disabled:opacity-50 text-sm" placeholder="Points ({{ (int) $pointsRedeemPoints }} = RM {{ number_format((float) $pointsRedeemAmount, 2) }})">
                                     <button type="button" wire:click="applyPoints"
                                         @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
-                                        class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30">
+                                        class="px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all text-sm disabled:opacity-40">
                                         Redeem
                                     </button>
                                 </div>
 
                                 @if(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
-                                    <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
-                                        Points redemption disabled by voucher rules.
-                                    </div>
+                                    <p class="text-xs text-zinc-400">Points redemption disabled by voucher rules.</p>
                                 @endif
 
-                                <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
+                                <p class="text-xs text-zinc-400">
                                     @if((int) $pointsMinRedeem > 0)
-                                        Min {{ (int) $pointsMinRedeem }} pts •
+                                        Min {{ (int) $pointsMinRedeem }} pts |
                                     @endif
                                     {{ (int) $pointsRedeemPoints }} pts = RM {{ number_format((float) $pointsRedeemAmount, 2) }}
-                                </div>
+                                </p>
 
                                 @if(($appliedPoints ?? 0) > 0)
-                                    <div class="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/60 dark:border-emerald-800/30">
-                                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Applied Points</span>
-                                        <span class="font-black text-emerald-700 dark:text-emerald-300 tabular-nums">{{ (int) $appliedPoints }}</span>
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
+                                        <span class="text-sm font-medium text-green-600">Applied Points</span>
+                                        <span class="font-bold text-green-700 dark:text-green-400 tabular-nums">{{ (int) $appliedPoints }}</span>
                                     </div>
                                 @endif
                             @else
-                                <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 text-sm text-neutral-500 font-medium">
+                                <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-500">
                                     Select or register a customer before redeeming points.
                                 </div>
-                                <button type="button" wire:click="setDiscountTab('customer')" class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                <button type="button" wire:click="setDiscountTab('customer')" class="w-full py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all text-sm">
                                     Go to Customer
                                 </button>
                             @endif
@@ -756,80 +752,76 @@
                     @endif
 
                     @if($discountTab === 'customer')
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                             @if($this->customer)
-                                <div class="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/60 dark:border-emerald-800/30">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Selected Customer</span>
-                                        <span class="font-black text-neutral-800 dark:text-neutral-100">{{ $this->customer->name }}</span>
-                                        <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Points: {{ (int) $this->customer->points_balance }}</span>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
+                                    <div>
+                                        <span class="text-xs text-green-600 block">Selected Customer</span>
+                                        <span class="font-semibold text-zinc-800 dark:text-zinc-100">{{ $this->customer->name }}</span>
+                                        <span class="text-xs text-zinc-400 block mt-0.5">Points: {{ (int) $this->customer->points_balance }}</span>
                                     </div>
-                                    <button type="button" wire:click="clearCustomer" class="px-3 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-emerald-200/80 dark:border-emerald-800/40 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest hover:border-red-500/50 hover:text-red-500 transition-all">
+                                    <button type="button" wire:click="clearCustomer" class="px-2 py-1 rounded-md bg-white dark:bg-zinc-900 border border-green-200 dark:border-green-800/40 text-xs text-green-700 dark:text-green-400 hover:border-red-300 hover:text-red-500 transition-all">
                                         Clear
                                     </button>
                                 </div>
                             @endif
 
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-2">Find Customer</label>
-                                <input type="text" wire:model.live.debounce.200ms="customerSearch" class="w-full rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="Search name / email / mobile">
-                                <div class="mt-2 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+                                <label class="text-xs font-medium text-zinc-500 block">Find Customer</label>
+                                <input type="text" wire:model.live.debounce.200ms="customerSearch" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Search name / email / mobile">
+                                <div class="mt-1 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden max-h-40 overflow-y-auto">
                                     @forelse($this->customerSearchResults as $row)
                                         @php $isSelected = (int) $customerId === (int) $row['id']; @endphp
-                                        <button type="button" wire:click="selectCustomer({{ (int) $row['id'] }})" class="w-full px-4 py-3 transition-all flex items-center justify-between border-l-4
-                                            {{ $isSelected ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-600' : 'bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 border-transparent' }}">
-                                            <div class="flex flex-col text-left">
-                                                <span class="font-black text-neutral-800 dark:text-neutral-100">{{ $row['name'] }}</span>
-                                                <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+                                        <button type="button" wire:click="selectCustomer({{ (int) $row['id'] }})" class="w-full px-3 py-2 transition-all flex items-center justify-between border-l-2
+                                            {{ $isSelected ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-500' : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border-transparent' }}">
+                                            <div class="text-left">
+                                                <span class="font-semibold text-zinc-800 dark:text-zinc-100 text-sm">{{ $row['name'] }}</span>
+                                                <span class="text-xs text-zinc-400 block">
                                                     {{ $row['email'] ?: ($row['mobile'] ?: '—') }}
                                                 </span>
                                             </div>
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-2">
                                                 @if($isSelected)
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-500 text-white text-xs font-medium">
                                                         <flux:icon.check class="w-3 h-3" />
                                                         Selected
                                                     </span>
                                                 @endif
-                                                <span class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                                                <span class="text-xs font-medium text-pink-600 dark:text-pink-400">
                                                     {{ (int) ($row['points_balance'] ?? 0) }} pts
                                                 </span>
                                             </div>
                                         </button>
                                     @empty
-                                        <div class="px-4 py-4 text-sm text-neutral-400 font-medium italic">
+                                        <div class="px-3 py-3 text-sm text-zinc-400 italic">
                                             No customers found.
                                         </div>
                                     @endforelse
                                 </div>
                             </div>
 
-                            <div class="pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Register Customer</span>
+                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                                <span class="text-xs font-medium text-zinc-500">Register New Customer</span>
+
+                                    <input type="email" wire:model="newCustomerEmail" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Email (optional)">
+                                    @error('newCustomerEmail') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <input type="text" wire:model="newCustomerMobile" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Mobile (optional)">
+                                    @error('newCustomerMobile') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="grid grid-cols-1 gap-3">
-                                    <input type="text" wire:model="newCustomerName" class="w-full rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-black focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="Name">
-                                    @error('newCustomerName') <span class="text-red-500 text-xs font-bold ml-2">{{ $message }}</span> @enderror
-                                    <input type="email" wire:model="newCustomerEmail" class="w-full rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="Email (optional)">
-                                    @error('newCustomerEmail') <span class="text-red-500 text-xs font-bold ml-2">{{ $message }}</span> @enderror
-                                    <input type="text" wire:model="newCustomerMobile" class="w-full rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="Mobile (optional)">
-                                    @error('newCustomerMobile') <span class="text-red-500 text-xs font-bold ml-2">{{ $message }}</span> @enderror
-                                </div>
-
-                                <button type="button" wire:click="registerCustomer" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-lg shadow-emerald-500/20 transition-all uppercase tracking-widest text-[10px]">
-                                    Register
+                                <button type="button" wire:click="registerCustomer" class="w-full py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold transition-all text-sm">
+                                    Register Customer
                                 </button>
                             </div>
                         </div>
                     @endif
+                </div>
 
-                    <div class="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Current Discount</span>
-                            <span class="text-xs font-black text-red-500 tabular-nums">- ${{ number_format($discountAmount, 2) }}</span>
-                        </div>
+                {{-- Footer with current discount --}}
+                <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-zinc-500">Current Discount</span>
+                        <span class="font-bold text-red-500 tabular-nums">- RM {{ number_format($discountAmount, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -838,71 +830,78 @@
 
     <!-- Payment Modal -->
     @if($isPaying)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300">
-            <div class="bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-neutral-200 dark:border-neutral-800 flex flex-col">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
 
                 <!-- Header -->
-                <div class="bg-blue-600 dark:bg-blue-700 p-8 text-white flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
-                            <flux:icon.credit-card class="w-6 h-6 text-white" />
+                <div class="bg-gradient-to-r from-pink-500 to-pink-600 p-5 text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                                <flux:icon.credit-card class="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold">Checkout</h3>
+                                <p class="text-pink-100 text-xs">
+                                    {{ $isSplitPayment ? 'Split Payment' : 'Select payment method' }}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-black tracking-tight">Checkout</h3>
-                            <p class="text-blue-100 text-[10px] font-medium opacity-80 uppercase tracking-widest">
-                                {{ $isSplitPayment ? 'Split Payment' : 'Select Payment Method' }}
-                            </p>
+                        <div class="text-right">
+                            <span class="block text-xs text-pink-200">Amount Due</span>
+                            <span class="text-2xl font-bold">RM {{ number_format($totalAmount, 2) }}</span>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="block text-[10px] font-bold opacity-60 uppercase tracking-widest">Amount Due</span>
-                        <span class="text-4xl font-black tracking-tighter">${{ number_format($totalAmount, 2) }}</span>
                     </div>
                 </div>
 
                 <!-- Body -->
-                <div class="p-8 space-y-6 overflow-y-auto max-h-[70vh] scrollbar-hide">
+                <div class="p-4 space-y-4 overflow-y-auto flex-1 scrollbar-hide">
 
                     {{-- Order Summary --}}
-                    <div class="rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/40 p-5 space-y-2">
-                        <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
+                    <div class="rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-2">
+                        <div class="flex justify-between text-zinc-500 text-sm">
                             <span>Subtotal</span>
-                            <span class="font-black">${{ number_format($subTotalAmount, 2) }}</span>
+                            <span class="font-semibold">RM {{ number_format($subTotalAmount, 2) }}</span>
                         </div>
-                        @if($discountAmount > 0)
-                            <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
-                                <span>Discount</span>
-                                <span class="font-black text-red-500">- ${{ number_format($discountAmount, 2) }}</span>
-                            </div>
-                        @endif
+                        
+                        {{-- Discount/Voucher row with edit button --}}
+                        <button type="button" wire:click="openDiscountModal" class="w-full flex justify-between text-sm hover:bg-white dark:hover:bg-zinc-800 rounded px-1 py-0.5 -mx-1 transition-colors">
+                            <span class="text-zinc-500">Discount / Voucher</span>
+                            @if($discountAmount > 0)
+                                <span class="font-semibold text-red-500">- RM {{ number_format($discountAmount, 2) }}</span>
+                            @else
+                                <span class="text-pink-500 text-sm">+ Add</span>
+                            @endif
+                        </button>
+                        
                         @if($taxAmount > 0)
                             @if(count($taxBreakdown) > 1)
                                 @foreach($taxBreakdown as $row)
-                                    <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
+                                    <div class="flex justify-between text-zinc-500 text-sm">
                                         <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                                        <span class="font-black text-emerald-600">${{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                                        <span class="font-semibold text-green-600">RM {{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
                                     </div>
                                 @endforeach
                             @else
-                                <div class="flex justify-between text-neutral-500 font-bold tracking-tight">
+                                <div class="flex justify-between text-zinc-500 text-sm">
                                     <span>Tax ({{ $taxLabel }})</span>
-                                    <span class="font-black text-emerald-600">${{ number_format($taxAmount, 2) }}</span>
+                                    <span class="font-semibold text-green-600">RM {{ number_format($taxAmount, 2) }}</span>
                                 </div>
                             @endif
                         @endif
-                        <div class="flex justify-between items-center pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                            <span class="text-sm font-black text-neutral-900 dark:text-neutral-100 uppercase tracking-widest">Total</span>
-                            <span class="text-xl font-black text-blue-600 tracking-tighter">${{ number_format($totalAmount, 2) }}</span>
+                        <div class="flex justify-between items-center pt-2 mt-1 border-t border-zinc-200 dark:border-zinc-700">
+                            <span class="font-semibold text-zinc-900 dark:text-zinc-100">Total</span>
+                            <span class="text-lg font-bold text-pink-500">RM {{ number_format($totalAmount, 2) }}</span>
                         </div>
                     </div>
 
                     {{-- Split Payment Toggle --}}
-                    <div class="flex items-center justify-between px-1">
-                        <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">Split Payment</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-zinc-500">Split Payment</span>
                         <button type="button"
                             wire:click="{{ $isSplitPayment ? 'disableSplitPayment' : 'enableSplitPayment' }}"
                             class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none
-                                {{ $isSplitPayment ? 'bg-blue-600' : 'bg-neutral-200 dark:bg-neutral-700' }}">
+                                {{ $isSplitPayment ? 'bg-pink-500' : 'bg-zinc-200 dark:bg-zinc-700' }}">
                             <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
                                 {{ $isSplitPayment ? 'translate-x-6' : 'translate-x-1' }}">
                             </span>
@@ -912,59 +911,62 @@
                     {{-- ── SINGLE PAYMENT MODE ── --}}
                     @if(!$isSplitPayment)
                         {{-- Method selector --}}
-                        <div class="grid grid-cols-2 gap-4">
-                            <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
-                                {{ $paymentMethod === 'cash' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="relative flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                                {{ $paymentMethod === 'cash' ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300' }}">
                                 <input type="radio" wire:model.live="paymentMethod" value="cash" class="sr-only">
-                                <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
-                                    <flux:icon.banknotes class="w-5 h-5 {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                <div class="w-9 h-9 rounded-lg bg-white dark:bg-zinc-800 flex items-center justify-center border border-zinc-100 dark:border-zinc-700">
+                                    <flux:icon.banknotes class="w-5 h-5 {{ $paymentMethod === 'cash' ? 'text-pink-500' : 'text-zinc-400' }}" />
                                 </div>
-                                <span class="font-black text-sm {{ $paymentMethod === 'cash' ? 'text-blue-600' : 'text-neutral-500' }}">CASH</span>
+                                <span class="font-semibold text-sm {{ $paymentMethod === 'cash' ? 'text-pink-600' : 'text-zinc-500' }}">Cash</span>
                             </label>
-                            <label class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300
-                                {{ $paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5' : 'border-neutral-100 dark:border-neutral-800 hover:border-blue-200' }}">
+                            <label class="relative flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                                {{ $paymentMethod === 'card' ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300' }}">
                                 <input type="radio" wire:model.live="paymentMethod" value="card" class="sr-only">
-                                <div class="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
-                                    <flux:icon.credit-card class="w-5 h-5 {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}" />
+                                <div class="w-9 h-9 rounded-lg bg-white dark:bg-zinc-800 flex items-center justify-center border border-zinc-100 dark:border-zinc-700">
+                                    <flux:icon.credit-card class="w-5 h-5 {{ $paymentMethod === 'card' ? 'text-pink-500' : 'text-zinc-400' }}" />
                                 </div>
-                                <span class="font-black text-sm {{ $paymentMethod === 'card' ? 'text-blue-600' : 'text-neutral-500' }}">CARD</span>
+                                <span class="font-semibold text-sm {{ $paymentMethod === 'card' ? 'text-pink-600' : 'text-zinc-500' }}">Card</span>
                             </label>
                         </div>
 
                         @if($paymentMethod === 'cash')
-                            <div class="space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div class="grid grid-cols-4 gap-2">
+                            <div class="space-y-3 animate-in slide-in-from-top-2 duration-200">
+                                {{-- Quick amount buttons --}}
+                                <div class="flex flex-wrap gap-2">
                                     <button type="button" wire:click="setExactAmount"
-                                        class="py-3 text-[10px] font-black rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all uppercase tracking-widest">
+                                        class="px-4 py-2 text-xs font-semibold rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-all">
                                         Exact
                                     </button>
                                     @foreach([5, 10, 20, 50, 100] as $amount)
                                         <button type="button" wire:click="addQuickAmount({{ $amount }})"
-                                            class="py-3 text-[10px] font-black rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 hover:border-blue-500 hover:text-blue-600 transition-all">
-                                            +${{ $amount }}
+                                            class="px-4 py-2 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-pink-500 hover:text-pink-500 transition-all">
+                                            +RM{{ $amount }}
                                         </button>
                                     @endforeach
                                 </div>
-                                <div class="flex items-center gap-6">
-                                    <div class="flex-1 relative group">
-                                        <div class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-300 group-focus-within:text-blue-500 transition-colors">$</div>
+                                
+                                {{-- Amount input and change display --}}
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-zinc-400">RM</span>
                                         <input type="number" step="0.01" min="0" wire:model.live="amountReceived"
-                                            class="w-full pl-12 pr-16 py-6 text-4xl font-black rounded-2xl border-none bg-neutral-50 dark:bg-neutral-800 focus:ring-4 focus:ring-blue-500/10 transition-all tracking-tighter text-neutral-800 dark:text-neutral-100 shadow-inner text-right"
+                                            class="w-full pl-12 pr-10 py-3 text-2xl font-bold rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-zinc-800 dark:text-zinc-100 text-right"
                                             placeholder="0.00"
                                             onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)&&n>0) this.value=n.toFixed(2); else this.value=''"
                                             onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)&&n>0?n.toFixed(2):'0.00'">
                                         <button type="button" wire:click="clearAmountReceived"
-                                            class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"
                                             title="Clear amount">
                                             <flux:icon.x-mark class="w-4 h-4" />
                                         </button>
                                     </div>
-                                    <div class="flex-1 flex justify-between items-center p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-100 dark:border-emerald-800/30">
-                                        <div class="flex flex-col">
-                                            <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Change</span>
-                                            <span class="text-3xl font-black text-emerald-600 tracking-tighter">${{ number_format($changeAmount, 2) }}</span>
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
+                                        <div>
+                                            <span class="text-xs text-green-600 block">Change</span>
+                                            <span class="text-xl font-bold text-green-600">RM {{ number_format($changeAmount, 2) }}</span>
                                         </div>
-                                        <flux:icon.banknotes class="w-8 h-8 text-emerald-500/30" />
+                                        <flux:icon.banknotes class="w-6 h-6 text-green-400" />
                                     </div>
                                 </div>
                             </div>
@@ -973,40 +975,38 @@
 
                     {{-- ── SPLIT PAYMENT MODE ── --}}
                     @if($isSplitPayment)
-                        <div class="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                        <div class="space-y-3 animate-in slide-in-from-top-2 duration-200">
 
                             {{-- Remaining balance indicator --}}
-                            <div class="flex items-center justify-between p-4 rounded-2xl
-                                {{ $splitRemaining <= 0.001 ? 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30' : 'bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30' }}">
-                                <span class="text-[10px] font-black uppercase tracking-widest
-                                    {{ $splitRemaining <= 0.001 ? 'text-emerald-600' : 'text-amber-600' }}">
+                            <div class="flex items-center justify-between p-3 rounded-lg
+                                {{ $splitRemaining <= 0.001 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30' : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30' }}">
+                                <span class="text-sm font-medium {{ $splitRemaining <= 0.001 ? 'text-green-600' : 'text-amber-600' }}">
                                     {{ $splitRemaining <= 0.001 ? 'Fully Covered' : 'Remaining' }}
                                 </span>
-                                <span class="text-2xl font-black tracking-tighter
-                                    {{ $splitRemaining <= 0.001 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                    ${{ number_format($splitRemaining, 2) }}
+                                <span class="text-lg font-bold {{ $splitRemaining <= 0.001 ? 'text-green-600' : 'text-amber-600' }}">
+                                    RM {{ number_format($splitRemaining, 2) }}
                                 </span>
                             </div>
 
                             {{-- Existing splits --}}
                             @if(!empty($paymentSplits))
-                                <div class="space-y-2">
+                                <div class="space-y-1.5">
                                     @foreach($paymentSplits as $i => $split)
-                                        <div class="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700">
-                                            <div class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-700 flex items-center justify-center shadow-sm shrink-0">
+                                        <div class="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700">
+                                            <div class="w-7 h-7 rounded-md bg-white dark:bg-zinc-700 flex items-center justify-center shrink-0">
                                                 @if($split['method'] === 'cash')
-                                                    <flux:icon.banknotes class="w-4 h-4 text-blue-600" />
+                                                    <flux:icon.banknotes class="w-4 h-4 text-pink-500" />
                                                 @elseif($split['method'] === 'card')
-                                                    <flux:icon.credit-card class="w-4 h-4 text-blue-600" />
+                                                    <flux:icon.credit-card class="w-4 h-4 text-pink-500" />
                                                 @else
-                                                    <flux:icon.device-phone-mobile class="w-4 h-4 text-blue-600" />
+                                                    <flux:icon.device-phone-mobile class="w-4 h-4 text-pink-500" />
                                                 @endif
                                             </div>
-                                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest w-16 shrink-0">{{ $split['method'] }}</span>
-                                            <span class="flex-1 text-right font-black text-neutral-800 dark:text-neutral-100 tabular-nums">${{ number_format($split['amount'], 2) }}</span>
+                                            <span class="text-xs font-medium text-zinc-500 capitalize w-14 shrink-0">{{ $split['method'] }}</span>
+                                            <span class="flex-1 text-right font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">RM {{ number_format($split['amount'], 2) }}</span>
                                             <button type="button" wire:click="removeSplit({{ $i }})"
-                                                class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-900/10 flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-all shrink-0">
-                                                <flux:icon.x-mark class="w-3.5 h-3.5" />
+                                                class="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors shrink-0">
+                                                <flux:icon.x-mark class="w-4 h-4" />
                                             </button>
                                         </div>
                                     @endforeach
@@ -1015,47 +1015,47 @@
 
                             {{-- Add split row --}}
                             @if($splitRemaining > 0.001)
-                                <div class="flex gap-3 items-end">
+                                <div class="flex flex-wrap gap-2 items-end">
                                     {{-- Method selector --}}
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-1.5">
                                         <button type="button" wire:click="$set('splitMethod', 'cash')"
-                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
-                                                {{ $splitMethod === 'cash' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
-                                            <flux:icon.banknotes class="w-5 h-5 {{ $splitMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}" />
-                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'cash' ? 'text-blue-600' : 'text-neutral-400' }}">Cash</span>
+                                            class="flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg border transition-all
+                                                {{ $splitMethod === 'cash' ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:border-zinc-300' }}">
+                                            <flux:icon.banknotes class="w-4 h-4 {{ $splitMethod === 'cash' ? 'text-pink-500' : 'text-zinc-400' }}" />
+                                            <span class="text-[9px] font-medium {{ $splitMethod === 'cash' ? 'text-pink-600' : 'text-zinc-400' }}">Cash</span>
                                         </button>
                                         <button type="button" wire:click="$set('splitMethod', 'card')"
-                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
-                                                {{ $splitMethod === 'card' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
-                                            <flux:icon.credit-card class="w-5 h-5 {{ $splitMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}" />
-                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'card' ? 'text-blue-600' : 'text-neutral-400' }}">Card</span>
+                                            class="flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg border transition-all
+                                                {{ $splitMethod === 'card' ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:border-zinc-300' }}">
+                                            <flux:icon.credit-card class="w-4 h-4 {{ $splitMethod === 'card' ? 'text-pink-500' : 'text-zinc-400' }}" />
+                                            <span class="text-[9px] font-medium {{ $splitMethod === 'card' ? 'text-pink-600' : 'text-zinc-400' }}">Card</span>
                                         </button>
                                         <button type="button" wire:click="$set('splitMethod', 'ewallet')"
-                                            class="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 transition-all
-                                                {{ $splitMethod === 'ewallet' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-blue-300' }}">
-                                            <flux:icon.device-phone-mobile class="w-5 h-5 {{ $splitMethod === 'ewallet' ? 'text-blue-600' : 'text-neutral-400' }}" />
-                                            <span class="text-[8px] font-black uppercase tracking-widest {{ $splitMethod === 'ewallet' ? 'text-blue-600' : 'text-neutral-400' }}">eWallet</span>
+                                            class="flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg border transition-all
+                                                {{ $splitMethod === 'ewallet' ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:border-zinc-300' }}">
+                                            <flux:icon.device-phone-mobile class="w-4 h-4 {{ $splitMethod === 'ewallet' ? 'text-pink-500' : 'text-zinc-400' }}" />
+                                            <span class="text-[9px] font-medium {{ $splitMethod === 'ewallet' ? 'text-pink-600' : 'text-zinc-400' }}">eWallet</span>
                                         </button>
                                     </div>
 
                                     {{-- Amount input --}}
-                                    <div class="flex-1 relative">
-                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-neutral-300">$</span>
+                                    <div class="flex-1 relative min-w-[120px]">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400">RM</span>
                                         <input type="number" step="0.01" min="0.01" wire:model.live="splitAmount"
-                                            class="w-full pl-8 pr-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-black text-right text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                            class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-semibold text-right text-zinc-800 dark:text-zinc-100 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
                                             onfocus="const n=parseFloat(this.value); if(Number.isFinite(n)&&n>0) this.value=n.toFixed(2)"
                                             onblur="const n=parseFloat(this.value); this.value=Number.isFinite(n)?n.toFixed(2):'0.00'">
                                     </div>
 
                                     {{-- Exact remaining button --}}
                                     <button type="button" wire:click="setSplitExact"
-                                        class="px-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:bg-blue-50 hover:text-blue-600 border border-neutral-200 dark:border-neutral-700 transition-all whitespace-nowrap">
+                                        class="px-3 py-2.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-pink-50 hover:text-pink-600 border border-zinc-200 dark:border-zinc-700 transition-all">
                                         Full
                                     </button>
 
                                     {{-- Add button --}}
                                     <button type="button" wire:click="addSplit"
-                                        class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shrink-0">
+                                        class="px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0">
                                         <flux:icon.plus class="w-4 h-4" />
                                         Add
                                     </button>
@@ -1065,18 +1065,17 @@
                     @endif
 
                     {{-- Notes --}}
-                    <div class="relative group">
-                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
-                            <flux:icon.pencil-square class="w-5 h-5" />
-                        </div>
-                        <input type="text" wire:model="orderNotes" placeholder="Add a quick note..."
-                            class="w-full rounded-xl border-none bg-neutral-50 dark:bg-neutral-800 p-4 pl-12 font-medium focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
+                    <div>
+                        <input type="text" wire:model="orderNotes" placeholder="Add a note (optional)..."
+                            class="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                     </div>
                 </div>
 
                 <!-- Footer -->
-                <div class="p-8 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 flex gap-4">
-                    <button wire:click="$set('isPaying', false)" class="flex-1 py-4 rounded-2xl font-black text-neutral-400 hover:text-neutral-800 transition-colors uppercase tracking-widest text-[10px]">Back</button>
+                <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
+                    <button wire:click="$set('isPaying', false)" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                        Back
+                    </button>
                     <button wire:click="checkout"
                         @php
                             $checkoutDisabled = $isSplitPayment
@@ -1084,8 +1083,8 @@
                                 : (!$isSplitPayment && $paymentMethod === 'cash' && $amountReceived < $totalAmount);
                         @endphp
                         {{ $checkoutDisabled ? 'disabled' : '' }}
-                        class="flex-[2] py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-base shadow-xl shadow-emerald-500/20 disabled:opacity-30 transition-all transform active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2 group">
-                        <flux:icon.check-circle class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        class="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                        <flux:icon.check-circle class="w-5 h-5" />
                         Process Payment
                     </button>
                 </div>
