@@ -1199,19 +1199,21 @@
 
     <!-- Customization Modal -->
     @if($selectingProduct)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300">
-            <div class="bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-neutral-200 dark:border-neutral-800">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-zinc-800">
                 <!-- Modal Header -->
-                <div class="p-10 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50">
-                    <div class="flex items-center gap-6">
-                        <div class="w-20 h-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden border-2 border-white dark:border-neutral-700 shadow-xl">
+                <div class="p-5 border-b border-zinc-100 dark:border-zinc-800">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
                             @if($selectingProduct->image_url)
                                 <img src="{{ $selectingProduct->image_url }}" class="w-full h-full object-cover">
+                            @elseif($selectingProduct->tile_color)
+                                <div class="w-full h-full" style="background-color: {{ $selectingProduct->tile_color }};"></div>
                             @else
-                                <flux:icon.package class="w-10 h-10 text-neutral-300 dark:text-neutral-600" />
+                                <flux:icon.package class="w-7 h-7 text-zinc-300 dark:text-zinc-600" />
                             @endif
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             @php
                                 $selectedVariant = $selectingProduct->variants->firstWhere('id', $selectedVariantId);
                                 $selectedIds = collect($selectedAddonIds ?? [])->map(fn ($v) => (int) $v)->all();
@@ -1236,47 +1238,49 @@
 
                                 $displayPrice = (float) ($selectedVariant?->price ?? $selectingProduct->price) + $addonsTotal + round(max(0, $setTotal), 2);
                             @endphp
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-3xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">{{ $selectingProduct->name }}</h3>
-                                <span class="text-2xl font-black text-blue-600 tracking-tighter">${{ number_format($displayPrice, 2) }}</span>
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 truncate">{{ $selectingProduct->name }}</h3>
+                                <span class="text-xl font-bold text-pink-500 shrink-0">RM {{ number_format($displayPrice, 2) }}</span>
                             </div>
-                            <p class="text-neutral-500 font-medium mt-1">{{ $selectingProduct->description }}</p>
+                            @if($selectingProduct->description)
+                                <p class="text-zinc-400 text-sm mt-0.5 truncate">{{ $selectingProduct->description }}</p>
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 <!-- Modal Body -->
-                <div class="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
+                <div class="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-hide">
                     <!-- Variants (Sizes) -->
                     @if($selectingProduct->variants->count() > 0)
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Select Variation</h4>
-                            <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Select Variation</h4>
+                            <div class="grid grid-cols-2 gap-2">
                                 <button type="button" wire:click="$set('selectedVariantId', null)"
-                                    class="group relative flex items-center justify-between p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300
-                                    {{ is_null($selectedVariantId) ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-xl shadow-blue-500/10' : 'border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-700' }}">
+                                    class="relative flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                    {{ is_null($selectedVariantId) ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600' }}">
                                     <div class="flex flex-col text-left">
-                                        <span class="font-black text-lg {{ is_null($selectedVariantId) ? 'text-blue-600' : 'text-neutral-800 dark:text-neutral-100' }}">Regular</span>
-                                        <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Base: ${{ number_format($selectingProduct->price, 2) }}</span>
+                                        <span class="font-semibold text-sm {{ is_null($selectedVariantId) ? 'text-pink-600' : 'text-zinc-800 dark:text-zinc-100' }}">Regular</span>
+                                        <span class="text-xs text-zinc-400 mt-0.5">Base price</span>
                                     </div>
-                                    <span class="text-xl font-black {{ is_null($selectedVariantId) ? 'text-blue-600' : 'text-neutral-400' }} tracking-tighter">${{ number_format($selectingProduct->price, 2) }}</span>
+                                    <span class="text-sm font-bold {{ is_null($selectedVariantId) ? 'text-pink-600' : 'text-zinc-500' }}">RM {{ number_format($selectingProduct->price, 2) }}</span>
                                     @if(is_null($selectedVariantId))
-                                        <div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-600"></div>
+                                        <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-500"></div>
                                     @endif
                                 </button>
                                 @foreach($selectingProduct->variants as $variant)
-                                    <label class="group relative flex items-center justify-between p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300
-                                        {{ $selectedVariantId == $variant->id ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-xl shadow-blue-500/10' : 'border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-700' }}">
+                                    <label class="relative flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                        {{ $selectedVariantId == $variant->id ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600' }}">
                                         <input type="radio" wire:model.live="selectedVariantId" value="{{ $variant->id }}" class="sr-only">
                                         <div class="flex flex-col">
-                                            <span class="font-black text-lg {{ $selectedVariantId == $variant->id ? 'text-blue-600' : 'text-neutral-800 dark:text-neutral-100' }}">
+                                            <span class="font-semibold text-sm {{ $selectedVariantId == $variant->id ? 'text-pink-600' : 'text-zinc-800 dark:text-zinc-100' }}">
                                                 {{ $variant->name }}
                                             </span>
-                                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Base: ${{ number_format($variant->price, 2) }}</span>
+                                            <span class="text-xs text-zinc-400 mt-0.5">+RM {{ number_format($variant->price - $selectingProduct->price, 2) }}</span>
                                         </div>
-                                        <span class="text-xl font-black {{ $selectedVariantId == $variant->id ? 'text-blue-600' : 'text-neutral-400' }} tracking-tighter">${{ number_format($variant->price, 2) }}</span>
+                                        <span class="text-sm font-bold {{ $selectedVariantId == $variant->id ? 'text-pink-600' : 'text-zinc-500' }}">RM {{ number_format($variant->price, 2) }}</span>
                                         @if($selectedVariantId == $variant->id)
-                                            <div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-600"></div>
+                                            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-500"></div>
                                         @endif
                                     </label>
                                 @endforeach
@@ -1287,18 +1291,16 @@
                     <!-- Set Builder -->
                     @if(($selectingProduct->product_type ?? 'ala_carte') === 'set' && ($selectingProduct->setGroups?->count() ?? 0) > 0)
                         <div class="space-y-4">
-                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Set Items</h4>
-
                             @foreach($selectingProduct->setGroups as $group)
-                                <div class="space-y-4">
+                                <div class="space-y-2">
                                     <div class="flex items-center justify-between">
-                                        <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">{{ $group->name }}</h4>
-                                        <div class="px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                                            Min: {{ (int) $group->min_select }} • Max: {{ (int) $group->max_select }}
-                                        </div>
+                                        <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{{ $group->name }}</h4>
+                                        <span class="text-xs text-zinc-400">
+                                            Select {{ (int) $group->min_select }}{{ (int) $group->max_select > (int) $group->min_select ? '-' . (int) $group->max_select : '' }}
+                                        </span>
                                     </div>
 
-                                    <div class="grid grid-cols-1 gap-3">
+                                    <div class="space-y-1.5">
                                         @foreach($group->items as $row)
                                             @php
                                                 $choice = $row->product;
@@ -1307,25 +1309,22 @@
                                                 $selectedList = collect(is_array($rawSelected) ? $rawSelected : [$rawSelected])->map(fn ($v) => (int) $v)->all();
                                                 $isSelected = in_array((int) $choice->id, $selectedList, true);
                                             @endphp
-                                            <label class="group flex items-center justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300
-                                                {{ $isSelected ? 'border-blue-600/30 bg-blue-50/50 dark:bg-blue-900/10' : 'border-neutral-50 dark:border-neutral-800 hover:border-neutral-100 dark:hover:border-neutral-700' }}">
-                                                <div class="flex items-center gap-4">
+                                            <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                                {{ $isSelected ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300' }}">
+                                                <div class="flex items-center gap-3">
                                                     @if((int) $group->max_select === 1)
                                                         <input type="radio" wire:model.live="selectedSetItems.{{ $group->id }}" value="{{ $choice->id }}"
-                                                            class="w-6 h-6 rounded-full border-2 border-neutral-200 dark:border-neutral-700 text-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                                            class="w-4 h-4 border-zinc-300 text-pink-500 focus:ring-pink-500/20">
                                                     @else
                                                         <input type="checkbox" wire:model.live="selectedSetItems.{{ $group->id }}" value="{{ $choice->id }}"
-                                                            class="w-6 h-6 rounded-lg border-2 border-neutral-200 dark:border-neutral-700 text-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                                            class="w-4 h-4 rounded border-zinc-300 text-pink-500 focus:ring-pink-500/20">
                                                     @endif
-                                                    <div class="flex flex-col">
-                                                        <span class="font-bold text-neutral-700 dark:text-neutral-200">{{ $choice->name }}</span>
-                                                        <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">${{ number_format((float) $choice->price, 2) }}</span>
-                                                    </div>
+                                                    <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $choice->name }}</span>
                                                 </div>
                                                 @if($extra > 0)
-                                                    <span class="font-black text-blue-600 dark:text-blue-400 tracking-tighter">+${{ number_format($extra, 2) }}</span>
+                                                    <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($extra, 2) }}</span>
                                                 @else
-                                                    <span class="font-black text-neutral-300 dark:text-neutral-700 tracking-tighter">$0.00</span>
+                                                    <span class="text-sm text-zinc-400">Included</span>
                                                 @endif
                                             </label>
                                         @endforeach
@@ -1337,25 +1336,23 @@
 
                     <!-- Addon Groups -->
                     @foreach($selectingProduct->addonGroups as $group)
-                        <div class="space-y-4">
+                        <div class="space-y-2">
                             <div class="flex items-center justify-between">
-                                <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">{{ $group->name }}</h4>
-                                <div class="px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                                    Min: {{ $group->min_select }} • Max: {{ $group->max_select }}
-                                </div>
+                                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{{ $group->name }}</h4>
+                                <span class="text-xs text-zinc-400">
+                                    Select {{ $group->min_select }}{{ $group->max_select > $group->min_select ? '-' . $group->max_select : '' }}
+                                </span>
                             </div>
-                            <div class="grid grid-cols-1 gap-3">
+                            <div class="space-y-1.5">
                                 @foreach($group->items as $addon)
-                                    <label class="group flex items-center justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300
-                                        {{ in_array($addon->id, $selectedAddonIds) ? 'border-blue-600/30 bg-blue-50/50 dark:bg-blue-900/10' : 'border-neutral-50 dark:border-neutral-800 hover:border-neutral-100 dark:hover:border-neutral-700' }}">
-                                        <div class="flex items-center gap-4">
-                                            <div class="relative flex items-center justify-center">
-                                                <input type="checkbox" wire:model.live="selectedAddonIds" value="{{ $addon->id }}" 
-                                                    class="w-6 h-6 rounded-lg border-2 border-neutral-200 dark:border-neutral-700 text-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all">
-                                            </div>
-                                            <span class="font-bold text-neutral-700 dark:text-neutral-200">{{ $addon->name }}</span>
+                                    <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                        {{ in_array($addon->id, $selectedAddonIds) ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300' }}">
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox" wire:model.live="selectedAddonIds" value="{{ $addon->id }}" 
+                                                class="w-4 h-4 rounded border-zinc-300 text-pink-500 focus:ring-pink-500/20">
+                                            <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $addon->name }}</span>
                                         </div>
-                                        <span class="font-black text-blue-600 dark:text-blue-400 tracking-tighter">+${{ number_format($addon->price, 2) }}</span>
+                                        <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($addon->price, 2) }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -1364,18 +1361,18 @@
 
                     <!-- Standalone Addons -->
                     @if($selectingProduct->addons->whereNull('addon_group_id')->count() > 0)
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Extras</h4>
-                            <div class="grid grid-cols-1 gap-3">
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Extras</h4>
+                            <div class="space-y-1.5">
                                 @foreach($selectingProduct->addons->whereNull('addon_group_id') as $addon)
-                                    <label class="group flex items-center justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300
-                                        {{ in_array($addon->id, $selectedAddonIds) ? 'border-blue-600/30 bg-blue-50/50 dark:bg-blue-900/10' : 'border-neutral-50 dark:border-neutral-800 hover:border-neutral-100 dark:hover:border-neutral-700' }}">
-                                        <div class="flex items-center gap-4">
+                                    <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                        {{ in_array($addon->id, $selectedAddonIds) ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300' }}">
+                                        <div class="flex items-center gap-3">
                                             <input type="checkbox" wire:model.live="selectedAddonIds" value="{{ $addon->id }}" 
-                                                class="w-6 h-6 rounded-lg border-2 border-neutral-200 dark:border-neutral-700 text-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all">
-                                            <span class="font-bold text-neutral-700 dark:text-neutral-200">{{ $addon->name }}</span>
+                                                class="w-4 h-4 rounded border-zinc-300 text-pink-500 focus:ring-pink-500/20">
+                                            <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $addon->name }}</span>
                                         </div>
-                                        <span class="font-black text-blue-600 dark:text-blue-400 tracking-tighter">+${{ number_format($addon->price, 2) }}</span>
+                                        <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($addon->price, 2) }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -1383,35 +1380,30 @@
                     @endif
 
                     <!-- Quantity and Notes -->
-                    <div class="grid grid-cols-2 gap-8 pt-6">
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Quantity</h4>
-                            <div class="flex items-center gap-6 bg-neutral-50 dark:bg-neutral-800 p-2 rounded-[2rem] w-fit border border-neutral-100 dark:border-neutral-700">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Quantity</h4>
+                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
                                 <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})" 
-                                    class="w-14 h-14 rounded-[1.5rem] bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-center font-black text-xl hover:bg-red-50 hover:text-red-500 transition-all duration-200">
-                                    <flux:icon.minus class="w-5 h-5" />
+                                    class="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-red-500 transition-colors">
+                                    <flux:icon.minus class="w-4 h-4" />
                                 </button>
-                                <span class="text-3xl font-black w-12 text-center tracking-tighter">{{ $quantity }}</span>
+                                <span class="text-xl font-bold w-10 text-center text-zinc-800 dark:text-zinc-100">{{ $quantity }}</span>
                                 <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})" 
-                                    class="w-14 h-14 rounded-[1.5rem] bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-center font-black text-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-200">
-                                    <flux:icon.plus class="w-5 h-5" />
+                                    class="w-10 h-10 flex items-center justify-center text-pink-500 hover:text-pink-600 transition-colors">
+                                    <flux:icon.plus class="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Special Instructions</h4>
-                            <div class="relative group">
-                                <div class="absolute left-5 top-5 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
-                                    <flux:icon.pencil-square class="w-5 h-5" />
-                                </div>
-                                <input type="text" wire:model.live="notes" placeholder="No spicy, extra ice..." 
-                                    class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
-                            </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Special Instructions</h4>
+                            <input type="text" wire:model.live="notes" placeholder="No spicy, extra ice..." 
+                                class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                             @if(count($this->quickNotes) > 0)
-                                <div class="flex flex-wrap gap-2">
+                                <div class="flex flex-wrap gap-1.5 mt-2">
                                     @foreach($this->quickNotes as $label)
                                         <button type="button" wire:click="applyQuickNote(@js($label))"
-                                            class="px-3 py-1.5 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:border-blue-500/40 hover:text-blue-600 transition-all">
+                                            class="px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-medium text-zinc-500 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/30 transition-all">
                                             {{ $label }}
                                         </button>
                                     @endforeach
@@ -1422,10 +1414,12 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-10 border-t border-neutral-100 dark:border-neutral-800 flex gap-4 bg-neutral-50/50 dark:bg-neutral-950/50">
-                    <button type="button" wire:click="cancelSelection" class="flex-1 py-5 rounded-[2rem] font-black text-neutral-500 uppercase tracking-widest text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all">Cancel</button>
-                    <button type="button" wire:click="addToCart" class="flex-[2] py-5 rounded-[2rem] bg-blue-600 hover:bg-blue-500 text-white font-black shadow-2xl shadow-blue-500/20 transition-all transform active:scale-95 uppercase tracking-widest text-xs flex items-center justify-center gap-2 group">
-                        <flux:icon.plus-circle class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
+                    <button type="button" wire:click="cancelSelection" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="addToCart" class="flex-1 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                        <flux:icon.plus-circle class="w-5 h-5" />
                         Add to Order
                     </button>
                 </div>
