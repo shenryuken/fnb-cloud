@@ -133,19 +133,19 @@
                                 @click="period = 'weekly'; $dispatch('chart-period', 'weekly')" 
                                 :class="period === 'weekly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
-                                Weekly
+                                Daily
                             </button>
                             <button 
                                 @click="period = 'monthly'; $dispatch('chart-period', 'monthly')" 
                                 :class="period === 'monthly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
-                                Monthly
+                                Weekly
                             </button>
                             <button 
                                 @click="period = 'yearly'; $dispatch('chart-period', 'yearly')" 
                                 :class="period === 'yearly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
-                                Yearly
+                                Monthly
                             </button>
                         </div>
                     </div>
