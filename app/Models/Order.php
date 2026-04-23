@@ -16,6 +16,7 @@ class Order extends Model
         'tenant_id',
         'customer_id',
         'user_id',
+        'voucher_id',
         'table_number',
         'order_type', // dine_in, takeaway
         'total_amount',
@@ -132,5 +133,10 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class);
     }
 }

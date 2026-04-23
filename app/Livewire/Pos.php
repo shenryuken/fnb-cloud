@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\ProductAddon;
 use App\Models\Customer;
 use App\Models\Voucher;
+use App\Models\CustomerVoucher;
 use App\Models\HeldOrder;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
@@ -17,6 +18,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 #[Title('POS')]
 #[Lazy]
@@ -32,6 +34,9 @@ class Pos extends Component
     public string $discountType = 'percent';
     public float $discountValue = 0;
     public float $discountAmount = 0;
+    public float $manualDiscountAmount = 0;
+    public string $discountInputType = 'percent';
+    public float $discountInputValue = 0;
     public float $taxRate = 0;
     public array $taxes = [];
     public array $taxBreakdown = [];
@@ -76,8 +81,14 @@ class Pos extends Component
     public string $newCustomerMobile = '';
     public string $voucherCode = '';
     public string $appliedVoucherCode = '';
+    public ?int $appliedVoucherId = null;
+    public array $appliedVoucherMeta = [];
+    public string $voucherDiscountType = 'percent';
+    public float $voucherDiscountValue = 0;
+    public float $voucherDiscountAmount = 0;
     public int $pointsToRedeem = 0;
     public int $appliedPoints = 0;
+    public float $pointsDiscountAmount = 0;
     public float $pointsEarnRate = 1;
     public float $pointsRedeemValuePer100 = 1;
     public int $pointsMinRedeem = 0;
@@ -89,6 +100,7 @@ class Pos extends Component
     public float $pointsPromoMultiplier = 1;
     public ?string $pointsPromoStartsAt = null;
     public ?string $pointsPromoEndsAt = null;
+    public array $issuedVoucherCodes = [];
 
     #[Computed]
     public function categories()
@@ -238,6 +250,8 @@ class Pos extends Component
         $this->loadTaxes();
         $this->loadLoyaltySettings();
         $this->recalculateTotals();
+        $this->discountInputType = $this->discountType;
+        $this->discountInputValue = $this->discountValue;
     }
 
     public function placeholder()
@@ -551,10 +565,19 @@ class Pos extends Component
         $this->discountType = 'percent';
         $this->discountValue = 0;
         $this->discountAmount = 0;
+        $this->manualDiscountAmount = 0;
+        $this->discountInputType = 'percent';
+        $this->discountInputValue = 0;
         $this->voucherCode = '';
         $this->appliedVoucherCode = '';
+        $this->appliedVoucherId = null;
+        $this->appliedVoucherMeta = [];
+        $this->voucherDiscountType = 'percent';
+        $this->voucherDiscountValue = 0;
+        $this->voucherDiscountAmount = 0;
         $this->pointsToRedeem = 0;
         $this->appliedPoints = 0;
+        $this->pointsDiscountAmount = 0;
         $this->customerId = null;
         $this->taxBreakdown = [];
         $this->taxAmount = 0;
@@ -604,8 +627,14 @@ class Pos extends Component
                 'discountType' => $this->discountType,
                 'discountValue' => $this->discountValue,
                 'discountAmount' => $this->discountAmount,
+                'manualDiscountAmount' => $this->manualDiscountAmount,
                 'appliedVoucherCode' => $this->appliedVoucherCode,
+                'appliedVoucherId' => $this->appliedVoucherId,
+                'appliedVoucherMeta' => $this->appliedVoucherMeta,
+                'voucherDiscountType' => $this->voucherDiscountType,
+                'voucherDiscountValue' => $this->voucherDiscountValue,
                 'appliedPoints' => $this->appliedPoints,
+                'pointsDiscountAmount' => $this->pointsDiscountAmount,
                 'customerId' => $this->customerId,
                 'customer_name' => $customerName,
                 'subTotalAmount' => $this->subTotalAmount,
@@ -642,9 +671,17 @@ class Pos extends Component
         $this->discountType = (string) ($payload['discountType'] ?? 'percent');
         $this->discountValue = (float) ($payload['discountValue'] ?? 0);
         $this->discountAmount = (float) ($payload['discountAmount'] ?? 0);
+        $this->manualDiscountAmount = (float) ($payload['manualDiscountAmount'] ?? 0);
+        $this->discountInputType = $this->discountType;
+        $this->discountInputValue = $this->discountValue;
         $this->appliedVoucherCode = (string) ($payload['appliedVoucherCode'] ?? '');
+        $this->appliedVoucherId = filled($payload['appliedVoucherId'] ?? null) ? (int) $payload['appliedVoucherId'] : null;
+        $this->appliedVoucherMeta = is_array($payload['appliedVoucherMeta'] ?? null) ? (array) $payload['appliedVoucherMeta'] : [];
+        $this->voucherDiscountType = (string) ($payload['voucherDiscountType'] ?? 'percent');
+        $this->voucherDiscountValue = (float) ($payload['voucherDiscountValue'] ?? 0);
         $this->voucherCode = '';
         $this->appliedPoints = (int) ($payload['appliedPoints'] ?? 0);
+        $this->pointsDiscountAmount = (float) ($payload['pointsDiscountAmount'] ?? 0);
         $this->pointsToRedeem = 0;
         $this->customerId = filled($payload['customerId'] ?? null) ? (int) $payload['customerId'] : null;
 
@@ -714,15 +751,39 @@ class Pos extends Component
     {
         $subTotal = round(max(0, (float) $this->subTotalAmount), 2);
 
-        $discount = 0.0;
+        $manualDiscount = 0.0;
         if ($this->discountType === 'fixed') {
-            $discount = round(min($subTotal, max(0, (float) $this->discountValue)), 2);
+            $manualDiscount = round(min($subTotal, max(0, (float) $this->discountValue)), 2);
         } else {
             $rate = min(100, max(0, (float) $this->discountValue));
-            $discount = round($subTotal * ($rate / 100), 2);
+            $manualDiscount = round($subTotal * ($rate / 100), 2);
         }
 
-        $taxable = round(max(0, $subTotal - $discount), 2);
+        $remainingAfterManual = round(max(0, $subTotal - $manualDiscount), 2);
+
+        $voucherDiscount = 0.0;
+        if (filled($this->appliedVoucherCode) && (float) $this->voucherDiscountValue > 0) {
+            if ($this->voucherDiscountType === 'fixed') {
+                $voucherDiscount = round(min($remainingAfterManual, max(0, (float) $this->voucherDiscountValue)), 2);
+            } else {
+                $rate = min(100, max(0, (float) $this->voucherDiscountValue));
+                $voucherDiscount = round($remainingAfterManual * ($rate / 100), 2);
+            }
+        }
+
+        $remainingAfterVoucher = round(max(0, $remainingAfterManual - $voucherDiscount), 2);
+
+        $pointsDiscount = 0.0;
+        if ((int) $this->appliedPoints > 0) {
+            $valuePerPoint = (float) $this->pointsRedeemAmount / max(1, (int) $this->pointsRedeemPoints);
+            $amount = round(((int) $this->appliedPoints) * max(0, $valuePerPoint), 2);
+            if ($amount > 0) {
+                $pointsDiscount = round(min($remainingAfterVoucher, $amount), 2);
+            }
+        }
+
+        $totalDiscount = round(min($subTotal, $manualDiscount + $voucherDiscount + $pointsDiscount), 2);
+        $taxable = round(max(0, $subTotal - $totalDiscount), 2);
         $taxRateSum = 0.0;
         foreach ($this->taxes as $t) {
             $taxRateSum += (float) ($t['rate'] ?? 0);
@@ -749,7 +810,10 @@ class Pos extends Component
 
         $taxSum = round($taxSum, 2);
 
-        $this->discountAmount = $discount;
+        $this->manualDiscountAmount = $manualDiscount;
+        $this->voucherDiscountAmount = $voucherDiscount;
+        $this->pointsDiscountAmount = $pointsDiscount;
+        $this->discountAmount = $totalDiscount;
         $this->taxBreakdown = $breakdown;
         $this->taxAmount = $taxSum;
         $this->totalAmount = round($taxable + $taxSum, 2);
@@ -919,13 +983,23 @@ class Pos extends Component
             }
         }
 
-        $this->lastOrder = DB::transaction(function () {
+        $issuedCodes = [];
+
+        $this->lastOrder = DB::transaction(function () use (&$issuedCodes) {
             $voucherCode = filled($this->appliedVoucherCode) ? strtoupper(trim($this->appliedVoucherCode)) : null;
             $points = max(0, (int) $this->appliedPoints);
             $earnedPoints = 0;
+            $voucher = null;
+            $customerVoucher = null;
 
             if ($voucherCode) {
-                $voucher = Voucher::where('code', $voucherCode)->lockForUpdate()->first();
+                $customerVoucher = CustomerVoucher::query()->where('code', $voucherCode)->lockForUpdate()->first();
+                if ($customerVoucher) {
+                    $voucher = Voucher::query()->where('id', $customerVoucher->voucher_id)->lockForUpdate()->first();
+                } else {
+                    $voucher = Voucher::query()->where('code', $voucherCode)->lockForUpdate()->first();
+                }
+
                 if (
                     !$voucher
                     || !(bool) $voucher->is_active
@@ -941,6 +1015,65 @@ class Pos extends Component
             $customer = null;
             if ($this->customerId) {
                 $customer = Customer::where('id', $this->customerId)->lockForUpdate()->first();
+            }
+
+            if ($voucher && $customerVoucher) {
+                if (!$customer) {
+                    $this->dispatch('notify', message: 'Select a customer to use this voucher.', type: 'error');
+                    return null;
+                }
+                if ((int) $customerVoucher->customer_id !== (int) $customer->id) {
+                    $this->dispatch('notify', message: 'This voucher is not assigned to this customer.', type: 'error');
+                    return null;
+                }
+                if ($customerVoucher->used_at !== null || $customerVoucher->used_order_id !== null) {
+                    $this->dispatch('notify', message: 'This voucher has already been used.', type: 'error');
+                    return null;
+                }
+                if ($customerVoucher->expires_at && now()->gt($customerVoucher->expires_at)) {
+                    $this->dispatch('notify', message: 'This voucher has expired.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && ($voucher->per_customer_limit !== null || (bool) $voucher->first_time_only)) {
+                if (!$customer) {
+                    $this->dispatch('notify', message: 'Select a customer to use this voucher.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && !(bool) $voucher->can_combine_with_points && $points > 0) {
+                $this->dispatch('notify', message: 'This voucher cannot be combined with points.', type: 'error');
+                return null;
+            }
+            if ($voucher && !(bool) $voucher->can_combine_with_manual_discount && (float) $this->manualDiscountAmount > 0) {
+                $this->dispatch('notify', message: 'This voucher cannot be combined with manual discount.', type: 'error');
+                return null;
+            }
+
+            if ($voucher && $customer && (bool) $voucher->first_time_only) {
+                $hasOrders = Order::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('payment_status', 'paid')
+                    ->exists();
+                if ($hasOrders) {
+                    $this->dispatch('notify', message: 'This voucher is only for first-time customers.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && $customer && $voucher->per_customer_limit !== null) {
+                $used = Order::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('voucher_id', $voucher->id)
+                    ->where('payment_status', 'paid')
+                    ->lockForUpdate()
+                    ->count();
+                if ($used >= (int) $voucher->per_customer_limit) {
+                    $this->dispatch('notify', message: 'This voucher has already been used by this customer.', type: 'error');
+                    return null;
+                }
             }
 
             if ($points > 0) {
@@ -981,6 +1114,7 @@ class Pos extends Component
                 'discount_type' => $this->discountType,
                 'discount_value' => $this->discountValue,
                 'discount_amount' => $this->discountAmount,
+                'voucher_id' => $voucher?->id,
                 'voucher_code' => $voucherCode,
                 'points_redeemed' => $points,
                 'points_earned' => $earnedPoints,
@@ -998,7 +1132,13 @@ class Pos extends Component
             ]);
 
             if ($voucherCode) {
-                Voucher::where('code', $voucherCode)->lockForUpdate()->increment('usage_count');
+                Voucher::where('id', $voucher->id)->lockForUpdate()->increment('usage_count');
+                if ($customerVoucher) {
+                    $customerVoucher->update([
+                        'used_order_id' => $order->id,
+                        'used_at' => now(),
+                    ]);
+                }
             }
 
             foreach ($this->cart as $item) {
@@ -1035,6 +1175,64 @@ class Pos extends Component
                 }
             }
 
+            if ($customer) {
+                $issuable = Voucher::query()
+                    ->whereNotNull('issue_on_min_spend')
+                    ->where('is_active', true)
+                    ->where(function ($q) {
+                        $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                    })
+                    ->get();
+
+                foreach ($issuable as $v) {
+                    $minSpend = (float) ($v->issue_on_min_spend ?? 0);
+                    if ($minSpend <= 0) {
+                        continue;
+                    }
+                    if ((float) $order->total_amount < $minSpend) {
+                        continue;
+                    }
+
+                    $expiresAt = null;
+                    if ($v->issue_expires_in_days !== null) {
+                        $expiresAt = now()->addDays((int) $v->issue_expires_in_days);
+                    }
+                    if ($v->ends_at && (!$expiresAt || $v->ends_at->lt($expiresAt))) {
+                        $expiresAt = $v->ends_at;
+                    }
+
+                    $prefix = strtoupper(trim((string) ($v->code ?? 'VOUCHER')));
+                    $generated = null;
+                    for ($i = 0; $i < 5; $i++) {
+                        $candidate = $prefix . '-' . now()->format('ymd') . '-' . strtoupper(Str::random(6));
+                        if (!CustomerVoucher::where('code', $candidate)->exists()) {
+                            $generated = $candidate;
+                            break;
+                        }
+                    }
+                    if (!$generated) {
+                        continue;
+                    }
+
+                    CustomerVoucher::create([
+                        'voucher_id' => $v->id,
+                        'customer_id' => $customer->id,
+                        'code' => $generated,
+                        'issued_from_order_id' => $order->id,
+                        'issued_at' => now(),
+                        'expires_at' => $expiresAt,
+                    ]);
+
+                    $issuedCodes[] = [
+                        'code' => $generated,
+                        'expires_at' => $expiresAt?->toDateString(),
+                    ];
+                }
+            }
+
             return $order;
         });
 
@@ -1042,7 +1240,9 @@ class Pos extends Component
             return;
         }
 
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'voucherCode', 'appliedVoucherCode', 'pointsToRedeem', 'appliedPoints', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderNotes', 'isPaying', 'showCartMobile']);
+        $this->issuedVoucherCodes = $issuedCodes;
+
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderNotes', 'isPaying', 'showCartMobile']);
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
         // We keep lastOrder to show receipt/success screen if needed
         $this->dispatch('order-placed');
@@ -1053,7 +1253,114 @@ class Pos extends Component
      */
     public function newOrder(): void
     {
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'voucherCode', 'appliedVoucherCode', 'pointsToRedeem', 'appliedPoints', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
+        $this->issuedVoucherCodes = [];
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
+    }
+
+    private function clearAppliedVoucher(): void
+    {
+        $code = filled($this->appliedVoucherCode) ? (string) $this->appliedVoucherCode : null;
+        if ($code) {
+            $this->cart = array_values(array_filter($this->cart, function ($row) use ($code) {
+                if (!is_array($row)) {
+                    return true;
+                }
+                if (!(bool) ($row['is_voucher_reward'] ?? false)) {
+                    return true;
+                }
+                return strtoupper((string) ($row['voucher_code'] ?? '')) !== strtoupper($code);
+            }));
+        }
+
+        $this->appliedVoucherCode = '';
+        $this->appliedVoucherId = null;
+        $this->appliedVoucherMeta = [];
+        $this->voucherDiscountType = 'percent';
+        $this->voucherDiscountValue = 0;
+        $this->voucherDiscountAmount = 0;
+    }
+
+    private function addVoucherRewardToCart(int $productId, int $quantity, string $voucherCode, int $voucherId): void
+    {
+        $product = Product::find($productId);
+        if (!$product || !(bool) $product->is_active) {
+            $this->dispatch('notify', message: 'Voucher reward product is not available.', type: 'error');
+            return;
+        }
+
+        $quantity = max(1, $quantity);
+
+        foreach ($this->cart as $index => $cartItem) {
+            if (
+                (int) ($cartItem['product_id'] ?? 0) === (int) $product->id
+                && (bool) ($cartItem['is_voucher_reward'] ?? false)
+                && strtoupper((string) ($cartItem['voucher_code'] ?? '')) === strtoupper($voucherCode)
+            ) {
+                $this->cart[$index]['quantity'] = $quantity;
+                $this->cart[$index]['unit_price'] = 0;
+                $this->cart[$index]['addons_total'] = 0;
+                $this->cart[$index]['subtotal'] = 0;
+                $this->calculateTotal();
+                return;
+            }
+        }
+
+        $this->cart[] = [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'variant_id' => null,
+            'variant_name' => null,
+            'addon_ids' => [],
+            'addon_names' => [],
+            'set_items' => [],
+            'set_total' => 0,
+            'set_summary' => '',
+            'quantity' => $quantity,
+            'unit_price' => 0,
+            'addons_total' => 0,
+            'subtotal' => 0,
+            'notes' => '',
+            'is_voucher_reward' => true,
+            'voucher_code' => strtoupper($voucherCode),
+            'voucher_id' => $voucherId,
+        ];
+
+        $this->calculateTotal();
+    }
+
+    private function resolveVoucherForCode(string $code): array
+    {
+        $code = strtoupper(trim($code));
+        if (!filled($code)) {
+            return ['voucher' => null, 'customerVoucher' => null, 'error' => 'Voucher code is not valid.'];
+        }
+
+        $customerVoucher = CustomerVoucher::query()->where('code', $code)->first();
+        $voucher = null;
+
+        if ($customerVoucher) {
+            if ($customerVoucher->used_at !== null || $customerVoucher->used_order_id !== null) {
+                return ['voucher' => null, 'customerVoucher' => null, 'error' => 'Voucher has already been used.'];
+            }
+            if ($customerVoucher->expires_at && now()->gt($customerVoucher->expires_at)) {
+                return ['voucher' => null, 'customerVoucher' => null, 'error' => 'Voucher has expired.'];
+            }
+            $voucher = Voucher::where('id', $customerVoucher->voucher_id)->first();
+        } else {
+            $voucher = Voucher::where('code', $code)->first();
+        }
+
+        if (
+            !$voucher
+            || !(bool) $voucher->is_active
+            || ($voucher->starts_at && now()->lt($voucher->starts_at))
+            || ($voucher->ends_at && now()->gt($voucher->ends_at))
+            || ($voucher->usage_limit !== null && (int) $voucher->usage_count >= (int) $voucher->usage_limit)
+        ) {
+            return ['voucher' => null, 'customerVoucher' => null, 'error' => 'Voucher code is not valid.'];
+        }
+
+        return ['voucher' => $voucher, 'customerVoucher' => $customerVoucher];
     }
 
     public function openDiscountModal(): void
@@ -1076,9 +1383,10 @@ class Pos extends Component
     {
         $this->discountType = 'percent';
         $this->discountValue = 0;
-        $this->discountAmount = 0;
+        $this->discountInputType = 'percent';
+        $this->discountInputValue = 0;
         $this->voucherCode = '';
-        $this->appliedVoucherCode = '';
+        $this->clearAppliedVoucher();
         $this->pointsToRedeem = 0;
         $this->appliedPoints = 0;
         $this->recalculateTotals();
@@ -1086,10 +1394,25 @@ class Pos extends Component
 
     public function applyManualDiscount(): void
     {
-        $this->appliedVoucherCode = '';
-        $this->voucherCode = '';
-        $this->appliedPoints = 0;
-        $this->pointsToRedeem = 0;
+        $type = $this->discountInputType === 'fixed' ? 'fixed' : 'percent';
+        $value = round(max(0, (float) $this->discountInputValue), 2);
+
+        $subTotal = round(max(0, (float) $this->subTotalAmount), 2);
+        $manualDiscount = 0.0;
+        if ($type === 'fixed') {
+            $manualDiscount = round(min($subTotal, $value), 2);
+        } else {
+            $rate = min(100, $value);
+            $manualDiscount = round($subTotal * ($rate / 100), 2);
+        }
+
+        if ($this->appliedVoucherId && !(bool) ($this->appliedVoucherMeta['can_combine_with_manual_discount'] ?? false) && $manualDiscount > 0) {
+            $this->dispatch('notify', message: 'This voucher cannot be combined with manual discount.', type: 'error');
+            return;
+        }
+
+        $this->discountType = $type;
+        $this->discountValue = $value;
         $this->recalculateTotals();
         $this->closeDiscountModal();
     }
@@ -1102,29 +1425,90 @@ class Pos extends Component
             return;
         }
 
-        $voucher = Voucher::where('code', $code)->first();
-        if (
-            !$voucher
-            || !(bool) $voucher->is_active
-            || ($voucher->starts_at && now()->lt($voucher->starts_at))
-            || ($voucher->ends_at && now()->gt($voucher->ends_at))
-            || ($voucher->usage_limit !== null && (int) $voucher->usage_count >= (int) $voucher->usage_limit)
-        ) {
-            $this->dispatch('notify', message: 'Voucher code is not valid.', type: 'error');
+        $resolved = $this->resolveVoucherForCode($code);
+        $voucher = $resolved['voucher'] ?? null;
+        $customerVoucher = $resolved['customerVoucher'] ?? null;
+        if (!$voucher) {
+            $this->dispatch('notify', message: (string) ($resolved['error'] ?? 'Voucher code is not valid.'), type: 'error');
             return;
         }
 
-        if ($voucher->type === 'fixed') {
-            $this->discountType = 'fixed';
-            $this->discountValue = round(max(0, (float) $voucher->value), 2);
-        } else {
-            $this->discountType = 'percent';
-            $this->discountValue = round(min(100, max(0, (float) $voucher->value)), 2);
+        $requiresCustomer = $customerVoucher !== null
+            || $voucher->per_customer_limit !== null
+            || (bool) $voucher->first_time_only;
+
+        if ($requiresCustomer && !$this->customerId) {
+            $this->dispatch('notify', message: 'Select a customer to use this voucher.', type: 'error');
+            return;
         }
 
+        if ($customerVoucher && $this->customerId && (int) $customerVoucher->customer_id !== (int) $this->customerId) {
+            $this->dispatch('notify', message: 'This voucher is not assigned to this customer.', type: 'error');
+            return;
+        }
+
+        if (!(bool) $voucher->can_combine_with_points && (int) $this->appliedPoints > 0) {
+            $this->dispatch('notify', message: 'This voucher cannot be combined with points.', type: 'error');
+            return;
+        }
+
+        if (!(bool) $voucher->can_combine_with_manual_discount && (float) $this->manualDiscountAmount > 0) {
+            $this->dispatch('notify', message: 'This voucher cannot be combined with manual discount.', type: 'error');
+            return;
+        }
+
+        if ($this->customerId && (bool) $voucher->first_time_only) {
+            $hasOrders = Order::query()
+                ->where('customer_id', $this->customerId)
+                ->where('payment_status', 'paid')
+                ->exists();
+            if ($hasOrders) {
+                $this->dispatch('notify', message: 'This voucher is only for first-time customers.', type: 'error');
+                return;
+            }
+        }
+
+        if ($this->customerId && $voucher->per_customer_limit !== null) {
+            $used = Order::query()
+                ->where('customer_id', $this->customerId)
+                ->where('voucher_id', $voucher->id)
+                ->where('payment_status', 'paid')
+                ->count();
+            if ($used >= (int) $voucher->per_customer_limit) {
+                $this->dispatch('notify', message: 'This voucher has already been used by this customer.', type: 'error');
+                return;
+            }
+        }
+
+        $this->clearAppliedVoucher();
         $this->appliedVoucherCode = $code;
-        $this->appliedPoints = 0;
-        $this->pointsToRedeem = 0;
+        $this->appliedVoucherId = (int) $voucher->id;
+        $this->appliedVoucherMeta = [
+            'can_combine_with_points' => (bool) $voucher->can_combine_with_points,
+            'can_combine_with_manual_discount' => (bool) $voucher->can_combine_with_manual_discount,
+            'requires_customer' => $requiresCustomer,
+            'free_product_id' => $voucher->free_product_id ? (int) $voucher->free_product_id : null,
+            'free_quantity' => max(1, (int) ($voucher->free_quantity ?? 1)),
+            'is_customer_specific' => $customerVoucher !== null,
+        ];
+
+        if ($voucher->free_product_id) {
+            $this->voucherDiscountType = 'percent';
+            $this->voucherDiscountValue = 0;
+            $this->addVoucherRewardToCart(
+                (int) $voucher->free_product_id,
+                max(1, (int) ($voucher->free_quantity ?? 1)),
+                $code,
+                (int) $voucher->id
+            );
+        } else {
+            $this->voucherDiscountType = $voucher->type === 'fixed' ? 'fixed' : 'percent';
+            $this->voucherDiscountValue = $voucher->type === 'fixed'
+                ? round(max(0, (float) $voucher->value), 2)
+                : round(min(100, max(0, (float) $voucher->value)), 2);
+        }
+
+        $this->voucherCode = '';
         $this->recalculateTotals();
         $this->closeDiscountModal();
     }
@@ -1144,6 +1528,10 @@ class Pos extends Component
             $this->dispatch('notify', message: 'Select a customer first.', type: 'error');
             return;
         }
+        if ($this->appliedVoucherId && !(bool) ($this->appliedVoucherMeta['can_combine_with_points'] ?? false)) {
+            $this->dispatch('notify', message: 'This voucher cannot be combined with points.', type: 'error');
+            return;
+        }
 
         $customer = Customer::find($this->customerId);
         if (!$customer || (int) $customer->points_balance < $points) {
@@ -1151,7 +1539,6 @@ class Pos extends Component
             return;
         }
 
-        $this->discountType = 'fixed';
         $valuePerPoint = (float) $this->pointsRedeemAmount / max(1, (int) $this->pointsRedeemPoints);
         $amount = round($points * max(0, $valuePerPoint), 2);
         if ($amount <= 0) {
@@ -1159,10 +1546,7 @@ class Pos extends Component
             return;
         }
 
-        $this->discountValue = $amount;
         $this->appliedPoints = $points;
-        $this->appliedVoucherCode = '';
-        $this->voucherCode = '';
         $this->recalculateTotals();
         $this->closeDiscountModal();
     }
@@ -1181,9 +1565,10 @@ class Pos extends Component
         $this->customerSearch = '';
         $this->pointsToRedeem = 0;
         $this->appliedPoints = 0;
-        if ($this->discountType === 'fixed' && $this->discountValue > 0 && $this->appliedVoucherCode === '') {
-            $this->clearPromotion();
+        if ((bool) ($this->appliedVoucherMeta['requires_customer'] ?? false)) {
+            $this->clearAppliedVoucher();
         }
+        $this->recalculateTotals();
     }
 
     public function registerCustomer(): void

@@ -251,12 +251,19 @@
                     </span>
                 </button>
 
+                @if(($manualDiscountAmount ?? 0) > 0)
+                    <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                        <span>Manual Discount</span>
+                        <span class="font-black text-neutral-400 tabular-nums">- ${{ number_format((float) $manualDiscountAmount, 2) }}</span>
+                    </div>
+                @endif
                 @if(filled($appliedVoucherCode))
                     <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
                         <span>Voucher</span>
                         <span class="font-black text-neutral-400 uppercase tracking-widest">{{ $appliedVoucherCode }}</span>
                     </div>
-                @elseif(($appliedPoints ?? 0) > 0)
+                @endif
+                @if(($appliedPoints ?? 0) > 0)
                     <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
                         <span>Points Redeemed</span>
                         <span class="font-black text-neutral-400 tabular-nums">{{ (int) $appliedPoints }}</span>
@@ -477,12 +484,19 @@
                                 </span>
                             </button>
 
+                            @if(($manualDiscountAmount ?? 0) > 0)
+                                <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
+                                    <span>Manual Discount</span>
+                                    <span class="font-black text-neutral-400 tabular-nums">- ${{ number_format((float) $manualDiscountAmount, 2) }}</span>
+                                </div>
+                            @endif
                             @if(filled($appliedVoucherCode))
                                 <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
                                     <span>Voucher</span>
                                     <span class="font-black text-neutral-400 uppercase tracking-widest">{{ $appliedVoucherCode }}</span>
                                 </div>
-                            @elseif(($appliedPoints ?? 0) > 0)
+                            @endif
+                            @if(($appliedPoints ?? 0) > 0)
                                 <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
                                     <span>Points Redeemed</span>
                                     <span class="font-black text-neutral-400 tabular-nums">{{ (int) $appliedPoints }}</span>
@@ -651,15 +665,23 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 px-2 py-1">
                                     <div class="flex p-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-                                        <button type="button" wire:click="$set('discountType', 'percent')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountType === 'percent' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">%</button>
-                                        <button type="button" wire:click="$set('discountType', 'fixed')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountType === 'fixed' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">$</button>
+                                        <button type="button" wire:click="$set('discountInputType', 'percent')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountInputType === 'percent' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">%</button>
+                                        <button type="button" wire:click="$set('discountInputType', 'fixed')" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all {{ $discountInputType === 'fixed' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-neutral-400' }}">$</button>
                                     </div>
-                                    <input type="number" step="0.01" wire:model.live="discountValue" class="w-24 bg-transparent border-none focus:ring-0 text-lg font-black text-neutral-700 dark:text-neutral-200 text-right tabular-nums p-0" placeholder="0">
+                                    <input type="number" step="0.01" wire:model.live="discountInputValue" class="w-24 bg-transparent border-none focus:ring-0 text-lg font-black text-neutral-700 dark:text-neutral-200 text-right tabular-nums p-0" placeholder="0">
                                 </div>
-                                <button type="button" wire:click="applyManualDiscount" class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                <button type="button" wire:click="applyManualDiscount"
+                                    @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
+                                    class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30">
                                     Apply
                                 </button>
                             </div>
+
+                            @if(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
+                                <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
+                                    Manual discount disabled by voucher rules.
+                                </div>
+                            @endif
                         </div>
                     @endif
 
@@ -683,6 +705,15 @@
                                 <div class="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/60 dark:border-emerald-800/30">
                                     <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Applied</span>
                                     <span class="font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">{{ $appliedVoucherCode }}</span>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    @if(!(bool) ($appliedVoucherMeta['can_combine_with_manual_discount'] ?? false))
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[9px] font-black text-neutral-500 uppercase tracking-widest">No Manual Discount</span>
+                                    @endif
+                                    @if(!(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[9px] font-black text-neutral-500 uppercase tracking-widest">No Points</span>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -710,11 +741,21 @@
                                 </div>
 
                                 <div class="flex items-center gap-3">
-                                    <input type="number" wire:model.live="pointsToRedeem" class="flex-1 rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-black focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="Points ({{ (int) $pointsRedeemPoints }} = RM {{ number_format((float) $pointsRedeemAmount, 2) }})">
-                                    <button type="button" wire:click="applyPoints" class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                    <input type="number" wire:model.live="pointsToRedeem"
+                                        @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
+                                        class="flex-1 rounded-2xl border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-4 font-black focus:ring-4 focus:ring-blue-500/10 transition-all disabled:opacity-50" placeholder="Points ({{ (int) $pointsRedeemPoints }} = RM {{ number_format((float) $pointsRedeemAmount, 2) }})">
+                                    <button type="button" wire:click="applyPoints"
+                                        @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
+                                        class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30">
                                         Redeem
                                     </button>
                                 </div>
+
+                                @if(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
+                                    <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
+                                        Points redemption disabled by voucher rules.
+                                    </div>
+                                @endif
 
                                 <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">
                                     @if((int) $pointsMinRedeem > 0)
@@ -1130,6 +1171,24 @@
                                 @endif
                             @endif
                         </div>
+
+                        @if(!empty($issuedVoucherCodes))
+                            <div class="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200/60 dark:border-purple-800/30 text-sm space-y-2">
+                                <div class="text-[10px] font-black text-purple-600 uppercase tracking-widest">Issued Voucher</div>
+                                @foreach($issuedVoucherCodes as $row)
+                                    <div class="flex items-center justify-between gap-3">
+                                        <span class="font-black text-purple-800 dark:text-purple-200 uppercase tracking-widest">{{ $row['code'] ?? '' }}</span>
+                                        <span class="text-[10px] font-black text-purple-500 uppercase tracking-widest">
+                                            @if(!empty($row['expires_at']))
+                                                Exp {{ $row['expires_at'] }}
+                                            @else
+                                                No Expiry
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <div class="flex flex-col gap-3">
                             <button type="button" 
