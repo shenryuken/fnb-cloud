@@ -123,70 +123,132 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
                 <flux:card class="p-0 overflow-hidden">
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-zinc-700 gap-3">
                         <div>
                             <flux:heading size="lg">Sales Trend</flux:heading>
-                            <flux:text size="sm" class="text-zinc-400">Last 7 days revenue</flux:text>
+                            <flux:text size="sm" class="text-zinc-400" x-text="periodDescription">Last 7 days revenue</flux:text>
                         </div>
-                        <flux:icon.chart-bar class="w-5 h-5 text-zinc-400" />
+                        <div class="flex gap-1 bg-zinc-800 p-1 rounded-lg" x-data="{ period: 'weekly' }">
+                            <button 
+                                @click="period = 'weekly'; $dispatch('chart-period', 'weekly')" 
+                                :class="period === 'weekly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
+                                Weekly
+                            </button>
+                            <button 
+                                @click="period = 'monthly'; $dispatch('chart-period', 'monthly')" 
+                                :class="period === 'monthly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
+                                Monthly
+                            </button>
+                            <button 
+                                @click="period = 'yearly'; $dispatch('chart-period', 'yearly')" 
+                                :class="period === 'yearly' ? 'bg-pink-500 text-white' : 'text-zinc-400 hover:text-white'"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">
+                                Yearly
+                            </button>
+                        </div>
                     </div>
-                    <div class="p-6">
-                        <div class="h-64 flex items-end justify-between gap-2">
-                            @php
-                                $maxValue = 35;
-                                $chartData = [
-                                    ['date' => 'Apr 02', 'value' => 0],
-                                    ['date' => 'Apr 03', 'value' => 0],
-                                    ['date' => 'Apr 04', 'value' => 0],
-                                    ['date' => 'Apr 05', 'value' => 0],
-                                    ['date' => 'Apr 06', 'value' => 5],
-                                    ['date' => 'Apr 07', 'value' => 30],
-                                    ['date' => 'Apr 08', 'value' => 10],
-                                ];
-                            @endphp
+                    
+                    <div class="p-6" 
+                         x-data="{
+                            period: 'weekly',
+                            periodDescription: 'Last 7 days revenue',
+                            chartData: {
+                                weekly: @js($weeklyChartData ?? []),
+                                monthly: @js($monthlyChartData ?? []),
+                                yearly: @js($yearlyChartData ?? [])
+                            },
+                            descriptions: {
+                                weekly: 'Last 7 days revenue',
+                                monthly: 'Last 4 weeks revenue',
+                                yearly: 'Last 12 months revenue'
+                            },
+                            get currentData() { return this.chartData[this.period] || []; },
+                            get maxValue() { 
+                                const max = Math.max(...this.currentData.map(d => d.value));
+                                return max > 0 ? max : 100;
+                            },
+                            getY(value) { return 240 - ((value / this.maxValue) * 220); },
+                            getX(index) { 
+                                const count = this.currentData.length;
+                                return count > 1 ? (index / (count - 1)) * 680 + 10 : 350;
+                            },
+                            get polylinePoints() {
+                                return this.currentData.map((d, i) => `${this.getX(i)},${this.getY(d.value)}`).join(' ');
+                            },
+                            get polygonPoints() {
+                                if (this.currentData.length === 0) return '';
+                                const first = this.getX(0);
+                                const last = this.getX(this.currentData.length - 1);
+                                return `${first},240 ${this.polylinePoints} ${last},240`;
+                            },
+                            formatValue(val) {
+                                return 'RM ' + val.toLocaleString('en-MY', { minimumFractionDigits: 2 });
+                            }
+                         }"
+                         @chart-period.window="period = $event.detail; periodDescription = descriptions[$event.detail]">
+                        
+                        {{-- Y-axis labels --}}
+                        <div class="flex gap-4">
+                            <div class="flex flex-col justify-between h-60 text-right pr-2 text-xs text-zinc-500 w-16 shrink-0">
+                                <span x-text="formatValue(maxValue)"></span>
+                                <span x-text="formatValue(maxValue * 0.75)"></span>
+                                <span x-text="formatValue(maxValue * 0.5)"></span>
+                                <span x-text="formatValue(maxValue * 0.25)"></span>
+                                <span>RM 0</span>
+                            </div>
                             
-                            <svg class="w-full h-full" viewBox="0 0 700 256" preserveAspectRatio="none">
-                                <!-- Grid lines -->
-                                @for($i = 0; $i <= 4; $i++)
-                                    <line x1="0" y1="{{ $i * 64 }}" x2="700" y2="{{ $i * 64 }}" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
-                                @endfor
+                            <div class="flex-1">
+                                <div class="h-60">
+                                    <svg class="w-full h-full" viewBox="0 0 700 250" preserveAspectRatio="none">
+                                        {{-- Grid lines --}}
+                                        <line x1="10" y1="20" x2="690" y2="20" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                        <line x1="10" y1="75" x2="690" y2="75" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                        <line x1="10" y1="130" x2="690" y2="130" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                        <line x1="10" y1="185" x2="690" y2="185" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                        <line x1="10" y1="240" x2="690" y2="240" stroke="currentColor" class="text-zinc-800" stroke-width="1" />
+                                        
+                                        {{-- Gradient definition --}}
+                                        <defs>
+                                            <linearGradient id="salesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                <stop offset="0%" style="stop-color:rgb(236, 72, 153);stop-opacity:0.3" />
+                                                <stop offset="100%" style="stop-color:rgb(236, 72, 153);stop-opacity:0" />
+                                            </linearGradient>
+                                        </defs>
+                                        
+                                        {{-- Area fill --}}
+                                        <polygon :points="polygonPoints" fill="url(#salesGradient)" />
+                                        
+                                        {{-- Line --}}
+                                        <polyline :points="polylinePoints" fill="none" stroke="rgb(236, 72, 153)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                                        
+                                        {{-- Data points --}}
+                                        <template x-for="(item, index) in currentData" :key="index">
+                                            <circle :cx="getX(index)" :cy="getY(item.value)" r="5" fill="rgb(236, 72, 153)" stroke="white" stroke-width="2" />
+                                        </template>
+                                    </svg>
+                                </div>
                                 
-                                <!-- Area fill -->
-                                <defs>
-                                    <linearGradient id="salesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" style="stop-color:rgb(236, 72, 153);stop-opacity:0.3" />
-                                        <stop offset="100%" style="stop-color:rgb(236, 72, 153);stop-opacity:0" />
-                                    </linearGradient>
-                                </defs>
-                                
-                                @php
-                                    $points = collect($chartData)->map(function($item, $index) use ($maxValue) {
-                                        $x = ($index / 6) * 700;
-                                        $y = 256 - (($item['value'] / 35) * 256);
-                                        return "$x,$y";
-                                    })->join(' ');
-                                    $areaPoints = "0,256 " . $points . " 700,256";
-                                @endphp
-                                
-                                <polyline points="{{ $points }}" fill="none" stroke="rgb(236, 72, 153)" stroke-width="3" />
-                                <polygon points="{{ $areaPoints }}" fill="url(#salesGradient)" />
-                                
-                                <!-- Data points -->
-                                @foreach($chartData as $index => $item)
-                                    @php
-                                        $x = ($index / 6) * 700;
-                                        $y = 256 - (($item['value'] / 35) * 256);
-                                    @endphp
-                                    <circle cx="{{ $x }}" cy="{{ $y }}" r="4" fill="rgb(236, 72, 153)" stroke="white" stroke-width="2" />
-                                @endforeach
-                            </svg>
+                                {{-- X-axis labels --}}
+                                <div class="flex justify-between mt-3 px-2">
+                                    <template x-for="(item, index) in currentData" :key="'label-' + index">
+                                        <div class="text-xs text-zinc-500 text-center" x-text="item.label"></div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                         
-                        <!-- X-axis labels -->
-                        <div class="flex justify-between mt-4">
-                            @foreach($chartData as $item)
-                                <div class="text-xs text-zinc-500">{{ $item['date'] }}</div>
-                            @endforeach
+                        {{-- Summary --}}
+                        <div class="mt-4 pt-4 border-t border-zinc-800 flex flex-wrap gap-4 text-sm">
+                            <div>
+                                <span class="text-zinc-400">Total: </span>
+                                <span class="font-semibold text-white" x-text="formatValue(currentData.reduce((sum, d) => sum + d.value, 0))"></span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-400">Average: </span>
+                                <span class="font-semibold text-white" x-text="formatValue(currentData.length > 0 ? currentData.reduce((sum, d) => sum + d.value, 0) / currentData.length : 0)"></span>
+                            </div>
                         </div>
                     </div>
                 </flux:card>
