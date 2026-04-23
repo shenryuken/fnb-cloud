@@ -87,14 +87,25 @@ class DashboardController extends Controller
     private function getMonthlyChartData($baseQuery): array
     {
         $data = [];
+        $weeks = [];
+        
+        // Collect 4 weeks backwards
         for ($i = 3; $i >= 0; $i--) {
             $startOfWeek = now()->subWeeks($i)->startOfWeek();
             $endOfWeek = now()->subWeeks($i)->endOfWeek();
+            $weeks[] = [
+                'start' => $startOfWeek,
+                'end' => $endOfWeek,
+            ];
+        }
+        
+        // Process weeks in order (oldest to newest)
+        foreach ($weeks as $index => $week) {
             $sales = (clone $baseQuery)
-                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->whereBetween('created_at', [$week['start'], $week['end']])
                 ->sum('total_amount');
             $data[] = [
-                'label' => 'Week ' . $startOfWeek->weekOfMonth,
+                'label' => 'Week ' . ($index + 1),
                 'value' => (float) $sales,
             ];
         }
