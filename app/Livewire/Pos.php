@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\ProductAddon;
 use App\Models\Customer;
 use App\Models\Voucher;
+use App\Models\HeldOrder;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
@@ -66,6 +67,7 @@ class Pos extends Component
     public bool $isKitchenBusy = false;
     public bool $showCartMobile = false;
     public bool $showDiscountModal = false;
+    public bool $showHeldOrdersModal = false;
     public string $discountTab = 'discount';
     public ?int $customerId = null;
     public string $customerSearch = '';
@@ -193,6 +195,39 @@ class Pos extends Component
             ->limit(20)
             ->pluck('text')
             ->map(fn ($t) => (string) $t)
+            ->all();
+    }
+
+    #[Computed]
+    public function heldOrders(): array
+    {
+        $tenantId = Auth::user()?->tenant_id;
+        if (!$tenantId) {
+            return [];
+        }
+
+        return HeldOrder::query()
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('id')
+            ->limit(15)
+            ->get(['id', 'label', 'payload', 'created_at'])
+            ->map(function (HeldOrder $h) {
+                $payload = is_array($h->payload) ? $h->payload : [];
+                $cart = is_array($payload['cart'] ?? null) ? $payload['cart'] : [];
+                $itemsCount = 0;
+                foreach ($cart as $row) {
+                    $itemsCount += (int) ($row['quantity'] ?? 0);
+                }
+
+                return [
+                    'id' => $h->id,
+                    'label' => (string) ($h->label ?? 'Held Order'),
+                    'created_at' => $h->created_at?->format('M d, H:i'),
+                    'items' => $itemsCount,
+                    'total' => (float) ($payload['totalAmount'] ?? 0),
+                    'customer_name' => (string) ($payload['customer_name'] ?? ''),
+                ];
+            })
             ->all();
     }
 
@@ -537,6 +572,99 @@ class Pos extends Component
         $this->recalculateTotals();
     }
 
+    public function openHeldOrders(): void
+    {
+        $this->showHeldOrdersModal = true;
+    }
+
+    public function closeHeldOrders(): void
+    {
+        $this->showHeldOrdersModal = false;
+    }
+
+    public function holdOrder(): void
+    {
+        if (empty($this->cart)) {
+            $this->dispatch('notify', message: 'Cart is empty.', type: 'error');
+            return;
+        }
+
+        $customerName = $this->customer?->name ?? null;
+        $label = $customerName
+            ?: ($this->orderType === 'dine_in' && filled($this->tableNumber) ? 'Table ' . trim($this->tableNumber) : 'Walk-in');
+
+        HeldOrder::create([
+            'user_id' => Auth::id(),
+            'label' => $label,
+            'payload' => [
+                'cart' => $this->cart,
+                'orderType' => $this->orderType,
+                'tableNumber' => $this->tableNumber,
+                'orderNotes' => $this->orderNotes,
+                'discountType' => $this->discountType,
+                'discountValue' => $this->discountValue,
+                'discountAmount' => $this->discountAmount,
+                'appliedVoucherCode' => $this->appliedVoucherCode,
+                'appliedPoints' => $this->appliedPoints,
+                'customerId' => $this->customerId,
+                'customer_name' => $customerName,
+                'subTotalAmount' => $this->subTotalAmount,
+                'taxAmount' => $this->taxAmount,
+                'totalAmount' => $this->totalAmount,
+            ],
+        ]);
+
+        $this->clearCart();
+        $this->tableNumber = '';
+        $this->orderType = 'dine_in';
+        $this->dispatch('notify', message: 'Order held.', type: 'success');
+    }
+
+    public function recallHeldOrder(int $heldOrderId): void
+    {
+        $tenantId = Auth::user()?->tenant_id;
+        if (!$tenantId) {
+            return;
+        }
+
+        $held = HeldOrder::where('tenant_id', $tenantId)->find($heldOrderId);
+        if (!$held) {
+            $this->dispatch('notify', message: 'Held order not found.', type: 'error');
+            return;
+        }
+
+        $payload = is_array($held->payload) ? $held->payload : [];
+
+        $this->cart = is_array($payload['cart'] ?? null) ? $payload['cart'] : [];
+        $this->orderType = (string) ($payload['orderType'] ?? 'dine_in');
+        $this->tableNumber = (string) ($payload['tableNumber'] ?? '');
+        $this->orderNotes = (string) ($payload['orderNotes'] ?? '');
+        $this->discountType = (string) ($payload['discountType'] ?? 'percent');
+        $this->discountValue = (float) ($payload['discountValue'] ?? 0);
+        $this->discountAmount = (float) ($payload['discountAmount'] ?? 0);
+        $this->appliedVoucherCode = (string) ($payload['appliedVoucherCode'] ?? '');
+        $this->voucherCode = '';
+        $this->appliedPoints = (int) ($payload['appliedPoints'] ?? 0);
+        $this->pointsToRedeem = 0;
+        $this->customerId = filled($payload['customerId'] ?? null) ? (int) $payload['customerId'] : null;
+
+        $held->delete();
+        $this->recalculateTotals();
+        $this->showHeldOrdersModal = false;
+        $this->dispatch('notify', message: 'Held order recalled.', type: 'success');
+    }
+
+    public function deleteHeldOrder(int $heldOrderId): void
+    {
+        $tenantId = Auth::user()?->tenant_id;
+        if (!$tenantId) {
+            return;
+        }
+
+        HeldOrder::where('tenant_id', $tenantId)->where('id', $heldOrderId)->delete();
+        $this->dispatch('notify', message: 'Held order deleted.', type: 'success');
+    }
+
     /**
      * Update the quantity of an item in the cart.
      */
@@ -794,6 +922,7 @@ class Pos extends Component
         $this->lastOrder = DB::transaction(function () {
             $voucherCode = filled($this->appliedVoucherCode) ? strtoupper(trim($this->appliedVoucherCode)) : null;
             $points = max(0, (int) $this->appliedPoints);
+            $earnedPoints = 0;
 
             if ($voucherCode) {
                 $voucher = Voucher::where('code', $voucherCode)->lockForUpdate()->first();
@@ -854,6 +983,7 @@ class Pos extends Component
                 'discount_amount' => $this->discountAmount,
                 'voucher_code' => $voucherCode,
                 'points_redeemed' => $points,
+                'points_earned' => $earnedPoints,
                 'tax_rate' => $this->taxRate,
                 'tax_amount' => $this->taxAmount,
                 'payment_method' => $this->isSplitPayment

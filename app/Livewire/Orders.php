@@ -7,6 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Carbon;
 
 #[Title('Orders')]
 #[Lazy]
@@ -22,6 +23,7 @@ class Orders extends Component
     public string $orderTypeFilter = '';
     public string $dateFrom = '';
     public string $dateTo = '';
+    public string $datePreset = '';
 
     protected $queryString = [
         'search'          => ['except' => ''],
@@ -29,6 +31,7 @@ class Orders extends Component
         'orderTypeFilter' => ['except' => '', 'as' => 'type'],
         'dateFrom'        => ['except' => '', 'as' => 'from'],
         'dateTo'          => ['except' => '', 'as' => 'to'],
+        'datePreset'      => ['except' => '', 'as' => 'range'],
     ];
 
     public function updatingSearch(): void
@@ -48,11 +51,39 @@ class Orders extends Component
 
     public function updatingDateFrom(): void
     {
+        $this->datePreset = '';
         $this->resetPage();
     }
 
     public function updatingDateTo(): void
     {
+        $this->datePreset = '';
+        $this->resetPage();
+    }
+
+    public function setDatePreset(string $preset): void
+    {
+        $preset = trim($preset);
+        $now = Carbon::now();
+
+        if ($preset === 'today') {
+            $this->dateFrom = $now->toDateString();
+            $this->dateTo = $now->toDateString();
+            $this->datePreset = 'today';
+        } elseif ($preset === 'week') {
+            $this->dateFrom = $now->copy()->startOfWeek()->toDateString();
+            $this->dateTo = $now->copy()->endOfWeek()->toDateString();
+            $this->datePreset = 'week';
+        } elseif ($preset === 'month') {
+            $this->dateFrom = $now->copy()->startOfMonth()->toDateString();
+            $this->dateTo = $now->copy()->endOfMonth()->toDateString();
+            $this->datePreset = 'month';
+        } else {
+            $this->dateFrom = '';
+            $this->dateTo = '';
+            $this->datePreset = '';
+        }
+
         $this->resetPage();
     }
 
@@ -63,6 +94,7 @@ class Orders extends Component
         $this->orderTypeFilter = '';
         $this->dateFrom        = '';
         $this->dateTo          = '';
+        $this->datePreset      = '';
         $this->resetPage();
     }
 
