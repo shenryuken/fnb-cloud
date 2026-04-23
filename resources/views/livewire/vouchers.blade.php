@@ -203,46 +203,46 @@
             <div class="flex flex-col gap-4">
 
                 {{-- Guide --}}
-                <flux:card class="p-5">
+                <flux:card class="p-5 border border-yellow-500/30 bg-yellow-500/5">
                     <div class="flex items-center gap-2 mb-4">
-                        <flux:icon.information-circle class="w-4 h-4 text-zinc-400" />
-                        <flux:text size="xs" class="text-zinc-400 uppercase font-semibold tracking-widest">Guide</flux:text>
+                        <flux:icon.information-circle class="w-4 h-4 text-yellow-400" />
+                        <flux:text size="xs" class="text-yellow-400 uppercase font-semibold tracking-widest">Guide</flux:text>
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <flux:text size="sm" class="font-semibold text-white mb-1">No promotion stacking voucher</flux:text>
-                            <flux:text size="xs" class="text-zinc-400">Turn OFF both "Can combine with manual discount" and "Can combine with points".</flux:text>
+                            <flux:text size="sm" class="font-semibold text-yellow-100 mb-1">No promotion stacking voucher</flux:text>
+                            <flux:text size="xs" class="text-yellow-200/60">Turn OFF both "Can combine with manual discount" and "Can combine with points".</flux:text>
                         </div>
-                        <flux:separator />
+                        <flux:separator class="border-yellow-500/20" />
                         <div>
-                            <flux:text size="sm" class="font-semibold text-white mb-1">WELCOME voucher (once per customer)</flux:text>
-                            <flux:text size="xs" class="text-zinc-400">Set "Per Customer Limit" to 1. Optionally enable "First-time customer only".</flux:text>
+                            <flux:text size="sm" class="font-semibold text-yellow-100 mb-1">WELCOME voucher (once per customer)</flux:text>
+                            <flux:text size="xs" class="text-yellow-200/60">Set "Per Customer Limit" to 1. Optionally enable "First-time customer only".</flux:text>
                         </div>
-                        <flux:separator />
+                        <flux:separator class="border-yellow-500/20" />
                         <div>
-                            <flux:text size="sm" class="font-semibold text-white mb-1">Free item next purchase</flux:text>
-                            <flux:text size="xs" class="text-zinc-400">Choose "Free Item", set "Auto-Issue After Purchase (Min Spend)", and select customer in POS checkout.</flux:text>
+                            <flux:text size="sm" class="font-semibold text-yellow-100 mb-1">Free item next purchase</flux:text>
+                            <flux:text size="xs" class="text-yellow-200/60">Choose "Free Item", set "Auto-Issue After Purchase (Min Spend)", and select customer in POS checkout.</flux:text>
                         </div>
-                        <flux:separator />
+                        <flux:separator class="border-yellow-500/20" />
                         <div>
-                            <flux:text size="sm" class="font-semibold text-white mb-1">Basic Discount Voucher</flux:text>
-                            <flux:text size="xs" class="text-zinc-400">Set a code, choose Percent or Fixed type, enter the discount value, and set Active to make it available in POS.</flux:text>
+                            <flux:text size="sm" class="font-semibold text-yellow-100 mb-1">Basic Discount Voucher</flux:text>
+                            <flux:text size="xs" class="text-yellow-200/60">Set a code, choose Percent or Fixed type, enter the discount value, and set Active to make it available in POS.</flux:text>
                         </div>
-                        <flux:separator />
+                        <flux:separator class="border-yellow-500/20" />
                         <div>
-                            <flux:text size="sm" class="font-semibold text-white mb-1">Time-Limited Voucher</flux:text>
-                            <flux:text size="xs" class="text-zinc-400">Use Starts At and Ends At to define a validity window. POS will automatically block usage outside this range.</flux:text>
+                            <flux:text size="sm" class="font-semibold text-yellow-100 mb-1">Time-Limited Voucher</flux:text>
+                            <flux:text size="xs" class="text-yellow-200/60">Use Starts At and Ends At to define a validity window. POS will automatically block usage outside this range.</flux:text>
                         </div>
                     </div>
                 </flux:card>
 
                 {{-- Live Details --}}
                 @if($editing)
-                    <flux:card class="p-5">
+                    <flux:card class="p-5 border border-blue-500/30 bg-blue-500/5">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-2">
-                                <flux:icon.eye class="w-4 h-4 text-zinc-400" />
-                                <flux:text size="xs" class="text-zinc-400 uppercase font-semibold tracking-widest">Live Details</flux:text>
+                                <flux:icon.eye class="w-4 h-4 text-blue-400" />
+                                <flux:text size="xs" class="text-blue-400 uppercase font-semibold tracking-widest">Live Details</flux:text>
                             </div>
                             <flux:badge :color="$editing->is_active ? 'green' : 'red'" size="sm">
                                 {{ $editing->is_active ? 'Active' : 'Inactive' }}
@@ -250,17 +250,17 @@
                         </div>
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Code</span>
-                                <span class="font-mono font-semibold">{{ $editing->code }}</span>
+                                <span class="text-blue-300/70">Code</span>
+                                <span class="font-mono font-semibold text-white">{{ $editing->code }}</span>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Name</span>
-                                <span>{{ $editing->name ?? '—' }}</span>
+                                <span class="text-blue-300/70">Name</span>
+                                <span class="text-white">{{ $editing->name ?? '—' }}</span>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Benefit</span>
+                                <span class="text-blue-300/70">Benefit</span>
                                 <span class="font-semibold text-pink-400">
                                     @if($editing->type === 'fixed')
                                         RM {{ number_format((float) $editing->value, 2) }} off
@@ -269,10 +269,10 @@
                                     @endif
                                 </span>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Validity</span>
-                                <span>
+                                <span class="text-blue-300/70">Validity</span>
+                                <span class="text-white">
                                     @if($editing->starts_at || $editing->ends_at)
                                         {{ $editing->starts_at?->format('d M Y') ?? '∞' }} – {{ $editing->ends_at?->format('d M Y') ?? '∞' }}
                                     @else
@@ -280,23 +280,23 @@
                                     @endif
                                 </span>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Usage</span>
-                                <span>
+                                <span class="text-blue-300/70">Usage</span>
+                                <span class="text-white">
                                     {{ (int) $editing->usage_count }}{{ $editing->usage_limit ? ' / ' . $editing->usage_limit : '' }}
-                                    @if(!$editing->usage_limit)<span class="text-zinc-500 text-xs ml-1">Unlimited</span>@endif
+                                    @if(!$editing->usage_limit)<span class="text-blue-300/50 text-xs ml-1">Unlimited</span>@endif
                                 </span>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Customer rules</span>
-                                <span>{{ $editing->per_customer_limit ? 'Max ' . $editing->per_customer_limit . '/customer' : 'None' }}</span>
+                                <span class="text-blue-300/70">Customer rules</span>
+                                <span class="text-white">{{ $editing->per_customer_limit ? 'Max ' . $editing->per_customer_limit . '/customer' : 'None' }}</span>
                             </div>
-                            <flux:separator />
-                            <p class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Customer optional to redeem in POS.</p>
+                            <flux:separator class="border-blue-500/20" />
+                            <p class="text-xs text-blue-300/50 uppercase tracking-widest font-semibold">Customer optional to redeem in POS.</p>
                             <div>
-                                <span class="text-zinc-400 text-sm">Promotion stacking</span>
+                                <span class="text-blue-300/70 text-sm">Promotion stacking</span>
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 <flux:badge size="sm" :color="$editing->can_combine_with_manual_discount ? 'green' : 'red'">
@@ -306,10 +306,10 @@
                                     {{ $editing->can_combine_with_points ? 'Points OK' : 'No points' }}
                                 </flux:badge>
                             </div>
-                            <flux:separator />
+                            <flux:separator class="border-blue-500/20" />
                             <div class="flex justify-between">
-                                <span class="text-zinc-400">Auto-Issue</span>
-                                <span>{{ $editing->issue_on_min_spend ? 'RM ' . number_format((float) $editing->issue_on_min_spend, 2) . ' min spend' : 'Off' }}</span>
+                                <span class="text-blue-300/70">Auto-Issue</span>
+                                <span class="text-white">{{ $editing->issue_on_min_spend ? 'RM ' . number_format((float) $editing->issue_on_min_spend, 2) . ' min spend' : 'Off' }}</span>
                             </div>
                         </div>
                     </flux:card>
