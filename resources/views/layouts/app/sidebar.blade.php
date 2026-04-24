@@ -61,18 +61,6 @@
                             {{ __('Vouchers') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
-
-                    <flux:sidebar.group :heading="__('Settings')" class="grid">
-                        <flux:sidebar.item icon="printer" :href="route('manage.settings.receipt')" :current="request()->routeIs('manage.settings.receipt')" wire:navigate>
-                            {{ __('Receipt Settings') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="document-text" :href="route('manage.settings.quick_notes')" :current="request()->routeIs('manage.settings.quick_notes')" wire:navigate>
-                            {{ __('Quick Notes') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="shield-check" :href="route('manage.settings.roles')" :current="request()->routeIs('manage.settings.roles')" wire:navigate>
-                            {{ __('Roles & Access') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
 
@@ -137,18 +125,6 @@
                         </flux:sidebar.item>
                         <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
                             {{ __('Vouchers') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
-
-                    <flux:sidebar.group :heading="__('Settings')" class="grid">
-                        <flux:sidebar.item icon="printer" :href="route('manage.settings.receipt')" :current="request()->routeIs('manage.settings.receipt')" wire:navigate>
-                            {{ __('Receipt Settings') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="document-text" :href="route('manage.settings.quick_notes')" :current="request()->routeIs('manage.settings.quick_notes')" wire:navigate>
-                            {{ __('Quick Notes') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="shield-check" :href="route('manage.settings.roles')" :current="request()->routeIs('manage.settings.roles')" wire:navigate>
-                            {{ __('Roles & Access') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
