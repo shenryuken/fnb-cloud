@@ -1,4 +1,9 @@
-<div class="flex flex-col gap-6 p-4 md:p-8 max-w-2xl">
+<section class="w-full">
+    @include('partials.settings-heading')
+
+    <x-settings.layout>
+        <x-slot:slot>
+<div class="flex flex-col gap-6 w-full max-w-2xl">
 
     {{-- Header --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -43,3 +48,6 @@
     </flux:card>
 
 </div>
+        </x-slot:slot>
+    </x-settings.layout>
+</section>
