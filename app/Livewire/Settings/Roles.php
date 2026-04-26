@@ -112,7 +112,7 @@ class Roles extends Component
 
     public function edit(int $roleId): void
     {
-        $role = Role::findOrFail($roleId);
+        $role = Role::withoutGlobalScopes()->findOrFail($roleId);
         
         // Prevent editing default roles
         if ($this->isDefaultRole($role)) {
@@ -136,7 +136,7 @@ class Roles extends Component
         $slug = \Illuminate\Support\Str::slug($this->name);
 
         if ($this->editingRoleId) {
-            $role = Role::findOrFail($this->editingRoleId);
+            $role = Role::withoutGlobalScopes()->findOrFail($this->editingRoleId);
             $role->update(['name' => $this->name, 'slug' => $slug]);
         } else {
             $role = Role::create([
@@ -154,7 +154,7 @@ class Roles extends Component
 
     public function delete(int $roleId): void
     {
-        $role = Role::findOrFail($roleId);
+        $role = Role::withoutGlobalScopes()->findOrFail($roleId);
         
         // Prevent deleting default roles
         if ($this->isDefaultRole($role)) {
