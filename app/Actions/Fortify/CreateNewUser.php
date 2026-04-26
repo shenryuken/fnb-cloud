@@ -42,20 +42,13 @@ class CreateNewUser implements CreatesNewUsers
             'tenant_id' => $tenant->id,
         ]);
 
-        // Get or create the "Owner" role for this tenant
-        $ownerRole = Role::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'slug' => 'owner'],
-            ['name' => 'Owner']
-        );
+        // Attach the global "Owner" role to the user
+        // Owner is a global default role with all permissions
+        $ownerRole = Role::withoutGlobalScopes()
+            ->where('slug', 'owner')
+            ->where('tenant_id', null)
+            ->firstOrFail();
 
-        // Assign all permissions to the Owner role if not already assigned
-        if ($ownerRole->permissions()->count() === 0) {
-            // Permissions are global (no tenant_id column), get all permission IDs
-            $permissionIds = \DB::table('permissions')->pluck('id')->toArray();
-            $ownerRole->permissions()->sync($permissionIds);
-        }
-
-        // Attach the Owner role to the user
         $user->roles()->attach($ownerRole);
 
         return $user;

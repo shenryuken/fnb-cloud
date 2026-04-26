@@ -34,7 +34,7 @@ class DefaultRolesSeeder extends Seeder
         }
 
         // ── 2. Global default roles (tenant_id = null) ────────────────────────
-        // These are shared across all tenants
+        // These are shared across all tenants - the base roles everyone has
         $globalRoles = [
             [
                 'name'        => 'Super Admin',
@@ -53,9 +53,27 @@ class DefaultRolesSeeder extends Seeder
             [
                 'name'        => 'Staff',
                 'slug'        => 'staff',
-                'permissions' => [
-                    'pos.access', 'orders.manage', 'kds.access',
-                ],
+                'permissions' => ['pos.access', 'orders.manage', 'kds.access'],
+            ],
+            [
+                'name'        => 'Kitchen Staff',
+                'slug'        => 'kitchen-staff',
+                'permissions' => ['kds.access', 'orders.manage'],
+            ],
+            [
+                'name'        => 'Waiter',
+                'slug'        => 'waiter',
+                'permissions' => ['pos.access', 'orders.manage'],
+            ],
+            [
+                'name'        => 'Cashier',
+                'slug'        => 'cashier',
+                'permissions' => ['pos.access', 'orders.manage', 'customers.manage', 'vouchers.manage'],
+            ],
+            [
+                'name'        => 'Owner',
+                'slug'        => 'owner',
+                'permissions' => array_keys($permissions), // all
             ],
         ];
 
