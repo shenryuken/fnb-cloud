@@ -10,8 +10,8 @@ use Illuminate\Database\Seeder;
 class DefaultRolesSeeder extends Seeder
 {
     /**
-     * Seed default permissions and default roles for every tenant.
-     * Also seeds landlord-level roles (no tenant_id).
+     * Seed default permissions and global default roles.
+     * Tenant-specific roles are created on-demand when needed.
      */
     public function run(): void
     {
@@ -33,8 +33,9 @@ class DefaultRolesSeeder extends Seeder
             $permissions[$p['slug']] = Permission::firstOrCreate(['slug' => $p['slug']], $p);
         }
 
-        // ── 2. Landlord roles (tenant_id = null) ─────────────────────────────
-        $landlordRoles = [
+        // ── 2. Global default roles (tenant_id = null) ────────────────────────
+        // These are shared across all tenants - the base roles everyone has
+        $globalRoles = [
             [
                 'name'        => 'Super Admin',
                 'slug'        => 'superadmin',
@@ -52,13 +53,31 @@ class DefaultRolesSeeder extends Seeder
             [
                 'name'        => 'Staff',
                 'slug'        => 'staff',
-                'permissions' => [
-                    'pos.access', 'orders.manage', 'kds.access',
-                ],
+                'permissions' => ['pos.access', 'orders.manage', 'kds.access'],
+            ],
+            [
+                'name'        => 'Kitchen Staff',
+                'slug'        => 'kitchen-staff',
+                'permissions' => ['kds.access', 'orders.manage'],
+            ],
+            [
+                'name'        => 'Waiter',
+                'slug'        => 'waiter',
+                'permissions' => ['pos.access', 'orders.manage'],
+            ],
+            [
+                'name'        => 'Cashier',
+                'slug'        => 'cashier',
+                'permissions' => ['pos.access', 'orders.manage', 'customers.manage', 'vouchers.manage'],
+            ],
+            [
+                'name'        => 'Owner',
+                'slug'        => 'owner',
+                'permissions' => array_keys($permissions), // all
             ],
         ];
 
-        foreach ($landlordRoles as $roleData) {
+        foreach ($globalRoles as $roleData) {
             $role = Role::withoutGlobalScopes()->firstOrCreate(
                 ['slug' => $roleData['slug'], 'tenant_id' => null],
                 ['name' => $roleData['name'], 'tenant_id' => null]
@@ -67,51 +86,6 @@ class DefaultRolesSeeder extends Seeder
             $role->permissions()->sync(
                 collect($roleData['permissions'])->map(fn ($slug) => $permissions[$slug]->id)->toArray()
             );
-        }
-
-        // ── 3. Tenant roles – seeded for every tenant ────────────────────────
-        $tenantRoles = [
-            [
-                'name'        => 'Admin',
-                'slug'        => 'admin',
-                'permissions' => array_keys($permissions), // full access
-            ],
-            [
-                'name'        => 'Kitchen Staff',
-                'slug'        => 'kitchen-staff',
-                'permissions' => [
-                    'kds.access', 'orders.manage',
-                ],
-            ],
-            [
-                'name'        => 'Waiter',
-                'slug'        => 'waiter',
-                'permissions' => [
-                    'pos.access', 'orders.manage',
-                ],
-            ],
-            [
-                'name'        => 'Cashier',
-                'slug'        => 'cashier',
-                'permissions' => [
-                    'pos.access', 'orders.manage', 'customers.manage', 'vouchers.manage',
-                ],
-            ],
-        ];
-
-        foreach (Tenant::all() as $tenant) {
-            app()->instance('tenant_id', $tenant->id);
-
-            foreach ($tenantRoles as $roleData) {
-                $role = Role::firstOrCreate(
-                    ['slug' => $roleData['slug'], 'tenant_id' => $tenant->id],
-                    ['name' => $roleData['name'], 'tenant_id' => $tenant->id]
-                );
-
-                $role->permissions()->sync(
-                    collect($roleData['permissions'])->map(fn ($slug) => $permissions[$slug]->id)->toArray()
-                );
-            }
         }
     }
 }

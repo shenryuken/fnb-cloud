@@ -19,60 +19,28 @@ class Roles extends Component
 
     // ── Default role definitions ──────────────────────────────────────────
 
-    /** Roles available on the landlord (no-tenant) level. */
-    private array $landlordDefaults = [
-        [
-            'name'        => 'Super Admin',
-            'slug'        => 'superadmin',
-            'permissions' => [], // resolved at seed-time to all permissions
-            'all'         => true,
-        ],
-        [
-            'name'        => 'Admin',
-            'slug'        => 'admin',
-            'permissions' => [
-                'pos.access', 'orders.manage', 'kds.access',
-                'menu.manage', 'reports.view', 'settings.manage',
-                'customers.manage', 'vouchers.manage',
-            ],
-        ],
-        [
-            'name'        => 'Staff',
-            'slug'        => 'staff',
-            'permissions' => ['pos.access', 'orders.manage', 'kds.access'],
-        ],
-    ];
-
-    /** Roles available on the tenant level. */
-    private array $tenantDefaults = [
-        [
-            'name'        => 'Admin',
-            'slug'        => 'admin',
-            'permissions' => [], // all
-            'all'         => true,
-        ],
-        [
-            'name'        => 'Kitchen Staff',
-            'slug'        => 'kitchen-staff',
-            'permissions' => ['kds.access', 'orders.manage'],
-        ],
-        [
-            'name'        => 'Waiter',
-            'slug'        => 'waiter',
-            'permissions' => ['pos.access', 'orders.manage'],
-        ],
-        [
-            'name'        => 'Cashier',
-            'slug'        => 'cashier',
-            'permissions' => ['pos.access', 'orders.manage', 'customers.manage', 'vouchers.manage'],
-        ],
+    /** Global default roles shared by all tenants - read-only. */
+    private array $globalDefaults = [
+        'superadmin',
+        'admin',
+        'staff',
+        'kitchen-staff',
+        'waiter',
+        'cashier',
+        'owner',
     ];
 
     // ── Computed properties ───────────────────────────────────────────────
 
     public function getRolesProperty()
     {
-        return Role::with('permissions')->get();
+        // For landlord: show only global roles
+        // For tenants: show both global and tenant-specific roles
+        if (auth()->user()->tenant_id === null) {
+            return Role::withoutGlobalScopes()->where('tenant_id', null)->with('permissions')->get();
+        }
+        
+        return Role::forTenant(auth()->user()->tenant_id)->with('permissions')->get();
     }
 
     public function getPermissionsProperty()
@@ -87,7 +55,15 @@ class Roles extends Component
 
     public function getDefaultDefinitionsProperty(): array
     {
-        return $this->isLandlord ? $this->landlordDefaults : $this->tenantDefaults;
+        return $this->globalDefaults;
+    }
+
+    /**
+     * Check if a role is a global default (read-only)
+     */
+    public function isDefaultRole(Role $role): bool
+    {
+        return $role->tenant_id === null || in_array($role->slug, $this->globalDefaults);
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
@@ -101,6 +77,13 @@ class Roles extends Component
     public function edit(int $roleId): void
     {
         $role = Role::findOrFail($roleId);
+        
+        // Prevent editing default roles
+        if ($this->isDefaultRole($role)) {
+            session()->flash('error', 'Cannot edit default roles.');
+            return;
+        }
+        
         $this->editingRoleId = $roleId;
         $this->name = $role->name;
         $this->selectedPermissions = $role->permissions->pluck('id')->toArray();
@@ -135,45 +118,23 @@ class Roles extends Component
 
     public function delete(int $roleId): void
     {
-        Role::findOrFail($roleId)->delete();
+        $role = Role::findOrFail($roleId);
+        
+        // Prevent deleting default roles
+        if ($this->isDefaultRole($role)) {
+            session()->flash('error', 'Cannot delete default roles.');
+            return;
+        }
+        
+        $role->delete();
     }
 
     /**
-     * Seed the default roles appropriate for this context (landlord or tenant).
+     * Create a new custom role (only for tenants, not for default roles)
      */
     public function seedDefaults(): void
     {
-        $allPermissions = Permission::all()->keyBy('slug');
-        $tenantId       = auth()->user()->tenant_id;
-        $defaults       = $this->isLandlord ? $this->landlordDefaults : $this->tenantDefaults;
-
-        // Ensure the extra permissions exist before seeding
-        $extraPermissions = [
-            ['name' => 'View Reports',     'slug' => 'reports.view'],
-            ['name' => 'Manage Customers', 'slug' => 'customers.manage'],
-            ['name' => 'Manage Vouchers',  'slug' => 'vouchers.manage'],
-        ];
-        foreach ($extraPermissions as $p) {
-            $allPermissions[$p['slug']] = Permission::firstOrCreate(['slug' => $p['slug']], $p);
-        }
-
-        foreach ($defaults as $def) {
-            $role = Role::withoutGlobalScopes()->firstOrCreate(
-                ['slug' => $def['slug'], 'tenant_id' => $tenantId],
-                ['name' => $def['name'], 'tenant_id' => $tenantId]
-            );
-
-            $permissionIds = ($def['all'] ?? false)
-                ? $allPermissions->pluck('id')->toArray()
-                : collect($def['permissions'] ?? [])
-                    ->filter(fn ($s) => isset($allPermissions[$s]))
-                    ->map(fn ($s) => $allPermissions[$s]->id)
-                    ->toArray();
-
-            $role->permissions()->sync($permissionIds);
-        }
-
-        session()->flash('status', 'Default roles seeded successfully.');
+        session()->flash('info', 'Default roles are automatically available. Create custom roles specific to your tenant here.');
     }
 
     // ── Render ────────────────────────────────────────────────────────────
