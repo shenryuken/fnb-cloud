@@ -45,14 +45,21 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->roles()->whereHas('permissions', function ($query) use ($permission) {
-            $query->where('slug', $permission);
-        })->exists();
+        // Use withoutGlobalScopes to check both global roles (tenant_id = null) 
+        // and tenant-specific custom roles
+        return Role::withoutGlobalScopes()
+            ->whereHas('users', fn($q) => $q->where('users.id', $this->id))
+            ->whereHas('permissions', fn($q) => $q->where('slug', $permission))
+            ->exists();
     }
 
     public function hasRole(string $role): bool
     {
-        return $this->roles()->where('slug', $role)->exists();
+        // Use withoutGlobalScopes to check both global and custom roles
+        return Role::withoutGlobalScopes()
+            ->whereHas('users', fn($q) => $q->where('users.id', $this->id))
+            ->where('slug', $role)
+            ->exists();
     }
 
     /**
