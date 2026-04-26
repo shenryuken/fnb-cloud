@@ -11,6 +11,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Title('Products')]
 #[Lazy]
@@ -50,6 +51,14 @@ class Products extends Component
     // Add-ons tab state
     public string $activeAddonTab = 'addon-groups';
 
+    // Import state
+    public bool $showImportModal = false;
+    public $importFile = null;
+    public array $importErrors = [];
+    public array $importPreview = [];
+    public int $importSuccessCount = 0;
+    public bool $importDone = false;
+
     protected $rules = [
         'product_type' => 'required|in:ala_carte,set',
         'name' => 'required|string|max:255',
@@ -70,6 +79,7 @@ class Products extends Component
         'selectedGroups.*' => 'exists:addon_groups,id',
         'selectedStandaloneAddons' => 'nullable|array',
         'selectedStandaloneAddons.*' => 'exists:product_addons,id',
+        'importFile' => 'nullable|file|mimes:csv,txt|max:2048',
     ];
 
     /**
@@ -371,6 +381,193 @@ class Products extends Component
     public function delete(Product $product): void
     {
         $product->delete();
+    }
+
+    /**
+     * Open the import modal and reset state.
+     */
+    public function openImportModal(): void
+    {
+        $this->reset(['importFile', 'importErrors', 'importPreview', 'importSuccessCount', 'importDone']);
+        $this->showImportModal = true;
+    }
+
+    /**
+     * Close the import modal.
+     */
+    public function closeImportModal(): void
+    {
+        $this->showImportModal = false;
+        $this->reset(['importFile', 'importErrors', 'importPreview', 'importSuccessCount', 'importDone']);
+    }
+
+    /**
+     * Preview the uploaded CSV before committing.
+     */
+    public function previewImport(): void
+    {
+        $this->validateOnly('importFile', ['importFile' => 'required|file|mimes:csv,txt|max:2048']);
+
+        $this->importErrors = [];
+        $this->importPreview = [];
+
+        $path = $this->importFile->getRealPath();
+        $handle = fopen($path, 'r');
+
+        // Read header row
+        $headers = fgetcsv($handle);
+        if (!$headers) {
+            $this->importErrors[] = 'Could not read the CSV file. Please ensure it is a valid CSV.';
+            fclose($handle);
+            return;
+        }
+
+        // Normalize headers (lowercase, trim)
+        $headers = array_map(fn($h) => strtolower(trim($h)), $headers);
+
+        $required = ['name', 'category', 'price'];
+        $missing = array_diff($required, $headers);
+        if (!empty($missing)) {
+            $this->importErrors[] = 'Missing required columns: ' . implode(', ', $missing);
+            fclose($handle);
+            return;
+        }
+
+        $row = 2;
+        while (($data = fgetcsv($handle)) !== false) {
+            if (empty(array_filter($data))) {
+                $row++;
+                continue; // skip blank rows
+            }
+
+            $record = array_combine($headers, array_pad($data, count($headers), ''));
+
+            $name     = trim($record['name'] ?? '');
+            $category = trim($record['category'] ?? '');
+            $price    = trim($record['price'] ?? '');
+            $desc     = trim($record['description'] ?? '');
+            $badge    = trim($record['badge'] ?? '');
+            $status   = strtolower(trim($record['status'] ?? 'active'));
+            $order    = trim($record['sort_order'] ?? '0');
+
+            $rowErrors = [];
+
+            if (empty($name)) {
+                $rowErrors[] = 'Name is required.';
+            }
+            if (empty($category)) {
+                $rowErrors[] = 'Category is required.';
+            }
+            if (!is_numeric($price) || (float) $price < 0) {
+                $rowErrors[] = 'Price must be a valid non-negative number.';
+            }
+
+            $this->importPreview[] = [
+                'row'         => $row,
+                'name'        => $name,
+                'category'    => $category,
+                'price'       => $price,
+                'description' => $desc,
+                'badge'       => $badge,
+                'status'      => in_array($status, ['active', '1', 'yes', 'true']) ? 'active' : 'inactive',
+                'sort_order'  => is_numeric($order) ? (int) $order : 0,
+                'errors'      => $rowErrors,
+            ];
+
+            $row++;
+        }
+
+        fclose($handle);
+
+        if (empty($this->importPreview)) {
+            $this->importErrors[] = 'No data rows found in the CSV.';
+        }
+    }
+
+    /**
+     * Commit the import: create or update products from the preview.
+     */
+    public function commitImport(): void
+    {
+        if (empty($this->importPreview)) {
+            return;
+        }
+
+        // Only import rows without errors
+        $valid = array_filter($this->importPreview, fn($r) => empty($r['errors']));
+
+        if (empty($valid)) {
+            $this->importErrors[] = 'No valid rows to import. Please fix the errors in your CSV.';
+            return;
+        }
+
+        // Build a category name->id map (create if not exists)
+        $categoryMap = Category::pluck('id', 'name')->toArray();
+
+        $count = 0;
+
+        DB::transaction(function () use ($valid, &$categoryMap, &$count) {
+            foreach ($valid as $record) {
+                $catName = $record['category'];
+
+                if (!isset($categoryMap[$catName])) {
+                    $cat = Category::create([
+                        'name'      => $catName,
+                        'is_active' => true,
+                        'sort_order' => 0,
+                    ]);
+                    $categoryMap[$catName] = $cat->id;
+                }
+
+                Product::create([
+                    'name'        => $record['name'],
+                    'category_id' => $categoryMap[$catName],
+                    'price'       => (float) $record['price'],
+                    'description' => $record['description'] ?: null,
+                    'badge_text'  => $record['badge'] ?: null,
+                    'is_active'   => $record['status'] === 'active',
+                    'sort_order'  => $record['sort_order'],
+                    'product_type' => 'ala_carte',
+                ]);
+
+                $count++;
+            }
+        });
+
+        $this->importSuccessCount = $count;
+        $this->importDone = true;
+        $this->importPreview = [];
+        $this->importFile = null;
+    }
+
+    /**
+     * Stream a CSV template file for download.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($handle, [
+                'name',
+                'category',
+                'price',
+                'description',
+                'badge',
+                'status',
+                'sort_order',
+            ]);
+
+            // Example rows
+            fputcsv($handle, ['Burger Ayam', 'Burgers', '8.50', 'Crispy fried chicken burger', 'HOT', 'active', '1']);
+            fputcsv($handle, ['Ayam Goreng Set', 'Set Meals', '12.00', 'Comes with rice and drink', '', 'active', '2']);
+            fputcsv($handle, ['Teh Tarik', 'Beverages', '3.00', 'Freshly pulled milk tea', '', 'active', '3']);
+
+            fclose($handle);
+        }, 'menu_import_template.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     /**
