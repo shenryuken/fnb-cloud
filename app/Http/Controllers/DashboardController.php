@@ -25,19 +25,58 @@ class DashboardController extends Controller
         // TenantScope filters everything automatically
         $completedOrders = Order::where('status', 'completed');
 
+        // Today's metrics
+        $todaySales = (clone $completedOrders)->whereDate('created_at', today())->sum('total_amount');
+        $todayOrders = (clone $completedOrders)->whereDate('created_at', today())->count();
+        $todayAvgOrder = $todayOrders > 0 ? $todaySales / $todayOrders : 0;
+
+        // Yesterday's metrics for comparison
+        $yesterdaySales = (clone $completedOrders)->whereDate('created_at', today()->subDay())->sum('total_amount');
+        $yesterdayOrders = (clone $completedOrders)->whereDate('created_at', today()->subDay())->count();
+
+        // Calculate percentage changes
+        $salesChange = $yesterdaySales > 0 ? (($todaySales - $yesterdaySales) / $yesterdaySales) * 100 : ($todaySales > 0 ? 100 : 0);
+        $ordersChange = $yesterdayOrders > 0 ? (($todayOrders - $yesterdayOrders) / $yesterdayOrders) * 100 : ($todayOrders > 0 ? 100 : 0);
+
+        // Kitchen/KDS status
+        $pendingKds = Order::whereIn('kds_status', ['pending', 'preparing'])->count();
+        $preparingOrders = Order::where('kds_status', 'preparing')->count();
+        $readyOrders = Order::where('kds_status', 'ready')->count();
+
+        // Week and month stats
+        $weekSales = (clone $completedOrders)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total_amount');
+        $weekOrders = (clone $completedOrders)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+        $monthSales = (clone $completedOrders)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount');
+        $monthOrders = (clone $completedOrders)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+        // Last week comparison
+        $lastWeekSales = (clone $completedOrders)->whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->sum('total_amount');
+        $weekChange = $lastWeekSales > 0 ? (($weekSales - $lastWeekSales) / $lastWeekSales) * 100 : ($weekSales > 0 ? 100 : 0);
+
         $data = [
             'categoryCount' => Category::count(),
             'productCount' => Product::count(),
             'orderCount' => Order::count(),
             'totalRevenue' => (clone $completedOrders)->sum('total_amount'),
 
-            // Time-based revenue
-            'todaySales'     => (clone $completedOrders)->whereDate('created_at', today())->sum('total_amount'),
-            'todayOrders'    => (clone $completedOrders)->whereDate('created_at', today())->count(),
-            'weekSales'      => (clone $completedOrders)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total_amount'),
-            'weekOrders'     => (clone $completedOrders)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'monthSales'     => (clone $completedOrders)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount'),
-            'monthOrders'    => (clone $completedOrders)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+            // Today metrics with comparisons
+            'todaySales'     => $todaySales,
+            'todayOrders'    => $todayOrders,
+            'todayAvgOrder'  => $todayAvgOrder,
+            'salesChange'    => $salesChange,
+            'ordersChange'   => $ordersChange,
+
+            // Week and month
+            'weekSales'      => $weekSales,
+            'weekOrders'     => $weekOrders,
+            'weekChange'     => $weekChange,
+            'monthSales'     => $monthSales,
+            'monthOrders'    => $monthOrders,
+
+            // KDS/Kitchen status
+            'pendingKds'     => $pendingKds,
+            'preparingOrders' => $preparingOrders,
+            'readyOrders'    => $readyOrders,
 
             // Top selling products this month (by quantity sold)
             'topProducts' => OrderItem::with('product')
@@ -50,7 +89,7 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get(),
 
-            'recentOrders' => Order::with(['user', 'customer'])->latest()->take(5)->get(),
+            'recentOrders' => Order::with(['user', 'customer', 'items'])->latest()->take(5)->get(),
             'tenant' => $request->user()->tenant,
 
             // Chart data for different time periods
