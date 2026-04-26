@@ -1,8 +1,30 @@
 <div x-data="{}" class="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] gap-4 p-4 overflow-y-auto lg:overflow-hidden bg-zinc-50 dark:bg-zinc-950" wire:poll.15s>
+    {{-- No Shift Warning --}}
+    @if(!$this->currentShift)
+        <div class="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3">
+            <flux:icon.exclamation-triangle class="w-5 h-5" />
+            <span>No active shift. Orders will not be linked to a shift.</span>
+            <a href="{{ route('manage.shifts.index') }}" wire:navigate class="underline hover:no-underline">Open Shift</a>
+        </div>
+    @endif
+
     <!-- Left Side: Product Selection -->
-    <div class="w-full lg:flex-1 flex flex-col gap-4 lg:overflow-hidden">
+    <div class="w-full lg:flex-1 flex flex-col gap-4 lg:overflow-hidden {{ !$this->currentShift ? 'pt-10' : '' }}">
         <!-- Top Bar: Search and Categories -->
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+            {{-- Shift status indicator --}}
+            @if($this->currentShift)
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2 text-green-600">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="font-semibold">Shift Active</span>
+                        <span class="text-zinc-400">{{ $this->currentShift->opened_at->format('g:i A') }}</span>
+                    </div>
+                    <a href="{{ route('manage.shifts.index') }}" wire:navigate class="text-zinc-400 hover:text-pink-500 transition-colors">
+                        <flux:icon.banknotes class="w-4 h-4" />
+                    </a>
+                </div>
+            @endif
             <div class="relative">
                 <input type="text" wire:model.live.debounce.300ms="search" 
                     placeholder="Search menu items..." 

@@ -13,6 +13,7 @@ use App\Livewire\Kds;
 use App\Livewire\SalesReport;
 use App\Livewire\Customers;
 use App\Livewire\Vouchers;
+use App\Livewire\Shifts;
 use App\Livewire\Settings\Roles;
 use App\Livewire\Settings\Loyalty as LoyaltySettings;
 use App\Livewire\Settings\QuickNotes as QuickNotesSettings;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reports
     Route::get('reports/sales', SalesReport::class)->name('reports.sales');
+
+    // Shifts
+    Route::get('shifts', Shifts::class)->name('manage.shifts.index');
 
     // Tenant Settings
     Route::get('settings/receipt', ReceiptSettings::class)->name('manage.settings.receipt');
