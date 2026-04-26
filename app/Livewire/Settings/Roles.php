@@ -19,12 +19,12 @@ class Roles extends Component
 
     // ── Default role definitions ──────────────────────────────────────────
 
-    /** Roles available on the landlord (no-tenant) level. */
-    private array $landlordDefaults = [
+    /** Global default roles shared by all tenants. */
+    private array $globalDefaults = [
         [
             'name'        => 'Super Admin',
             'slug'        => 'superadmin',
-            'permissions' => [], // resolved at seed-time to all permissions
+            'permissions' => [], // all
             'all'         => true,
         ],
         [
@@ -43,14 +43,8 @@ class Roles extends Component
         ],
     ];
 
-    /** Roles available on the tenant level. */
-    private array $tenantDefaults = [
-        [
-            'name'        => 'Admin',
-            'slug'        => 'admin',
-            'permissions' => [], // all
-            'all'         => true,
-        ],
+    /** Custom roles available on the tenant level. */
+    private array $tenantCustomRoles = [
         [
             'name'        => 'Kitchen Staff',
             'slug'        => 'kitchen-staff',
@@ -72,7 +66,13 @@ class Roles extends Component
 
     public function getRolesProperty()
     {
-        return Role::with('permissions')->get();
+        // For landlord: show only global roles
+        // For tenants: show both global and tenant-specific roles
+        if (auth()->user()->tenant_id === null) {
+            return Role::withoutGlobalScopes()->where('tenant_id', null)->with('permissions')->get();
+        }
+        
+        return Role::forTenant(auth()->user()->tenant_id)->with('permissions')->get();
     }
 
     public function getPermissionsProperty()
@@ -87,7 +87,7 @@ class Roles extends Component
 
     public function getDefaultDefinitionsProperty(): array
     {
-        return $this->isLandlord ? $this->landlordDefaults : $this->tenantDefaults;
+        return $this->isLandlord ? $this->globalDefaults : $this->tenantCustomRoles;
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
@@ -139,41 +139,29 @@ class Roles extends Component
     }
 
     /**
-     * Seed the default roles appropriate for this context (landlord or tenant).
+     * Seed the default custom roles for this tenant.
      */
     public function seedDefaults(): void
     {
         $allPermissions = Permission::all()->keyBy('slug');
         $tenantId       = auth()->user()->tenant_id;
-        $defaults       = $this->isLandlord ? $this->landlordDefaults : $this->tenantDefaults;
-
-        // Ensure the extra permissions exist before seeding
-        $extraPermissions = [
-            ['name' => 'View Reports',     'slug' => 'reports.view'],
-            ['name' => 'Manage Customers', 'slug' => 'customers.manage'],
-            ['name' => 'Manage Vouchers',  'slug' => 'vouchers.manage'],
-        ];
-        foreach ($extraPermissions as $p) {
-            $allPermissions[$p['slug']] = Permission::firstOrCreate(['slug' => $p['slug']], $p);
-        }
+        $defaults       = $this->tenantCustomRoles;
 
         foreach ($defaults as $def) {
-            $role = Role::withoutGlobalScopes()->firstOrCreate(
+            $role = Role::firstOrCreate(
                 ['slug' => $def['slug'], 'tenant_id' => $tenantId],
                 ['name' => $def['name'], 'tenant_id' => $tenantId]
             );
 
-            $permissionIds = ($def['all'] ?? false)
-                ? $allPermissions->pluck('id')->toArray()
-                : collect($def['permissions'] ?? [])
-                    ->filter(fn ($s) => isset($allPermissions[$s]))
-                    ->map(fn ($s) => $allPermissions[$s]->id)
-                    ->toArray();
+            $permissionIds = collect($def['permissions'] ?? [])
+                ->filter(fn ($s) => isset($allPermissions[$s]))
+                ->map(fn ($s) => $allPermissions[$s]->id)
+                ->toArray();
 
             $role->permissions()->sync($permissionIds);
         }
 
-        session()->flash('status', 'Default roles seeded successfully.');
+        session()->flash('status', 'Default custom roles seeded successfully.');
     }
 
     // ── Render ────────────────────────────────────────────────────────────
