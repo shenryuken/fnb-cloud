@@ -33,9 +33,9 @@ class DefaultRolesSeeder extends Seeder
             $permissions[$p['slug']] = Permission::firstOrCreate(['slug' => $p['slug']], $p);
         }
 
-        // ── 2. Global default roles (tenant_id = null) ────────────────────────
-        // These are shared across all tenants - the base roles everyone has
-        $globalRoles = [
+        // ── 2. Landlord roles (tenant_id = null) ────────────────────────────
+        // These are for system administrators (users without a tenant)
+        $landlordRoles = [
             [
                 'name'        => 'Super Admin',
                 'slug'        => 'superadmin',
@@ -55,6 +55,27 @@ class DefaultRolesSeeder extends Seeder
                 'slug'        => 'staff',
                 'permissions' => ['pos.access', 'orders.manage', 'kds.access'],
             ],
+        ];
+
+        foreach ($landlordRoles as $roleData) {
+            $role = Role::withoutGlobalScopes()->firstOrCreate(
+                ['slug' => $roleData['slug'], 'tenant_id' => null],
+                ['name' => $roleData['name'], 'tenant_id' => null]
+            );
+
+            $role->permissions()->sync(
+                collect($roleData['permissions'])->map(fn ($slug) => $permissions[$slug]->id)->toArray()
+            );
+        }
+
+        // ── 3. Restaurant default roles (tenant_id = null) ────────────────────
+        // These are shared defaults for all restaurants/tenants
+        $restaurantRoles = [
+            [
+                'name'        => 'Owner',
+                'slug'        => 'owner',
+                'permissions' => array_keys($permissions), // all
+            ],
             [
                 'name'        => 'Kitchen Staff',
                 'slug'        => 'kitchen-staff',
@@ -70,14 +91,9 @@ class DefaultRolesSeeder extends Seeder
                 'slug'        => 'cashier',
                 'permissions' => ['pos.access', 'orders.manage', 'customers.manage', 'vouchers.manage'],
             ],
-            [
-                'name'        => 'Owner',
-                'slug'        => 'owner',
-                'permissions' => array_keys($permissions), // all
-            ],
         ];
 
-        foreach ($globalRoles as $roleData) {
+        foreach ($restaurantRoles as $roleData) {
             $role = Role::withoutGlobalScopes()->firstOrCreate(
                 ['slug' => $roleData['slug'], 'tenant_id' => null],
                 ['name' => $roleData['name'], 'tenant_id' => null]

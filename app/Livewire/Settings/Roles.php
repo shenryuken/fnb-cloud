@@ -19,28 +19,48 @@ class Roles extends Component
 
     // ── Default role definitions ──────────────────────────────────────────
 
-    /** Global default roles shared by all tenants - read-only. */
-    private array $globalDefaults = [
+    /** Landlord roles - for system administrators only */
+    private array $landlordRoles = [
         'superadmin',
         'admin',
         'staff',
+    ];
+
+    /** Restaurant roles - for tenant users */
+    private array $restaurantRoles = [
+        'owner',
         'kitchen-staff',
         'waiter',
         'cashier',
-        'owner',
     ];
 
     // ── Computed properties ───────────────────────────────────────────────
 
     public function getRolesProperty()
     {
-        // For landlord: show only global roles
-        // For tenants: show both global and tenant-specific roles
+        // For landlord: show only landlord roles (superadmin, admin, staff)
         if (auth()->user()->tenant_id === null) {
-            return Role::withoutGlobalScopes()->where('tenant_id', null)->with('permissions')->get();
+            return Role::withoutGlobalScopes()
+                ->where('tenant_id', null)
+                ->whereIn('slug', $this->landlordRoles)
+                ->with('permissions')
+                ->get();
         }
         
-        return Role::forTenant(auth()->user()->tenant_id)->with('permissions')->get();
+        // For tenants: show restaurant default roles + any custom tenant roles
+        return Role::withoutGlobalScopes()
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    // Global restaurant roles
+                    $sub->whereNull('tenant_id')
+                        ->whereIn('slug', $this->restaurantRoles);
+                })->orWhere(function ($sub) {
+                    // Custom roles for this tenant
+                    $sub->where('tenant_id', auth()->user()->tenant_id);
+                });
+            })
+            ->with('permissions')
+            ->get();
     }
 
     public function getPermissionsProperty()
@@ -55,11 +75,13 @@ class Roles extends Component
 
     public function getDefaultDefinitionsProperty(): array
     {
-        // Fetch the actual default roles from the database
+        // Get the appropriate default roles based on user type
+        $slugs = $this->isLandlord ? $this->landlordRoles : $this->restaurantRoles;
+        
         return Role::withoutGlobalScopes()
             ->where('tenant_id', null)
-            ->whereIn('slug', $this->globalDefaults)
-            ->orderByRaw("FIELD(slug, '" . implode("','", $this->globalDefaults) . "')")
+            ->whereIn('slug', $slugs)
+            ->orderByRaw("FIELD(slug, '" . implode("','", $slugs) . "')")
             ->with('permissions')
             ->get()
             ->map(fn($role) => [
@@ -76,7 +98,8 @@ class Roles extends Component
      */
     public function isDefaultRole(Role $role): bool
     {
-        return $role->tenant_id === null || in_array($role->slug, $this->globalDefaults);
+        // Global default roles (tenant_id = null) are read-only
+        return $role->tenant_id === null;
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
