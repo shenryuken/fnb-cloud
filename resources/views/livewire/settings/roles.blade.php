@@ -29,6 +29,18 @@
         </flux:callout>
     @endif
 
+    @if(session('error'))
+        <flux:callout variant="danger" icon="exclamation-circle">
+            {{ session('error') }}
+        </flux:callout>
+    @endif
+
+    @if(session('info'))
+        <flux:callout variant="warning" icon="information-circle">
+            {{ session('info') }}
+        </flux:callout>
+    @endif
+
     {{-- Default role reference table --}}
     <flux:card class="p-0 overflow-hidden">
         <div class="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
@@ -102,8 +114,14 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 shrink-0">
-                                <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $role->id }})" />
-                                <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $role->id }})" wire:confirm="Delete the '{{ $role->name }}' role?" class="text-red-400 hover:text-red-600" />
+                                @if($role->tenant_id === null)
+                                    {{-- Default roles are read-only --}}
+                                    <flux:button size="sm" variant="ghost" icon="lock-closed" disabled title="Default roles cannot be edited" class="opacity-50 cursor-not-allowed" />
+                                @else
+                                    {{-- Custom roles can be edited/deleted --}}
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $role->id }})" />
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $role->id }})" wire:confirm="Delete the '{{ $role->name }}' role?" class="text-red-400 hover:text-red-600" />
+                                @endif
                             </div>
                         </div>
                         <div class="p-4">
