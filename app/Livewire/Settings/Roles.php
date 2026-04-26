@@ -55,7 +55,20 @@ class Roles extends Component
 
     public function getDefaultDefinitionsProperty(): array
     {
-        return $this->globalDefaults;
+        // Fetch the actual default roles from the database
+        return Role::withoutGlobalScopes()
+            ->where('tenant_id', null)
+            ->whereIn('slug', $this->globalDefaults)
+            ->orderByRaw("FIELD(slug, '" . implode("','", $this->globalDefaults) . "')")
+            ->with('permissions')
+            ->get()
+            ->map(fn($role) => [
+                'name' => $role->name,
+                'slug' => $role->slug,
+                'permissions' => $role->permissions->pluck('slug')->toArray(),
+                'all' => $role->permissions->count() === Permission::count(),
+            ])
+            ->toArray();
     }
 
     /**
