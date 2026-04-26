@@ -6,8 +6,208 @@
 
         <flux:separator />
 
+        <flux:button wire:click="openImportModal" icon="arrow-up-tray" variant="ghost">Import CSV</flux:button>
         <flux:button wire:click="create" icon="plus" variant="primary">Add New Product</flux:button>
     </flux:header>
+
+    {{-- Import Modal --}}
+    @if($showImportModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
+
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center shrink-0">
+                            <flux:icon.arrow-up-tray class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100">Import Menu via CSV</h3>
+                            <p class="text-xs text-zinc-400">Upload a CSV file to bulk-create menu items</p>
+                        </div>
+                    </div>
+                    <button wire:click="closeImportModal" class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors">
+                        <flux:icon.x-mark class="w-4 h-4" />
+                    </button>
+                </div>
+
+                <div class="p-5 space-y-5 overflow-y-auto flex-1">
+
+                    @if($importDone)
+                        {{-- Success state --}}
+                        <div class="flex flex-col items-center justify-center py-10 text-center gap-3">
+                            <div class="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <flux:icon.check-circle class="w-8 h-8 text-green-500" />
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-zinc-900 dark:text-zinc-100">Import Complete</p>
+                                <p class="text-sm text-zinc-400">{{ $importSuccessCount }} product(s) were successfully imported.</p>
+                            </div>
+                            <button wire:click="closeImportModal" class="mt-2 px-5 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold text-sm transition-all">
+                                Done
+                            </button>
+                        </div>
+                    @else
+                        {{-- Step 1: Download template + upload --}}
+                        @if(empty($importPreview))
+                            {{-- Template info card --}}
+                            <div class="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">CSV Template</p>
+                                        <p class="text-xs text-zinc-400 mt-0.5">Download the template, fill in your menu items, then upload it here.</p>
+                                        <div class="mt-3 flex flex-wrap gap-1.5">
+                                            @foreach(['name *', 'category *', 'price *', 'description', 'badge', 'status', 'sort_order'] as $col)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-xs font-mono text-zinc-600 dark:text-zinc-300">
+                                                    {{ $col }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        <p class="text-xs text-zinc-400 mt-2">* Required fields. <code class="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">status</code> accepts: <strong>active</strong> or <strong>inactive</strong>.</p>
+                                    </div>
+                                    <button wire:click="downloadTemplate" class="shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500 transition-all">
+                                        <flux:icon.arrow-down-tray class="w-4 h-4" />
+                                        Download Template
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- File upload --}}
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400 block">Upload CSV File</label>
+                                <div class="relative border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg p-6 text-center hover:border-pink-400 dark:hover:border-pink-500 transition-colors">
+                                    <flux:icon.document-text class="w-8 h-8 text-zinc-300 dark:text-zinc-600 mx-auto mb-2" />
+                                    <p class="text-sm text-zinc-500 mb-3">Select your filled CSV template</p>
+                                    <input type="file" wire:model="importFile" accept=".csv,.txt"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                    @if($importFile)
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 text-pink-600 text-xs font-medium">
+                                            <flux:icon.document-check class="w-4 h-4" />
+                                            {{ $importFile->getClientOriginalName() }}
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-zinc-400">CSV files only, max 2MB</span>
+                                    @endif
+                                </div>
+                                @error('importFile') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+
+                            @if(!empty($importErrors))
+                                <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 space-y-1">
+                                    @foreach($importErrors as $err)
+                                        <p class="text-xs text-red-600 dark:text-red-400 flex items-start gap-1.5">
+                                            <flux:icon.exclamation-triangle class="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                            {{ $err }}
+                                        </p>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @else
+                            {{-- Step 2: Preview table --}}
+                            @php
+                                $hasErrors = collect($importPreview)->some(fn($r) => !empty($r['errors']));
+                                $validCount = collect($importPreview)->filter(fn($r) => empty($r['errors']))->count();
+                            @endphp
+
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                                    Preview — {{ count($importPreview) }} row(s) found
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600">
+                                        <flux:icon.check class="w-3 h-3" /> {{ $validCount }} valid
+                                    </span>
+                                    @if($hasErrors)
+                                        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600">
+                                            <flux:icon.x-mark class="w-3 h-3" /> {{ count($importPreview) - $validCount }} error(s)
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs">
+                                        <thead class="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                                            <tr>
+                                                <th class="text-left px-3 py-2 text-zinc-500 font-semibold">#</th>
+                                                <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Name</th>
+                                                <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Category</th>
+                                                <th class="text-right px-3 py-2 text-zinc-500 font-semibold">Price</th>
+                                                <th class="text-center px-3 py-2 text-zinc-500 font-semibold">Status</th>
+                                                <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                            @foreach($importPreview as $row)
+                                                <tr class="{{ !empty($row['errors']) ? 'bg-red-50 dark:bg-red-900/10' : 'bg-white dark:bg-zinc-900' }}">
+                                                    <td class="px-3 py-2 text-zinc-400 font-mono">{{ $row['row'] }}</td>
+                                                    <td class="px-3 py-2 font-medium text-zinc-800 dark:text-zinc-100">{{ $row['name'] ?: '—' }}</td>
+                                                    <td class="px-3 py-2 text-zinc-500">{{ $row['category'] ?: '—' }}</td>
+                                                    <td class="px-3 py-2 text-right font-mono text-zinc-700 dark:text-zinc-300">
+                                                        RM {{ is_numeric($row['price']) ? number_format((float)$row['price'], 2) : $row['price'] }}
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        @if($row['status'] === 'active')
+                                                            <span class="inline-block px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-600 text-[10px] font-semibold">Active</span>
+                                                        @else
+                                                            <span class="inline-block px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400 text-[10px] font-semibold">Inactive</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        @if(!empty($row['errors']))
+                                                            <div class="space-y-0.5">
+                                                                @foreach($row['errors'] as $e)
+                                                                    <p class="text-red-500 text-[10px]">{{ $e }}</p>
+                                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <span class="text-green-500 text-[10px]">Ready</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            @if(!empty($importErrors))
+                                <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 space-y-1">
+                                    @foreach($importErrors as $err)
+                                        <p class="text-xs text-red-600 dark:text-red-400">{{ $err }}</p>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endif
+                    @endif
+                </div>
+
+                {{-- Modal Footer --}}
+                @if(!$importDone)
+                    <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3">
+                        @if(!empty($importPreview))
+                            <button wire:click="$set('importPreview', []); $set('importErrors', [])" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                                Back
+                            </button>
+                            <button wire:click="commitImport" class="px-5 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                                <flux:icon.check-circle class="w-4 h-4" />
+                                Import {{ collect($importPreview)->filter(fn($r) => empty($r['errors']))->count() }} Item(s)
+                            </button>
+                        @else
+                            <button wire:click="closeImportModal" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                                Cancel
+                            </button>
+                            <button wire:click="previewImport" @disabled(!$importFile) class="px-5 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold text-sm transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <flux:icon.magnifying-glass class="w-4 h-4" />
+                                Preview
+                            </button>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 
     {{-- Product Form Modal --}}
     <flux:modal name="product-form" wire:model="isCreating" class="w-full max-w-5xl space-y-6">
