@@ -15,7 +15,9 @@ trait BelongsToTenant
         static::addGlobalScope(new TenantScope);
 
         static::creating(function (Model $model) {
-            if (app()->bound('tenant_id')) {
+            // Only set tenant_id if it wasn't explicitly set (including explicit null)
+            // Check if tenant_id was explicitly provided in the model's attributes
+            if (!array_key_exists('tenant_id', $model->getAttributes()) && app()->bound('tenant_id')) {
                 $model->tenant_id = app('tenant_id');
             }
         });
