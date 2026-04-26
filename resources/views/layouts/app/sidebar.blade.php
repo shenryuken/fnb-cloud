@@ -24,46 +24,66 @@
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
-                        <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
-                            {{ __('POS') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index')" wire:navigate>
-                            {{ __('Orders') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
-                            {{ __('Sales Report') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
-                            {{ __('Kitchen (KDS)') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
-                            {{ __('Shifts') }}
-                        </flux:sidebar.item>
+                        @if(auth()->user()->hasPermission('pos.access'))
+                            <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                                {{ __('POS') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('orders.manage'))
+                            <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index')" wire:navigate>
+                                {{ __('Orders') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('reports.view'))
+                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
+                                {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('kds.access'))
+                            <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
+                                {{ __('Kitchen (KDS)') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('pos.access'))
+                            <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
+                                {{ __('Shifts') }}
+                            </flux:sidebar.item>
+                        @endif
                     </flux:sidebar.group>
 
-                    <flux:sidebar.group :heading="__('Menu Management')" class="grid">
-                        <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
-                            {{ __('Categories') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
-                            {{ __('Products') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
-                            {{ __('Add-ons') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    @if(auth()->user()->hasPermission('menu.manage'))
+                        <flux:sidebar.group :heading="__('Menu Management')" class="grid">
+                            <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
+                                {{ __('Categories') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
+                                {{ __('Products') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
+                                {{ __('Add-ons') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
 
-                    <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
-                        <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
-                            {{ __('Loyalty Points') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
-                            {{ __('Customers') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
-                            {{ __('Vouchers') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    @if(auth()->user()->hasPermission('customers.manage') || auth()->user()->hasPermission('vouchers.manage') || auth()->user()->hasPermission('settings.manage'))
+                        <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
+                            @if(auth()->user()->hasPermission('settings.manage'))
+                                <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
+                                    {{ __('Loyalty Points') }}
+                                </flux:sidebar.item>
+                            @endif
+                            @if(auth()->user()->hasPermission('customers.manage'))
+                                <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
+                                    {{ __('Customers') }}
+                                </flux:sidebar.item>
+                            @endif
+                            @if(auth()->user()->hasPermission('vouchers.manage'))
+                                <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
+                                    {{ __('Vouchers') }}
+                                </flux:sidebar.item>
+                            @endif
+                        </flux:sidebar.group>
+                    @endif
                 @endif
             </flux:sidebar.nav>
 
@@ -93,46 +113,66 @@
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
-                        <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
-                            {{ __('POS') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index')" wire:navigate>
-                            {{ __('Orders') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
-                            {{ __('Sales Report') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
-                            {{ __('Kitchen (KDS)') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
-                            {{ __('Shifts') }}
-                        </flux:sidebar.item>
+                        @if(auth()->user()->hasPermission('pos.access'))
+                            <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                                {{ __('POS') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('orders.manage'))
+                            <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index')" wire:navigate>
+                                {{ __('Orders') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('reports.view'))
+                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
+                                {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('kds.access'))
+                            <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
+                                {{ __('Kitchen (KDS)') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('pos.access'))
+                            <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
+                                {{ __('Shifts') }}
+                            </flux:sidebar.item>
+                        @endif
                     </flux:sidebar.group>
 
-                    <flux:sidebar.group :heading="__('Menu Management')" class="grid">
-                        <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
-                            {{ __('Categories') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
-                            {{ __('Products') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
-                            {{ __('Add-ons') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    @if(auth()->user()->hasPermission('menu.manage'))
+                        <flux:sidebar.group :heading="__('Menu Management')" class="grid">
+                            <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
+                                {{ __('Categories') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
+                                {{ __('Products') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
+                                {{ __('Add-ons') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
 
-                    <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
-                        <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
-                            {{ __('Loyalty Points') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
-                            {{ __('Customers') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
-                            {{ __('Vouchers') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    @if(auth()->user()->hasPermission('customers.manage') || auth()->user()->hasPermission('vouchers.manage') || auth()->user()->hasPermission('settings.manage'))
+                        <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
+                            @if(auth()->user()->hasPermission('settings.manage'))
+                                <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
+                                    {{ __('Loyalty Points') }}
+                                </flux:sidebar.item>
+                            @endif
+                            @if(auth()->user()->hasPermission('customers.manage'))
+                                <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
+                                    {{ __('Customers') }}
+                                </flux:sidebar.item>
+                            @endif
+                            @if(auth()->user()->hasPermission('vouchers.manage'))
+                                <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
+                                    {{ __('Vouchers') }}
+                                </flux:sidebar.item>
+                            @endif
+                        </flux:sidebar.group>
+                    @endif
                 @endif
             </flux:sidebar.nav>
 
