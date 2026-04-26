@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -18,28 +19,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 0. Create Default Permissions
-        $permissions = [
-            ['name' => 'Access POS', 'slug' => 'pos.access'],
-            ['name' => 'Manage Orders', 'slug' => 'orders.manage'],
-            ['name' => 'Access KDS', 'slug' => 'kds.access'],
-            ['name' => 'Manage Menu', 'slug' => 'menu.manage'],
-            ['name' => 'Manage Settings', 'slug' => 'settings.manage'],
-            ['name' => 'Manage Roles', 'slug' => 'roles.manage'],
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['slug' => $permission['slug']], $permission);
-        }
+        // 0. Seed default roles and permissions first
+        $this->call(DefaultRolesSeeder::class);
 
         // 1. Create Landlord (System Admin) - No Tenant
-        User::create([
+        $superAdminRole = Role::withoutGlobalScopes()->where('slug', 'superadmin')->whereNull('tenant_id')->first();
+        
+        $systemAdmin = User::create([
             'name' => 'System Admin',
             'email' => 'admin@fnbcloud.com',
             'password' => Hash::make('password'),
             'api_token' => Str::random(80),
             'tenant_id' => null,
         ]);
+        
+        if ($superAdminRole) {
+            $systemAdmin->roles()->attach($superAdminRole);
+        }
 
         // 2. Create Test Tenant 1: The Burger House
         $burgerHouse = Tenant::create([
@@ -50,14 +46,20 @@ class DatabaseSeeder extends Seeder
             'phone' => '+1 234 567 890',
         ]);
 
-        // Admin for Burger House
-        User::create([
+        // Admin for Burger House - assign Owner role
+        $ownerRole = Role::withoutGlobalScopes()->where('slug', 'owner')->whereNull('tenant_id')->first();
+        
+        $burgerAdmin = User::create([
             'name' => 'Burger Admin',
             'email' => 'admin@burgerhouse.com',
             'password' => Hash::make('password'),
             'api_token' => Str::random(80),
             'tenant_id' => $burgerHouse->id,
         ]);
+        
+        if ($ownerRole) {
+            $burgerAdmin->roles()->attach($ownerRole);
+        }
 
         // Bind tenant_id for seeder so the BelongsToTenant trait works automatically
         app()->instance('tenant_id', $burgerHouse->id);
@@ -88,14 +90,18 @@ class DatabaseSeeder extends Seeder
             'domain' => 'sushi-central.fnbcloud.test',
         ]);
 
-        // Admin for Sushi Central
-        User::create([
+        // Admin for Sushi Central - assign Owner role
+        $sushiAdmin = User::create([
             'name' => 'Sushi Admin',
             'email' => 'admin@sushicentral.com',
             'password' => Hash::make('password'),
             'api_token' => Str::random(80),
             'tenant_id' => $sushiCentral->id,
         ]);
+        
+        if ($ownerRole) {
+            $sushiAdmin->roles()->attach($ownerRole);
+        }
 
         // Bind tenant_id for the second tenant
         app()->instance('tenant_id', $sushiCentral->id);
@@ -118,8 +124,5 @@ class DatabaseSeeder extends Seeder
             'price' => 15.00,
             'sort_order' => 2,
         ]);
-
-        // Seed default roles and permissions for all tenants + landlord
-        $this->call(DefaultRolesSeeder::class);
     }
 }
