@@ -118,5 +118,8 @@ class DatabaseSeeder extends Seeder
             'price' => 15.00,
             'sort_order' => 2,
         ]);
+
+        // Seed default roles and permissions for all tenants + landlord
+        $this->call(DefaultRolesSeeder::class);
     }
 }
