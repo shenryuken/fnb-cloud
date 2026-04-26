@@ -50,24 +50,14 @@ class CreateNewUser implements CreatesNewUsers
 
         // Assign all permissions to the Owner role if not already assigned
         if ($ownerRole->permissions()->count() === 0) {
-            $ownerRole->permissions()->sync($this->getAllPermissionIds($tenant->id));
+            // Permissions are global (no tenant_id column), get all permission IDs
+            $permissionIds = \DB::table('permissions')->pluck('id')->toArray();
+            $ownerRole->permissions()->sync($permissionIds);
         }
 
         // Attach the Owner role to the user
         $user->roles()->attach($ownerRole);
 
         return $user;
-    }
-
-    /**
-     * Get all permission IDs for a tenant
-     */
-    private function getAllPermissionIds($tenantId): array
-    {
-        return \DB::table('permissions')
-            ->whereNull('tenant_id')
-            ->orWhere('tenant_id', $tenantId)
-            ->pluck('id')
-            ->toArray();
     }
 }
