@@ -11,6 +11,7 @@
                 <flux:navlist.item :href="route('manage.settings.receipt')" wire:navigate>{{ __('Receipt Settings') }}</flux:navlist.item>
                 <flux:navlist.item :href="route('manage.settings.quick_notes')" wire:navigate>{{ __('Quick Notes') }}</flux:navlist.item>
                 <flux:navlist.item :href="route('manage.settings.roles')" wire:navigate>{{ __('Roles & Access') }}</flux:navlist.item>
+                <flux:navlist.item :href="route('manage.settings.users')" wire:navigate>{{ __('Team Members') }}</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
     </div>

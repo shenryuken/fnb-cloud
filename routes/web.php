@@ -15,6 +15,7 @@ use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
 use App\Livewire\Settings\Roles;
+use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Loyalty as LoyaltySettings;
 use App\Livewire\Settings\QuickNotes as QuickNotesSettings;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/loyalty', LoyaltySettings::class)->name('manage.settings.loyalty');
     Route::get('settings/quick-notes', QuickNotesSettings::class)->name('manage.settings.quick_notes');
     Route::get('settings/roles', Roles::class)->name('manage.settings.roles');
+    Route::get('settings/users', Users::class)->name('manage.settings.users');
 });
 
 require __DIR__.'/settings.php';
