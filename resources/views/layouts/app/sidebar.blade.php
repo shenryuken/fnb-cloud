@@ -36,6 +36,9 @@
                         <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
                             {{ __('Kitchen (KDS)') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
+                            {{ __('Shifts') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
 
                     <flux:sidebar.group :heading="__('Menu Management')" class="grid">
@@ -101,6 +104,9 @@
                         </flux:sidebar.item>
                         <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
                             {{ __('Kitchen (KDS)') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
+                            {{ __('Shifts') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
 

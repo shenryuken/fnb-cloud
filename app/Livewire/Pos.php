@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Voucher;
 use App\Models\CustomerVoucher;
 use App\Models\HeldOrder;
+use App\Models\Shift;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
@@ -208,6 +209,12 @@ class Pos extends Component
             ->pluck('text')
             ->map(fn ($t) => (string) $t)
             ->all();
+    }
+
+    #[Computed]
+    public function currentShift(): ?Shift
+    {
+        return Shift::currentOpen();
     }
 
     #[Computed]
@@ -1103,6 +1110,7 @@ class Pos extends Component
             }
 
             $order = Order::create([
+                'shift_id' => $this->currentShift?->id,
                 'user_id' => Auth::id(),
                 'customer_id' => $this->customerId,
                 'table_number' => $this->orderType === 'dine_in' ? $this->tableNumber : null,
@@ -1238,6 +1246,12 @@ class Pos extends Component
 
         if (!$this->lastOrder) {
             return;
+        }
+
+        // Update shift sales totals
+        if ($shift = $this->currentShift) {
+            $shift->recalculateSales();
+            unset($this->currentShift);
         }
 
         $this->issuedVoucherCodes = $issuedCodes;

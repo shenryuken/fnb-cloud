@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'tenant_id',
+        'shift_id',
         'customer_id',
         'user_id',
         'voucher_id',
@@ -138,5 +139,10 @@ class Order extends Model
     public function voucher(): BelongsTo
     {
         return $this->belongsTo(Voucher::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
 }
