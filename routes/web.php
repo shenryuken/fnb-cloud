@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     // POS
-    Route::get('pos', Pos::class)->name('pos.index');
+    Route::get('pos', Pos::class)->name('pos.index')->middleware('permission:pos.access');
     Route::get('pos/receipt/{order}', function (\App\Models\Order $order) {
         // Ensure the order belongs to the current tenant (handled by TenantScope)
         return view('pos.receipt', [
@@ -45,31 +45,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->orderBy('id')
                 ->get(['code', 'expires_at']),
         ]);
-    })->name('pos.receipt');
+    })->name('pos.receipt')->middleware('permission:pos.access');
     
     // Menu Management
-    Route::get('categories', Categories::class)->name('manage.categories.index');
-    Route::get('products', Products::class)->name('manage.products.index');
-    Route::get('addons', Addons::class)->name('manage.addons.index');
-    Route::get('customers', Customers::class)->name('manage.customers.index');
-    Route::get('vouchers', Vouchers::class)->name('manage.vouchers.index');
+    Route::get('categories', Categories::class)->name('manage.categories.index')->middleware('permission:menu.manage');
+    Route::get('products', Products::class)->name('manage.products.index')->middleware('permission:menu.manage');
+    Route::get('addons', Addons::class)->name('manage.addons.index')->middleware('permission:menu.manage');
+    Route::get('customers', Customers::class)->name('manage.customers.index')->middleware('permission:customers.manage');
+    Route::get('vouchers', Vouchers::class)->name('manage.vouchers.index')->middleware('permission:vouchers.manage');
     
     // Order Management
-    Route::get('orders', Orders::class)->name('manage.orders.index');
-    Route::get('kds', Kds::class)->name('kds.index');
+    Route::get('orders', Orders::class)->name('manage.orders.index')->middleware('permission:orders.manage');
+    Route::get('kds', Kds::class)->name('kds.index')->middleware('permission:kds.access');
 
     // Reports
-    Route::get('reports/sales', SalesReport::class)->name('reports.sales');
+    Route::get('reports/sales', SalesReport::class)->name('reports.sales')->middleware('permission:reports.view');
 
     // Shifts
-    Route::get('shifts', Shifts::class)->name('manage.shifts.index');
+    Route::get('shifts', Shifts::class)->name('manage.shifts.index')->middleware('permission:pos.access');
 
-    // Tenant Settings
-    Route::get('settings/receipt', ReceiptSettings::class)->name('manage.settings.receipt');
-    Route::get('settings/loyalty', LoyaltySettings::class)->name('manage.settings.loyalty');
-    Route::get('settings/quick-notes', QuickNotesSettings::class)->name('manage.settings.quick_notes');
-    Route::get('settings/roles', Roles::class)->name('manage.settings.roles');
-    Route::get('settings/users', Users::class)->name('manage.settings.users');
+    // Tenant Settings (requires settings.manage permission)
+    Route::get('settings/receipt', ReceiptSettings::class)->name('manage.settings.receipt')->middleware('permission:settings.manage');
+    Route::get('settings/loyalty', LoyaltySettings::class)->name('manage.settings.loyalty')->middleware('permission:settings.manage');
+    Route::get('settings/quick-notes', QuickNotesSettings::class)->name('manage.settings.quick_notes')->middleware('permission:settings.manage');
+    Route::get('settings/roles', Roles::class)->name('manage.settings.roles')->middleware('permission:roles.manage');
+    Route::get('settings/users', Users::class)->name('manage.settings.users')->middleware('permission:roles.manage');
 });
 
 require __DIR__.'/settings.php';
