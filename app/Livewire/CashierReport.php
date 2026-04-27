@@ -52,10 +52,14 @@ class CashierReport extends Component
     {
         $stats = [];
 
-        foreach ($this->users as $user) {
-            $userShifts = $this->shifts->where('user_id', $user->id);
-
+        // Group shifts by user_id
+        foreach ($this->shifts->groupBy('user_id') as $userId => $userShifts) {
             if ($userShifts->isEmpty()) {
+                continue;
+            }
+
+            $user = $userShifts->first()->user;
+            if (!$user) {
                 continue;
             }
 
@@ -74,7 +78,7 @@ class CashierReport extends Component
 
             $avgDuration = $shiftsCount > 0 ? intdiv($totalDuration, $shiftsCount) : 0;
 
-            $stats[$user->id] = [
+            $stats[$userId] = [
                 'user' => $user,
                 'shiftsCount' => $shiftsCount,
                 'totalSales' => $totalSales,
