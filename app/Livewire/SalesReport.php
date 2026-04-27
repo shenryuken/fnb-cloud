@@ -146,8 +146,8 @@ class SalesReport extends Component
     public function chartData(): array
     {
         $data = collect($this->daily)->map(fn($r) => [
-            'label' => Carbon::parse($r['day'])->format('M d'),
-            'value' => round($r['net_sales'], 2),
+            'date' => Carbon::parse($r['day'])->format('M d'),
+            'revenue' => round($r['net_sales'], 2),
         ])->values()->toArray();
         
         return count($data) > 0 ? $data : [];

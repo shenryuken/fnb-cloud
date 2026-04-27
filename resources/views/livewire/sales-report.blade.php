@@ -68,19 +68,24 @@
             </div>
         </div>
 
-        <div class="w-full h-72">
-            <flux:chart :value="$this->chartData">
-                <flux:chart.svg>
-                    <flux:chart.line field="value" class="text-pink-500 stroke-2" />
-                    <flux:chart.axis axis="x" field="label" />
-                    <flux:chart.axis axis="y" tick-prefix="$" />
-                </flux:chart.svg>
-                <flux:chart.tooltip>
-                    <flux:chart.tooltip.heading field="label" />
-                    <flux:chart.tooltip.value field="value" label="Net Sales" prefix="$" />
-                </flux:chart.tooltip>
-            </flux:chart>
-        </div>
+        <flux:chart :value="$this->chartData" class="aspect-[3/1]">
+            <flux:chart.svg>
+                <flux:chart.bar field="revenue" class="text-pink-500 dark:text-pink-400" radius="4" width="70%" />
+                <flux:chart.axis axis="x" field="date" tick-count="7">
+                    <flux:chart.axis.tick />
+                    <flux:chart.axis.line />
+                </flux:chart.axis>
+                <flux:chart.axis axis="y" :format="['useGrouping' => true]" tick-prefix="$">
+                    <flux:chart.axis.grid />
+                    <flux:chart.axis.tick />
+                </flux:chart.axis>
+                <flux:chart.cursor type="area" />
+            </flux:chart.svg>
+            <flux:chart.tooltip>
+                <flux:chart.tooltip.heading field="date" />
+                <flux:chart.tooltip.value field="revenue" label="Revenue" :format="['useGrouping' => true]" prefix="$" />
+            </flux:chart.tooltip>
+        </flux:chart>
     </flux:card>
     @endif
 
