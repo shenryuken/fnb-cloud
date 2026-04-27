@@ -143,6 +143,16 @@ class SalesReport extends Component
     }
 
     #[Computed]
+    public function chartData(): array
+    {
+        return collect($this->daily)->map(fn($r) => [
+            'date' => Carbon::parse($r['day'])->format('M d'),
+            'net_sales' => $r['net_sales'],
+            'orders_count' => $r['orders_count'],
+        ])->values()->toArray();
+    }
+
+    #[Computed]
     public function paymentBreakdown(): array
     {
         return (clone $this->ordersBaseQuery())
