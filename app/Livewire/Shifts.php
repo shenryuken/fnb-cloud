@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Shift;
 use App\Models\CashMovement;
+use App\Models\User;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -39,6 +40,7 @@ class Shifts extends Component
 
     // Filter
     public string $dateFilter = '';
+    public ?int $cashierFilter = null;
 
     protected $rules = [
         'openingCash' => 'required|numeric|min:0',
@@ -58,6 +60,15 @@ class Shifts extends Component
     }
 
     #[Computed]
+    public function cashiers()
+    {
+        return User::where('tenant_id', auth()->user()->tenant_id)
+            ->whereHas('roles', fn($q) => $q->whereIn('slug', ['cashier', 'waiter', 'kitchen-staff', 'owner']))
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
     public function shifts()
     {
         $query = Shift::with(['user', 'closedBy'])
@@ -65,6 +76,10 @@ class Shifts extends Component
 
         if ($this->dateFilter) {
             $query->whereDate('opened_at', $this->dateFilter);
+        }
+
+        if ($this->cashierFilter) {
+            $query->where('user_id', $this->cashierFilter);
         }
 
         return $query->paginate(10);
