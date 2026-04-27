@@ -145,12 +145,21 @@ class SalesReport extends Component
     #[Computed]
     public function chartData(): array
     {
+        // Get the daily data
         $data = collect($this->daily)->map(fn($r) => [
             'date' => Carbon::parse($r['day'])->format('M d'),
             'revenue' => round($r['net_sales'], 2),
         ])->values()->toArray();
         
-        return count($data) > 0 ? $data : [];
+        // For single day views (Today/Yesterday), ensure we have data even if it's zero
+        if (empty($data) && $this->fromDate === $this->toDate) {
+            $data = [[
+                'date' => Carbon::parse($this->fromDate)->format('M d'),
+                'revenue' => 0,
+            ]];
+        }
+        
+        return $data;
     }
 
     #[Computed]
