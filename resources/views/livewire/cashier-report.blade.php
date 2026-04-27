@@ -16,9 +16,15 @@
                 <div class="flex gap-4 mt-2">
                     <flux:input
                         type="date"
-                        :value="date('Y-m-d', $this->fromDate)"
-                        wire:change="$set('fromDate', strtotime($event->target->value) * 1)"
-                        class="flex-1"
+                        :value="$this->fromDate"
+                        wire:change="$set('fromDate', $event->target->value)"
+                        placeholder="From"
+                    />
+                    <flux:input
+                        type="date"
+                        :value="$this->toDate"
+                        wire:change="$set('toDate', $event->target->value)"
+                        placeholder="To"
                     />
                     <flux:input
                         type="date"
