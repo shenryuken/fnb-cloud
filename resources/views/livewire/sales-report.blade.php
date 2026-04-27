@@ -68,6 +68,16 @@
             </div>
         </div>
 
+        {{-- Adjust chart height based on data points --}}
+        @php
+            $chartHeight = count($this->chartData) === 1 ? 'h-64' : 'aspect-[3/1]';
+            $barWidth = count($this->chartData) === 1 ? '30%' : '70%';
+        @endphp
+
+        <flux:chart :value="$this->chartData" class="{{ $chartHeight }}">
+            <flux:chart.svg>
+                <flux:chart.bar field="revenue" class="text-pink-500 dark:text-pink-400" radius="4" :width="$barWidth" />
+                <flux:chart.axis axis="x" field="date" :tick-count="count($this->chartData)">
         <flux:chart :value="$this->chartData" class="aspect-[3/1] h-64" wire:key="revenue-chart-{{ $fromDate }}-{{ $toDate }}">
             <flux:chart.svg>
                 <flux:chart.bar field="revenue" class="text-pink-500 dark:text-pink-400" radius="4" width="70%" />
