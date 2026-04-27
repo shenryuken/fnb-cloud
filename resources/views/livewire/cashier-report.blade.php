@@ -26,12 +26,6 @@
                         wire:change="$set('toDate', $event->target->value)"
                         placeholder="To"
                     />
-                    <flux:input
-                        type="date"
-                        :value="date('Y-m-d', $this->toDate)"
-                        wire:change="$set('toDate', strtotime($event->target->value) * 1)"
-                        class="flex-1"
-                    />
                 </div>
             </div>
 
