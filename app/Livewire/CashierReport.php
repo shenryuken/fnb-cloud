@@ -32,11 +32,11 @@ class CashierReport extends Component
     #[Computed]
     public function shifts()
     {
-        $query = Shift::where('tenant_id', auth()->user()->tenant_id)
-            ->whereBetween('opened_at', [
-                Carbon::createFromFormat('Y-m-d', $this->fromDate)->startOfDay(),
-                Carbon::createFromFormat('Y-m-d', $this->toDate)->endOfDay(),
-            ]);
+        // Remove the explicit tenant_id filter - BelongsToTenant trait handles it automatically
+        $fromDateTime = Carbon::createFromFormat('Y-m-d', $this->fromDate)->startOfDay();
+        $toDateTime = Carbon::createFromFormat('Y-m-d', $this->toDate)->endOfDay();
+        
+        $query = Shift::whereBetween('opened_at', [$fromDateTime, $toDateTime]);
 
         if ($this->selectedUserId) {
             $query->where('user_id', $this->selectedUserId);
