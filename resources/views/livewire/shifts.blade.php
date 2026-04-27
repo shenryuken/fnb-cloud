@@ -104,9 +104,19 @@
     <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden">
         <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
             <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">Shift History</h3>
-            <input type="date" wire:model.live="dateFilter"
-                class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300"
-            />
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="date" wire:model.live="dateFilter"
+                    class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300"
+                />
+                <select wire:model.live="cashierFilter"
+                    class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300"
+                >
+                    <option value="">All Cashiers</option>
+                    @foreach($this->cashiers as $cashier)
+                        <option value="{{ $cashier->id }}">{{ $cashier->name }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div class="overflow-x-auto">

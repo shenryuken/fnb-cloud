@@ -14,6 +14,7 @@ use App\Livewire\SalesReport;
 use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
+use App\Livewire\CashierReport;
 use App\Livewire\Settings\Roles;
 use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Loyalty as LoyaltySettings;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reports
     Route::get('reports/sales', SalesReport::class)->name('reports.sales')->middleware('permission:reports.view');
+    Route::get('reports/cashier', CashierReport::class)->name('reports.cashier')->middleware('permission:reports.view');
 
     // Shifts
     Route::get('shifts', Shifts::class)->name('manage.shifts.index')->middleware('permission:pos.access');
