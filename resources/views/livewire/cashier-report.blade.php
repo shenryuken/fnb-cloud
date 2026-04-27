@@ -44,8 +44,8 @@
             <div class="flex gap-2">
                 <flux:button
                     size="sm"
-                    wire:click="$set('fromDate', now()->startOfMonth()->timestamp)"
-                    wire:click="$set('toDate', now()->endOfMonth()->timestamp)"
+                    wire:click="$set('fromDate', '{{ now()->startOfMonth()->format('Y-m-d') }}')"
+                    wire:click="$set('toDate', '{{ now()->endOfMonth()->format('Y-m-d') }}')"
                     class="w-full"
                 >
                     This Month
@@ -174,22 +174,21 @@
                                 <span class="text-yellow-400 text-xs">(open)</span>
                             @endif
                         </td>
-                        <td class="text-right py-3 px-4">{{ $shift->total_orders }}</td>
+                        <td class="text-right py-3 px-4">{{ $shift->order_count }}</td>
                         <td class="text-right py-3 px-4">${{ number_format($shift->total_sales, 2) }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($shift->opening_cash_amount, 2) }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($shift->expected_cash_amount, 2) }}</td>
+                        <td class="text-right py-3 px-4">${{ number_format($shift->opening_cash, 2) }}</td>
+                        <td class="text-right py-3 px-4">${{ number_format($shift->expected_cash, 2) }}</td>
                         <td class="text-right py-3 px-4">
                             @if($shift->closed_at)
-                                ${{ number_format($shift->actual_cash_amount, 2) }}
+                                ${{ number_format($shift->actual_cash, 2) }}
                             @else
                                 <span class="text-zinc-500">-</span>
                             @endif
                         </td>
                         <td class="text-right py-3 px-4">
                             @if($shift->closed_at)
-                                @php $variance = $shift->actual_cash_amount - $shift->expected_cash_amount @endphp
-                                <span class="{{ $variance >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                                    ${{ number_format($variance, 2) }}
+                                <span class="{{ $shift->difference >= 0 ? 'text-green-400' : 'text-red-400' }}">
+                                    ${{ number_format($shift->difference, 2) }}
                                 </span>
                             @else
                                 <span class="text-zinc-500">-</span>
@@ -199,6 +198,21 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </flux:card>
+    @endif
+
+    {{-- Empty State --}}
+    @if($this->cashierStats->count() === 0)
+    <flux:card class="p-12 text-center">
+        <div class="text-zinc-400">
+            <div class="text-lg font-semibold mb-2">No shifts found</div>
+            <div class="text-sm">Try adjusting your date range or filter selection</div>
+            <div class="text-xs mt-4 text-zinc-500">
+                Shifts data: {{ count($this->shifts) }} | 
+                From: {{ $this->fromDate }} | 
+                To: {{ $this->toDate }}
+            </div>
         </div>
     </flux:card>
     @endif
