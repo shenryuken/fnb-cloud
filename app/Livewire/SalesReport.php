@@ -145,11 +145,14 @@ class SalesReport extends Component
     #[Computed]
     public function chartData(): array
     {
-        $data = collect($this->daily)->map(fn($r) => [
-            'date' => Carbon::parse($r['day'])->format('M d'),
-            'revenue' => round($r['net_sales'], 2),
-        ])->values()->toArray();
-        
+        $data = collect($this->daily)
+            ->map(fn ($r) => [
+                'date' => (string) $r['day'],
+                'revenue' => round((float) $r['net_sales'], 2),
+            ])
+            ->values()
+            ->toArray();
+
         return count($data) > 0 ? $data : [];
     }
 
