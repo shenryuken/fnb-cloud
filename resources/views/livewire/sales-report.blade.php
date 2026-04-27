@@ -59,7 +59,7 @@
     </div>
 
     {{-- Revenue Chart --}}
-    @if(!empty($this->daily))
+    @if(!empty($this->chartData))
     <flux:card class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -68,25 +68,19 @@
             </div>
         </div>
 
-        <flux:chart :value="$this->chartData" class="aspect-[3/1]">
-            <flux:chart.svg>
-                <flux:chart.bar field="net_sales" class="text-pink-500 dark:text-pink-400" radius="4" width="70%" />
-                <flux:chart.axis axis="x" field="date" tick-count="7">
-                    <flux:chart.axis.tick />
-                    <flux:chart.axis.line />
-                </flux:chart.axis>
-                <flux:chart.axis axis="y" tick-count="5" tick-prefix="$" :format="['useGrouping' => true]">
-                    <flux:chart.axis.grid />
-                    <flux:chart.axis.tick />
-                </flux:chart.axis>
-                <flux:chart.cursor type="area" />
-            </flux:chart.svg>
-            <flux:chart.tooltip>
-                <flux:chart.tooltip.heading field="date" />
-                <flux:chart.tooltip.value field="net_sales" label="Net Sales" :format="['useGrouping' => true]" prefix="$" />
-                <flux:chart.tooltip.value field="orders_count" label="Orders" />
-            </flux:chart.tooltip>
-        </flux:chart>
+        <div class="w-full h-72">
+            <flux:chart :value="$this->chartData">
+                <flux:chart.svg>
+                    <flux:chart.line field="value" class="text-pink-500 stroke-2" />
+                    <flux:chart.axis axis="x" field="label" />
+                    <flux:chart.axis axis="y" tick-prefix="$" />
+                </flux:chart.svg>
+                <flux:chart.tooltip>
+                    <flux:chart.tooltip.heading field="label" />
+                    <flux:chart.tooltip.value field="value" label="Net Sales" prefix="$" />
+                </flux:chart.tooltip>
+            </flux:chart>
+        </div>
     </flux:card>
     @endif
 
