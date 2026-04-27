@@ -74,14 +74,10 @@
             $barWidth = count($this->chartData) === 1 ? '30%' : '70%';
         @endphp
 
-        <flux:chart :value="$this->chartData" class="{{ $chartHeight }}">
+        <flux:chart :value="$this->chartData" :class="$chartHeight" wire:key="revenue-chart-{{ $fromDate }}-{{ $toDate }}">
             <flux:chart.svg>
                 <flux:chart.bar field="revenue" class="text-pink-500 dark:text-pink-400" radius="4" :width="$barWidth" />
                 <flux:chart.axis axis="x" field="date" :tick-count="count($this->chartData)">
-        <flux:chart :value="$this->chartData" class="aspect-[3/1] h-64" wire:key="revenue-chart-{{ $fromDate }}-{{ $toDate }}">
-            <flux:chart.svg>
-                <flux:chart.bar field="revenue" class="text-pink-500 dark:text-pink-400" radius="4" width="70%" />
-                <flux:chart.axis axis="x" field="date" tick-count="7" :format="['month' => 'short', 'day' => 'numeric']">
                     <flux:chart.axis.tick />
                     <flux:chart.axis.line />
                 </flux:chart.axis>
@@ -92,7 +88,7 @@
                 <flux:chart.cursor type="area" />
             </flux:chart.svg>
             <flux:chart.tooltip>
-                <flux:chart.tooltip.heading field="date" :format="['month' => 'short', 'day' => 'numeric']" />
+                <flux:chart.tooltip.heading field="date" />
                 <flux:chart.tooltip.value field="revenue" label="Revenue" :format="['useGrouping' => true]" prefix="$" />
             </flux:chart.tooltip>
         </flux:chart>
