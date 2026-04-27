@@ -10,14 +10,14 @@ use Livewire\Component;
 
 class CashierReport extends Component
 {
-    public ?int $fromDate = null;
-    public ?int $toDate = null;
+    public ?string $fromDate = null;
+    public ?string $toDate = null;
     public ?int $selectedUserId = null;
 
     public function mount()
     {
-        $this->fromDate = now()->startOfMonth()->timestamp;
-        $this->toDate = now()->endOfMonth()->timestamp;
+        $this->fromDate = now()->startOfMonth()->format('Y-m-d');
+        $this->toDate = now()->endOfMonth()->format('Y-m-d');
     }
 
     #[Computed]
@@ -34,15 +34,15 @@ class CashierReport extends Component
     {
         $query = Shift::where('tenant_id', auth()->user()->tenant_id)
             ->whereBetween('opened_at', [
-                Carbon::createFromTimestamp($this->fromDate),
-                Carbon::createFromTimestamp($this->toDate),
+                Carbon::createFromFormat('Y-m-d', $this->fromDate)->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $this->toDate)->endOfDay(),
             ]);
 
         if ($this->selectedUserId) {
-            $query->where('opened_by_user_id', $this->selectedUserId);
+            $query->where('user_id', $this->selectedUserId);
         }
 
-        return $query->with('openedByUser', 'closedByUser')
+        return $query->with('user', 'closedBy')
             ->orderBy('opened_at', 'desc')
             ->get();
     }
@@ -53,15 +53,15 @@ class CashierReport extends Component
         $stats = [];
 
         foreach ($this->users as $user) {
-            $userShifts = $this->shifts->where('opened_by_user_id', $user->id);
+            $userShifts = $this->shifts->where('user_id', $user->id);
 
             if ($userShifts->isEmpty()) {
                 continue;
             }
 
             $totalSales = $userShifts->sum('total_sales');
-            $totalOrders = $userShifts->sum('total_orders');
-            $totalCashVariance = $userShifts->sum(fn($shift) => $shift->actual_cash_amount - $shift->expected_cash_amount);
+            $totalOrders = $userShifts->sum('order_count');
+            $totalCashVariance = $userShifts->sum('difference');
             $shiftsCount = $userShifts->count();
 
             $totalDuration = $userShifts->reduce(function ($carry, $shift) {
