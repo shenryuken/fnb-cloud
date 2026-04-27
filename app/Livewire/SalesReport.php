@@ -160,6 +160,15 @@ class SalesReport extends Component
         }
         
         return $data;
+        $data = collect($this->daily)
+            ->map(fn ($r) => [
+                'date' => (string) $r['day'],
+                'revenue' => round((float) $r['net_sales'], 2),
+            ])
+            ->values()
+            ->toArray();
+
+        return count($data) > 0 ? $data : [];
     }
 
     #[Computed]
