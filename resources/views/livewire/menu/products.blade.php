@@ -1,14 +1,15 @@
-<div class="p-6 space-y-6">
+<div class="flex flex-col gap-6 p-4 md:p-8">
     {{-- Header --}}
-    <flux:header>
-        <flux:heading size="xl">Menu Products</flux:heading>
-        <flux:subheading>Create and manage your restaurant's digital menu</flux:subheading>
-
-        <flux:separator />
-
-        <flux:button wire:click="openImportModal" icon="arrow-up-tray" variant="ghost">Import CSV</flux:button>
-        <flux:button wire:click="create" icon="plus" variant="primary">Add New Product</flux:button>
-    </flux:header>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <flux:heading size="xl" level="2">Menu Products</flux:heading>
+            <flux:subheading>Create and manage your restaurant's digital menu</flux:subheading>
+        </div>
+        <div class="flex items-center gap-2">
+            <flux:button wire:click="openImportModal" icon="arrow-up-tray" variant="ghost">Import CSV</flux:button>
+            <flux:button wire:click="create" icon="plus" variant="primary">Add New Product</flux:button>
+        </div>
+    </div>
 
     {{-- Import Modal --}}
     @if($showImportModal)
