@@ -15,6 +15,7 @@ use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
 use App\Livewire\CashierReport;
+use App\Livewire\UserGuide;
 use App\Livewire\Settings\Roles;
 use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Loyalty as LoyaltySettings;
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Shifts
     Route::get('shifts', Shifts::class)->name('manage.shifts.index')->middleware('permission:pos.access');
+
+    // User Guide
+    Route::get('guide', UserGuide::class)->name('guide.index');
 
     // Tenant Settings (requires settings.manage permission)
     Route::get('settings/receipt', ReceiptSettings::class)->name('manage.settings.receipt')->middleware('permission:settings.manage');
