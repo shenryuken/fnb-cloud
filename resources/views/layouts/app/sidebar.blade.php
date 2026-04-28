@@ -34,14 +34,6 @@
                                 {{ __('Orders') }}
                             </flux:sidebar.item>
                         @endif
-                        @if(auth()->user()->hasPermission('reports.view'))
-                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
-                                {{ __('Sales Report') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
-                                {{ __('Cashier Report') }}
-                            </flux:sidebar.item>
-                        @endif
                         @if(auth()->user()->hasPermission('kds.access'))
                             <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
                                 {{ __('Kitchen (KDS)') }}
@@ -53,6 +45,17 @@
                             </flux:sidebar.item>
                         @endif
                     </flux:sidebar.group>
+
+                    @if(auth()->user()->hasPermission('reports.view'))
+                        <flux:sidebar.group :heading="__('Reports')" class="grid">
+                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
+                                {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
+                                {{ __('Cashier Report') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
 
                     @if(auth()->user()->hasPermission('menu.manage'))
                         <flux:sidebar.group :heading="__('Menu Management')" class="grid">
@@ -130,14 +133,6 @@
                                 {{ __('Orders') }}
                             </flux:sidebar.item>
                         @endif
-                        @if(auth()->user()->hasPermission('reports.view'))
-                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
-                                {{ __('Sales Report') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
-                                {{ __('Cashier Report') }}
-                            </flux:sidebar.item>
-                        @endif
                         @if(auth()->user()->hasPermission('kds.access'))
                             <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
                                 {{ __('Kitchen (KDS)') }}
@@ -149,6 +144,17 @@
                             </flux:sidebar.item>
                         @endif
                     </flux:sidebar.group>
+
+                    @if(auth()->user()->hasPermission('reports.view'))
+                        <flux:sidebar.group :heading="__('Reports')" class="grid">
+                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
+                                {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
+                                {{ __('Cashier Report') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
 
                     @if(auth()->user()->hasPermission('menu.manage'))
                         <flux:sidebar.group :heading="__('Menu Management')" class="grid">
