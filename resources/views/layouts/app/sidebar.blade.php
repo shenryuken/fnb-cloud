@@ -92,6 +92,10 @@
 
             <flux:spacer />
 
+            <flux:sidebar.item icon="book-open" :href="route('guide.index')" :current="request()->routeIs('guide.index')" wire:navigate class="text-zinc-400">
+                {{ __('User Guide') }}
+            </flux:sidebar.item>
+
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
@@ -183,6 +187,10 @@
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            <flux:sidebar.item icon="book-open" :href="route('guide.index')" :current="request()->routeIs('guide.index')" wire:navigate class="text-zinc-400">
+                {{ __('User Guide') }}
+            </flux:sidebar.item>
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
