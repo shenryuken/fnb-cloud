@@ -43,6 +43,9 @@
                             <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
                                 {{ __('Shifts') }}
                             </flux:sidebar.item>
+                            <flux:sidebar.item icon="squares-2x2" :href="route('manage.tables.index')" :current="request()->routeIs('manage.tables.index')" wire:navigate>
+                                {{ __('Tables') }}
+                            </flux:sidebar.item>
                         @endif
                     </flux:sidebar.group>
 
@@ -141,6 +144,9 @@
                         @if(auth()->user()->hasPermission('pos.access'))
                             <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
                                 {{ __('Shifts') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="squares-2x2" :href="route('manage.tables.index')" :current="request()->routeIs('manage.tables.index')" wire:navigate>
+                                {{ __('Tables') }}
                             </flux:sidebar.item>
                         @endif
                     </flux:sidebar.group>

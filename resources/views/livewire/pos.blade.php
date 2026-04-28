@@ -163,13 +163,44 @@
 
             @if($orderType === 'dine_in')
                 <div class="mt-3">
-                    <div class="relative">
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                            <flux:icon.hashtag class="w-4 h-4" />
+                    @if($this->availableTables->count() > 0)
+                        <select wire:model.live="tableId" wire:change="selectTable($event.target.value)"
+                            class="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                            <option value="">Select Table</option>
+                            @foreach($this->availableTables as $table)
+                                <option value="{{ $table->id }}" 
+                                    @if($table->status === 'occupied' && $table->id !== $tableId) disabled @endif>
+                                    {{ $table->name }} 
+                                    ({{ $table->total_capacity }} seats)
+                                    @if($table->status === 'occupied') - Occupied @endif
+                                    @if($table->status === 'reserved') - Reserved @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @if($this->selectedTable)
+                            <div class="mt-2 px-3 py-2 rounded-lg text-xs
+                                @if($this->selectedTable->status === 'available') bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400
+                                @elseif($this->selectedTable->status === 'occupied') bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400
+                                @elseif($this->selectedTable->status === 'reserved') bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
+                                @else bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400
+                                @endif
+                            ">
+                                <span class="font-semibold">{{ $this->selectedTable->name }}</span>
+                                - {{ $this->selectedTable->getStatusLabel() }}
+                                @if($this->selectedTable->turn_time_formatted)
+                                    ({{ $this->selectedTable->turn_time_formatted }})
+                                @endif
+                            </div>
+                        @endif
+                    @else
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                                <flux:icon.hashtag class="w-4 h-4" />
+                            </div>
+                            <input type="text" wire:model.live="tableNumber" placeholder="Table Number" 
+                                class="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                         </div>
-                        <input type="text" wire:model.live="tableNumber" placeholder="Table Number" 
-                            class="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
-                    </div>
+                    @endif
                 </div>
             @endif
         </div>
@@ -385,13 +416,27 @@
 
                             @if($orderType === 'dine_in')
                                 <div class="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div class="relative group">
-                                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
-                                            <flux:icon.hashtag class="w-4 h-4" />
+                                    @if($this->availableTables->count() > 0)
+                                        <select wire:model.live="tableId" wire:change="selectTable($event.target.value)"
+                                            class="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
+                                            <option value="">Select Table</option>
+                                            @foreach($this->availableTables as $table)
+                                                <option value="{{ $table->id }}" 
+                                                    @if($table->status === 'occupied' && $table->id !== $tableId) disabled @endif>
+                                                    {{ $table->name }} ({{ $table->total_capacity }})
+                                                    @if($table->status !== 'available') - {{ $table->getStatusLabel() }} @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <div class="relative group">
+                                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                                                <flux:icon.hashtag class="w-4 h-4" />
+                                            </div>
+                                            <input type="text" wire:model.live="tableNumber" placeholder="Table Number"
+                                                class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
                                         </div>
-                                        <input type="text" wire:model.live="tableNumber" placeholder="Table Number"
-                                            class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
-                                    </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>

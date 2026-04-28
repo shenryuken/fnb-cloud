@@ -12,6 +12,7 @@ use App\Models\Voucher;
 use App\Models\CustomerVoucher;
 use App\Models\HeldOrder;
 use App\Models\Shift;
+use App\Models\RestaurantTable;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
@@ -54,6 +55,7 @@ class Pos extends Component
 
     // Order details
     public string $tableNumber = '';
+    public ?int $tableId = null;
     public string $orderType = 'dine_in'; // dine_in, takeaway
     public string $orderNotes = '';
 
@@ -218,6 +220,23 @@ class Pos extends Component
     }
 
     #[Computed]
+    public function availableTables()
+    {
+        return RestaurantTable::where('is_active', true)
+            ->whereNull('merged_into_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
+    public function selectedTable(): ?RestaurantTable
+    {
+        if (!$this->tableId) return null;
+        return RestaurantTable::find($this->tableId);
+    }
+
+    #[Computed]
     public function heldOrders(): array
     {
         $tenantId = Auth::user()?->tenant_id;
@@ -250,7 +269,7 @@ class Pos extends Component
             ->all();
     }
 
-    public function mount(): void
+    public function mount(?int $table = null): void
     {
         $tenant = Auth::user()->tenant;
         $this->isKitchenBusy = (bool) $tenant->is_busy;
@@ -259,6 +278,21 @@ class Pos extends Component
         $this->recalculateTotals();
         $this->discountInputType = $this->discountType;
         $this->discountInputValue = $this->discountValue;
+
+        // Handle table assignment from URL parameter
+        if ($table) {
+            $restaurantTable = RestaurantTable::find($table);
+            if ($restaurantTable && $restaurantTable->is_active) {
+                $this->tableId = $restaurantTable->id;
+                $this->tableNumber = $restaurantTable->name;
+                $this->orderType = 'dine_in';
+                
+                // If table has a current order, we might want to load it
+                if ($restaurantTable->current_order_id) {
+                    // Could implement order continuation here
+                }
+            }
+        }
     }
 
     public function placeholder()
@@ -598,6 +632,8 @@ class Pos extends Component
         $this->splitRemaining = 0;
         $this->amountReceived = 0;
         $this->changeAmount = 0;
+        $this->tableId = null;
+        $this->tableNumber = '';
 
         $this->recalculateTotals();
     }
@@ -1113,6 +1149,7 @@ class Pos extends Component
                 'shift_id' => $this->currentShift?->id,
                 'user_id' => Auth::id(),
                 'customer_id' => $this->customerId,
+                'table_id' => $this->orderType === 'dine_in' ? $this->tableId : null,
                 'table_number' => $this->orderType === 'dine_in' ? $this->tableNumber : null,
                 'order_type' => $this->orderType,
                 'notes' => $this->orderNotes,
@@ -1248,6 +1285,14 @@ class Pos extends Component
             return;
         }
 
+        // Update table status to dirty after order completion
+        if ($this->tableId && $this->orderType === 'dine_in') {
+            $table = RestaurantTable::find($this->tableId);
+            if ($table) {
+                $table->markDirty();
+            }
+        }
+
         // Update shift sales totals
         if ($shift = $this->currentShift) {
             $shift->recalculateSales();
@@ -1256,7 +1301,7 @@ class Pos extends Component
 
         $this->issuedVoucherCodes = $issuedCodes;
 
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderNotes', 'isPaying', 'showCartMobile']);
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'tableId', 'orderNotes', 'isPaying', 'showCartMobile']);
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
         // We keep lastOrder to show receipt/success screen if needed
         $this->dispatch('order-placed');
@@ -1268,7 +1313,34 @@ class Pos extends Component
     public function newOrder(): void
     {
         $this->issuedVoucherCodes = [];
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'tableId', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
+    }
+
+    /**
+     * Select a table for the current order.
+     */
+    public function selectTable(?int $tableId): void
+    {
+        if (!$tableId) {
+            $this->tableId = null;
+            $this->tableNumber = '';
+            return;
+        }
+
+        $table = RestaurantTable::find($tableId);
+        if (!$table || !$table->is_active) {
+            $this->dispatch('notify', message: 'Table not found or inactive.', type: 'error');
+            return;
+        }
+
+        $this->tableId = $table->id;
+        $this->tableNumber = $table->name;
+        $this->orderType = 'dine_in';
+
+        // Mark table as occupied if it was available
+        if ($table->status === 'available' || $table->status === 'reserved') {
+            $table->occupy();
+        }
     }
 
     private function clearAppliedVoucher(): void
