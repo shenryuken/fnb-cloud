@@ -20,6 +20,7 @@ class Tables extends Component
     // Table form
     public bool $showTableModal = false;
     public ?int $editingTableId = null;
+    public string $createMode = 'single'; // 'single' or 'bulk'
     public string $tableName = '';
     public string $tableCode = '';
     public int $tableCapacity = 4;
@@ -30,6 +31,14 @@ class Tables extends Component
     public int $tableWidth = 1;
     public int $tableHeight = 1;
     public bool $tableIsActive = true;
+
+    // Bulk creation
+    public string $bulkRange = '';
+    public int $bulkCapacity = 4;
+    public string $bulkShape = 'square';
+    public string $bulkFloor = '';
+    public bool $bulkIsActive = true;
+    public array $bulkPreview = [];
     
     // Reservation modal
     public bool $showReservationModal = false;
@@ -102,6 +111,50 @@ class Tables extends Component
         return RestaurantTable::orderBy('sort_order')->orderBy('name')->get();
     }
 
+    /**
+     * Parse a bulk range string into an array of table names.
+     * Supports: "1-10" → Table 1..10, "T1-T10" → T1..T10, "ML1-ML5" → ML1..ML5
+     */
+    public function parseBulkRange(string $range): array
+    {
+        $range = trim($range);
+        if (!$range) return [];
+
+        // Match pattern: optional prefix + number - optional same prefix + number
+        // e.g. "1-10", "T1-T10", "ML1-ML5", "A01-A20"
+        if (!preg_match('/^([a-zA-Z]*)(\d+)\s*-\s*([a-zA-Z]*)(\d+)$/', $range, $m)) {
+            return [];
+        }
+
+        [$, $prefixStart, $numStart, $prefixEnd, $numEnd] = $m;
+
+        // Prefixes must match (or end prefix empty meaning same as start)
+        $prefix = $prefixStart;
+        if ($prefixEnd && $prefixEnd !== $prefixStart) {
+            return []; // mismatched prefixes
+        }
+
+        $start = (int) $numStart;
+        $end   = (int) $numEnd;
+
+        if ($start > $end || ($end - $start) > 200) return []; // safety cap at 200
+
+        $tables = [];
+        $padLen = strlen($numStart) > 1 && $numStart[0] === '0' ? strlen($numStart) : 0;
+
+        for ($i = $start; $i <= $end; $i++) {
+            $num = $padLen ? str_pad($i, $padLen, '0', STR_PAD_LEFT) : (string) $i;
+            $tables[] = $prefix . $num;
+        }
+
+        return $tables;
+    }
+
+    public function updatedBulkRange(): void
+    {
+        $this->bulkPreview = $this->parseBulkRange($this->bulkRange);
+    }
+
     // Table CRUD
     public function create()
     {
@@ -128,6 +181,10 @@ class Tables extends Component
 
     public function saveTable()
     {
+        if ($this->createMode === 'bulk' && !$this->editingTableId) {
+            return $this->saveBulkTables();
+        }
+
         $this->validate([
             'tableName' => 'required|string|max:255',
             'tableCapacity' => 'required|integer|min:1|max:50',
@@ -160,6 +217,58 @@ class Tables extends Component
         $this->resetTableForm();
     }
 
+    public function saveBulkTables()
+    {
+        $this->validate([
+            'bulkRange'    => 'required|string',
+            'bulkCapacity' => 'required|integer|min:1|max:50',
+            'bulkShape'    => 'required|in:square,rectangle,circle,oval',
+        ]);
+
+        $names = $this->parseBulkRange($this->bulkRange);
+
+        if (empty($names)) {
+            $this->addError('bulkRange', 'Invalid range format. Use e.g. T1-T10 or 1-20 or ML1-ML5.');
+            return;
+        }
+
+        $tenantId = auth()->user()->tenant_id;
+        $created  = 0;
+
+        foreach ($names as $name) {
+            // Skip if a table with this name already exists for the tenant
+            if (RestaurantTable::where('tenant_id', $tenantId)->where('name', $name)->exists()) {
+                continue;
+            }
+
+            RestaurantTable::create([
+                'tenant_id'  => $tenantId,
+                'name'       => $name,
+                'code'       => $name,
+                'capacity'   => $this->bulkCapacity,
+                'shape'      => $this->bulkShape,
+                'floor'      => $this->bulkFloor ?: null,
+                'is_active'  => $this->bulkIsActive,
+                'position_x' => 0,
+                'position_y' => 0,
+                'width'      => 1,
+                'height'     => 1,
+            ]);
+
+            $created++;
+        }
+
+        $skipped = count($names) - $created;
+        $msg = "Created {$created} table(s) successfully.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} skipped (already exist).";
+        }
+
+        $this->dispatch('notify', message: $msg, type: 'success');
+        $this->showTableModal = false;
+        $this->resetTableForm();
+    }
+
     public function deleteTable(int $id)
     {
         $table = RestaurantTable::findOrFail($id);
@@ -176,6 +285,7 @@ class Tables extends Component
     private function resetTableForm()
     {
         $this->editingTableId = null;
+        $this->createMode = 'single';
         $this->tableName = '';
         $this->tableCode = '';
         $this->tableCapacity = 4;
@@ -186,6 +296,12 @@ class Tables extends Component
         $this->tableWidth = 1;
         $this->tableHeight = 1;
         $this->tableIsActive = true;
+        $this->bulkRange = '';
+        $this->bulkCapacity = 4;
+        $this->bulkShape = 'square';
+        $this->bulkFloor = '';
+        $this->bulkIsActive = true;
+        $this->bulkPreview = [];
     }
 
     // Status changes

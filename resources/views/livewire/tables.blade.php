@@ -306,31 +306,111 @@
 
     {{-- Table Modal --}}
     <flux:modal wire:model="showTableModal" class="max-w-lg">
-        <div class="space-y-6">
+        <div class="space-y-5">
             <flux:heading size="lg">{{ $editingTableId ? 'Edit Table' : 'Add New Table' }}</flux:heading>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <flux:input wire:model="tableName" label="Table Name" placeholder="e.g., Table 1" required />
-                <flux:input wire:model="tableCode" label="Short Code" placeholder="e.g., T1" />
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <flux:input wire:model="tableCapacity" type="number" label="Capacity" min="1" max="50" />
-                <flux:select wire:model="tableShape" label="Shape">
-                    <flux:select.option value="square">Square</flux:select.option>
-                    <flux:select.option value="rectangle">Rectangle</flux:select.option>
-                    <flux:select.option value="circle">Circle</flux:select.option>
-                    <flux:select.option value="oval">Oval</flux:select.option>
-                </flux:select>
-            </div>
-            
-            <flux:input wire:model="tableFloor" label="Floor / Area" placeholder="e.g., Main Floor, Patio" />
-            
-            <flux:switch wire:model="tableIsActive" label="Active" description="Inactive tables won't appear in floor plan" />
-            
-            <div class="flex justify-end gap-3 pt-4">
+
+            {{-- Single / Bulk toggle (only on create) --}}
+            @if(!$editingTableId)
+                <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
+                    <button
+                        wire:click="$set('createMode', 'single')"
+                        class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors
+                            {{ $createMode === 'single'
+                                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200' }}">
+                        Single
+                    </button>
+                    <button
+                        wire:click="$set('createMode', 'bulk')"
+                        class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors
+                            {{ $createMode === 'bulk'
+                                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200' }}">
+                        Bulk
+                    </button>
+                </div>
+            @endif
+
+            {{-- Single mode --}}
+            @if($createMode === 'single' || $editingTableId)
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:input wire:model="tableName" label="Table Name" placeholder="e.g., Table 1" required />
+                    <flux:input wire:model="tableCode" label="Short Code" placeholder="e.g., T1" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:input wire:model="tableCapacity" type="number" label="Capacity" min="1" max="50" />
+                    <flux:select wire:model="tableShape" label="Shape">
+                        <flux:select.option value="square">Square</flux:select.option>
+                        <flux:select.option value="rectangle">Rectangle</flux:select.option>
+                        <flux:select.option value="circle">Circle</flux:select.option>
+                        <flux:select.option value="oval">Oval</flux:select.option>
+                    </flux:select>
+                </div>
+
+                <flux:input wire:model="tableFloor" label="Floor / Area" placeholder="e.g., Main Floor, Patio" />
+
+                <flux:switch wire:model="tableIsActive" label="Active" description="Inactive tables won't appear in floor plan" />
+            @endif
+
+            {{-- Bulk mode --}}
+            @if($createMode === 'bulk' && !$editingTableId)
+                <div>
+                    <flux:input
+                        wire:model.live="bulkRange"
+                        label="Table Range"
+                        placeholder="e.g., T1-T10, ML1-ML5, 1-20"
+                        description="Use a prefix + number range. Examples: T1-T10, ML1-ML5, A01-A12, 1-30"
+                    />
+                    @error('bulkRange')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+
+                    {{-- Live preview --}}
+                    @if(!empty($bulkPreview))
+                        <div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+                                Preview &mdash; {{ count($bulkPreview) }} table(s) will be created
+                            </p>
+                            <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                                @foreach($bulkPreview as $name)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-xs font-mono text-zinc-700 dark:text-zinc-300">
+                                        {{ $name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @elseif($bulkRange)
+                        <p class="mt-2 text-xs text-amber-500">No tables matched. Check your range format.</p>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:input wire:model="bulkCapacity" type="number" label="Capacity (per table)" min="1" max="50" />
+                    <flux:select wire:model="bulkShape" label="Shape">
+                        <flux:select.option value="square">Square</flux:select.option>
+                        <flux:select.option value="rectangle">Rectangle</flux:select.option>
+                        <flux:select.option value="circle">Circle</flux:select.option>
+                        <flux:select.option value="oval">Oval</flux:select.option>
+                    </flux:select>
+                </div>
+
+                <flux:input wire:model="bulkFloor" label="Floor / Area" placeholder="e.g., Main Floor, Patio" />
+
+                <flux:switch wire:model="bulkIsActive" label="Active" description="Inactive tables won't appear in floor plan" />
+            @endif
+
+            <div class="flex justify-end gap-3 pt-2">
                 <flux:button wire:click="$set('showTableModal', false)" variant="ghost">Cancel</flux:button>
-                <flux:button wire:click="saveTable" variant="primary">{{ $editingTableId ? 'Update' : 'Create' }} Table</flux:button>
+                <flux:button wire:click="saveTable" variant="primary">
+                    @if($editingTableId)
+                        Update Table
+                    @elseif($createMode === 'bulk')
+                        Create {{ count($bulkPreview) > 0 ? count($bulkPreview) : '' }} Tables
+                    @else
+                        Create Table
+                    @endif
+                </flux:button>
             </div>
         </div>
     </flux:modal>
