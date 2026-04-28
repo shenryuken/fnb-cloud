@@ -14,6 +14,7 @@ use App\Livewire\SalesReport;
 use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
+use App\Livewire\Tables;
 use App\Livewire\CashierReport;
 use App\Livewire\UserGuide;
 use App\Livewire\Settings\Roles;
@@ -66,6 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Shifts
     Route::get('shifts', Shifts::class)->name('manage.shifts.index')->middleware('permission:pos.access');
+
+    // Tables
+    Route::get('tables', Tables::class)->name('manage.tables.index')->middleware('permission:pos.access');
 
     // User Guide
     Route::get('guide', UserGuide::class)->name('guide.index');

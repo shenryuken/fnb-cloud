@@ -18,6 +18,7 @@ class Order extends Model
         'customer_id',
         'user_id',
         'voucher_id',
+        'table_id',
         'table_number',
         'order_type', // dine_in, takeaway
         'total_amount',
@@ -144,5 +145,10 @@ class Order extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function table(): BelongsTo
+    {
+        return $this->belongsTo(RestaurantTable::class, 'table_id');
     }
 }
