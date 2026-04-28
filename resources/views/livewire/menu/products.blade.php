@@ -513,107 +513,99 @@
     </flux:card>
 
     {{-- Products Table --}}
-    <flux:table :paginate="$products">
-        <flux:table.columns>
-            <flux:table.column>Product</flux:table.column>
-            <flux:table.column class="text-center w-24">Order</flux:table.column>
-            <flux:table.column>Category</flux:table.column>
-            <flux:table.column class="text-right w-32">Price</flux:table.column>
-            <flux:table.column class="text-center w-28">Status</flux:table.column>
-            <flux:table.column class="text-right w-32">Actions</flux:table.column>
-        </flux:table.columns>
-
-        <flux:table.rows>
-            @forelse($products as $product)
-                <flux:table.row :key="$product->id" class="hover:bg-zinc-800/30 transition-colors">
-                    <flux:table.cell>
-                        <div class="flex items-center gap-3">
-                            <div class="w-14 h-14 rounded-xl overflow-hidden border-2 border-zinc-700 flex items-center justify-center shrink-0 shadow-sm">
-                                @if($product->image_url)
-                                    <img src="{{ $product->image_url }}" class="w-full h-full object-cover" alt="{{ $product->name }}">
-                                @elseif($product->tile_color)
-                                    <div class="w-full h-full flex items-center justify-center" style="background-color: {{ $product->tile_color }};">
-                                        <span class="text-white font-black text-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
+    <flux:card class="p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Product</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Order</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Category</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Price</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($products as $product)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
+                                        @if($product->image_url)
+                                            <img src="{{ $product->image_url }}" class="w-full h-full object-cover" alt="{{ $product->name }}">
+                                        @elseif($product->tile_color)
+                                            <div class="w-full h-full flex items-center justify-center" style="background-color: {{ $product->tile_color }};">
+                                                <span class="text-white font-bold text-sm">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
+                                            </div>
+                                        @else
+                                            <div class="w-full h-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                                <flux:icon.cube class="w-5 h-5 text-zinc-400" />
+                                            </div>
+                                        @endif
                                     </div>
-                                @else
-                                    <div class="w-full h-full bg-zinc-800 flex items-center justify-center">
-                                        <flux:icon.cube class="w-7 h-7 text-zinc-400" />
+                                    <div class="min-w-0">
+                                        <flux:text class="font-semibold">{{ $product->name }}</flux:text>
+                                        @if($product->description)
+                                            <flux:text size="sm" class="text-zinc-400 truncate">{{ Str::limit($product->description, 40) }}</flux:text>
+                                        @endif
                                     </div>
-                                @endif
-                            </div>
-                            <div class="min-w-0">
-                                <div class="font-bold text-sm truncate">{{ $product->name }}</div>
-                                @if($product->description)
-                                    <flux:text size="xs" class="text-zinc-400 truncate">{{ Str::limit($product->description, 40) }}</flux:text>
-                                @endif
-                            </div>
-                        </div>
-                    </flux:table.cell>
+                                </div>
+                            </td>
 
-                    <flux:table.cell class="text-center">
-                        <flux:badge size="sm" color="zinc" class="font-mono">{{ $product->sort_order }}</flux:badge>
-                    </flux:table.cell>
+                            <td class="py-3 px-4 text-center">
+                                <flux:badge color="zinc" size="sm">{{ $product->sort_order }}</flux:badge>
+                            </td>
 
-                    <flux:table.cell>
-                        <flux:badge size="sm" color="blue" inset="top bottom">
-                            {{ $product->category->name ?? 'Uncategorized' }}
-                        </flux:badge>
-                    </flux:table.cell>
+                            <td class="py-3 px-4">
+                                <flux:badge size="sm" color="blue">
+                                    {{ $product->category->name ?? 'Uncategorized' }}
+                                </flux:badge>
+                            </td>
 
-                    <flux:table.cell variant="strong" class="text-right">
-                        <span class="font-mono text-base">${{ number_format($product->price, 2) }}</span>
-                    </flux:table.cell>
+                            <td class="py-3 px-4 text-right">
+                                <span class="font-mono font-semibold">${{ number_format($product->price, 2) }}</span>
+                            </td>
 
-                    <flux:table.cell class="text-center">
-                        @if($product->is_active)
-                            <flux:badge size="sm" color="green" inset="top bottom">
-                                <flux:icon.check-circle class="w-3.5 h-3.5" />
-                                Active
-                            </flux:badge>
-                        @else
-                            <flux:badge size="sm" color="red" inset="top bottom">
-                                <flux:icon.x-circle class="w-3.5 h-3.5" />
-                                Inactive
-                            </flux:badge>
-                        @endif
-                    </flux:table.cell>
+                            <td class="py-3 px-4 text-center">
+                                <flux:badge :color="$product->is_active ? 'green' : 'zinc'" size="sm">
+                                    {{ $product->is_active ? 'Active' : 'Hidden' }}
+                                </flux:badge>
+                            </td>
 
-                    <flux:table.cell class="text-right">
-                        <flux:dropdown position="left" align="top">
-                            <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" square />
-                            
-                            <flux:menu>
-                                <flux:menu.item icon="clipboard-document" wire:click="duplicateWithVariants({{ $product->id }})">
-                                    Copy + Variants
-                                </flux:menu.item>
-                                <flux:menu.item icon="document-duplicate" wire:click="duplicateWithoutVariants({{ $product->id }})">
-                                    Copy
-                                </flux:menu.item>
-                                <flux:menu.separator />
-                                <flux:menu.item icon="pencil" wire:click="edit({{ $product->id }})">
-                                    Edit
-                                </flux:menu.item>
-                                <flux:menu.item icon="trash" variant="danger" wire:click="delete({{ $product->id }})" wire:confirm="Are you sure you want to delete this product?">
-                                    Delete
-                                </flux:menu.item>
-                            </flux:menu>
-                        </flux:dropdown>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="6" class="text-center py-12 text-zinc-400">
-                        <flux:icon.inbox class="w-16 h-16 mx-auto mb-3 text-zinc-300" />
-                        <div>No products found. Create your first menu item!</div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
-
-    @if($products->hasPages())
-        <div class="flex justify-center">
-            {{ $products->links() }}
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <flux:button size="sm" variant="ghost" icon="document-duplicate" wire:click="duplicateWithVariants({{ $product->id }})" title="Copy with variants" />
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $product->id }})" />
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $product->id }})" wire:confirm="Are you sure you want to delete this product?" class="text-red-500 hover:text-red-600" />
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <flux:icon.cube class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+                                    <flux:heading>No products yet</flux:heading>
+                                    <flux:subheading>Create your first menu item to get started.</flux:subheading>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+
+        @if($products->hasPages())
+            <div class="border-t border-zinc-200 dark:border-zinc-700 px-4 py-3">
+                {{ $products->links() }}
+            </div>
+        @endif
+    </flux:card>
+
+    @if($products->total() > 0)
+        <flux:text size="sm" class="text-zinc-500">
+            Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
+        </flux:text>
     @endif
 </div>
