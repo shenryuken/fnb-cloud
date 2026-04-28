@@ -126,7 +126,7 @@ class Tables extends Component
             return [];
         }
 
-        [$, $prefixStart, $numStart, $prefixEnd, $numEnd] = $m;
+        [, $prefixStart, $numStart, $prefixEnd, $numEnd] = $m;
 
         // Prefixes must match (or end prefix empty meaning same as start)
         $prefix = $prefixStart;
