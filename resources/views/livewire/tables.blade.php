@@ -75,18 +75,18 @@
             <div class="flex items-center gap-3">
                 @if($this->floors->count() > 0)
                     <flux:select wire:model.live="filterFloor" placeholder="All Floors" size="sm">
-                        <flux:option value="">All Floors</flux:option>
+                        <flux:select.option value="">All Floors</flux:select.option>
                         @foreach($this->floors as $floor)
-                            <flux:option value="{{ $floor }}">{{ $floor }}</flux:option>
+                            <flux:select.option value="{{ $floor }}">{{ $floor }}</flux:select.option>
                         @endforeach
                     </flux:select>
                 @endif
                 <flux:select wire:model.live="filterStatus" placeholder="All Status" size="sm">
-                    <flux:option value="">All Status</flux:option>
-                    <flux:option value="available">Available</flux:option>
-                    <flux:option value="occupied">Occupied</flux:option>
-                    <flux:option value="reserved">Reserved</flux:option>
-                    <flux:option value="dirty">Needs Cleaning</flux:option>
+                    <flux:select.option value="">All Status</flux:select.option>
+                    <flux:select.option value="available">Available</flux:select.option>
+                    <flux:select.option value="occupied">Occupied</flux:select.option>
+                    <flux:select.option value="reserved">Reserved</flux:select.option>
+                    <flux:select.option value="dirty">Needs Cleaning</flux:select.option>
                 </flux:select>
             </div>
             <div class="flex items-center gap-2">
@@ -317,10 +317,10 @@
             <div class="grid grid-cols-2 gap-4">
                 <flux:input wire:model="tableCapacity" type="number" label="Capacity" min="1" max="50" />
                 <flux:select wire:model="tableShape" label="Shape">
-                    <flux:option value="square">Square</flux:option>
-                    <flux:option value="rectangle">Rectangle</flux:option>
-                    <flux:option value="circle">Circle</flux:option>
-                    <flux:option value="oval">Oval</flux:option>
+                    <flux:select.option value="square">Square</flux:select.option>
+                    <flux:select.option value="rectangle">Rectangle</flux:select.option>
+                    <flux:select.option value="circle">Circle</flux:select.option>
+                    <flux:select.option value="oval">Oval</flux:select.option>
                 </flux:select>
             </div>
             
