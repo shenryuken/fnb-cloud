@@ -545,6 +545,11 @@ class Pos extends Component
         $unitPrice = (float) $product->price;
 
         foreach ($this->cart as $index => $cartItem) {
+            // Don't merge with existing (already ordered) items - those are locked
+            if (!empty($cartItem['existing'])) {
+                continue;
+            }
+            
             if (
                 (int) $cartItem['product_id'] === (int) $product->id
                 && (int) ($cartItem['variant_id'] ?? 0) === (int) ($variantId ?? 0)
