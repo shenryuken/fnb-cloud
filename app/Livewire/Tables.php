@@ -414,6 +414,26 @@ class Tables extends Component
     }
 
     /**
+     * Redirect to POS to add more items to an existing order.
+     * Used when order is preparing/ready/served and customer wants more.
+     */
+    public function addToExistingOrder(int $tableId)
+    {
+        $table = RestaurantTable::with('currentOrder')->findOrFail($tableId);
+        
+        if (!$table->currentOrder) {
+            $this->dispatch('notify', message: 'No active order for this table', type: 'error');
+            return;
+        }
+        
+        // Redirect to POS with addto parameter to load the existing order for adding items
+        return redirect()->route('pos.index', [
+            'table' => $tableId,
+            'addto' => $table->currentOrder->id,
+        ]);
+    }
+
+    /**
      * Redirect to POS to collect payment for table's unpaid order.
      */
     public function collectTablePayment(int $tableId)
