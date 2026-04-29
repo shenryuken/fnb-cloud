@@ -7,9 +7,19 @@
             <a href="{{ route('manage.shifts.index') }}" wire:navigate class="underline hover:no-underline">Open Shift</a>
         </div>
     @endif
+    
+    {{-- Adding to Existing Order Banner --}}
+    @if($existingOrder)
+        <div class="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3 {{ !$this->currentShift ? 'top-10' : '' }}">
+            <flux:icon.plus-circle class="w-5 h-5" />
+            <span>Adding items to Order #{{ $existingOrder->id }} ({{ ucfirst($existingOrder->kds_status) }})</span>
+            <span class="text-blue-200">|</span>
+            <span>Table: {{ $tableNumber }}</span>
+        </div>
+    @endif
 
     <!-- Left Side: Product Selection -->
-    <div class="w-full lg:flex-1 flex flex-col gap-4 lg:overflow-hidden {{ !$this->currentShift ? 'pt-10' : '' }}">
+    <div class="w-full lg:flex-1 flex flex-col gap-4 lg:overflow-hidden {{ !$this->currentShift ? 'pt-10' : '' }} {{ $existingOrder ? 'pt-10' : '' }}">
         <!-- Top Bar: Search and Categories -->
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-3">
             {{-- Shift status indicator --}}
@@ -212,11 +222,15 @@
             @forelse($cart as $index => $item)
                 @php
                     $eachPrice = (float) ($item['unit_price'] ?? 0) + (float) ($item['addons_total'] ?? 0) + (float) ($item['set_total'] ?? 0);
+                    $isExisting = !empty($item['existing']);
                 @endphp
-                <div class="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:border-pink-500/30 transition-all">
+                <div class="p-3 rounded-lg border transition-all {{ $isExisting ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 opacity-70' : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800 hover:border-pink-500/30' }}">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="min-w-0 flex-1">
-                            <h4 class="font-semibold text-zinc-800 dark:text-zinc-100 text-sm truncate">
+                            <h4 class="font-semibold text-sm truncate {{ $isExisting ? 'text-blue-700 dark:text-blue-300' : 'text-zinc-800 dark:text-zinc-100' }}">
+                                @if($isExisting)
+                                    <flux:icon.lock-closed class="w-3 h-3 inline mr-1" />
+                                @endif
                                 {{ $item['product_name'] }}
                                 @if(!empty($item['variant_name']))
                                     <span class="text-zinc-400">({{ $item['variant_name'] }})</span>
@@ -232,21 +246,31 @@
                                 <p class="text-xs text-zinc-400 truncate mt-0.5 italic">{{ $item['notes'] }}</p>
                             @endif
                         </div>
-                        <button type="button" wire:click="removeFromCart({{ $index }})" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:bg-red-500 hover:text-white transition-all">
-                            <flux:icon.x-mark class="w-4 h-4" />
-                        </button>
+                        @if(!$isExisting)
+                            <button type="button" wire:click="removeFromCart({{ $index }})" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:bg-red-500 hover:text-white transition-all">
+                                <flux:icon.x-mark class="w-4 h-4" />
+                            </button>
+                        @else
+                            <span class="text-xs text-blue-500 font-medium">In Kitchen</span>
+                        @endif
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                            <button wire:click="updateQuantity({{ $index }}, -1)" class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors">
-                                <flux:icon.minus class="w-3.5 h-3.5" />
-                            </button>
-                            <span class="w-8 text-center font-semibold text-sm text-zinc-800 dark:text-zinc-100 tabular-nums">{{ $item['quantity'] }}</span>
-                            <button wire:click="updateQuantity({{ $index }}, 1)" class="w-8 h-8 flex items-center justify-center text-pink-500 hover:text-pink-600 transition-colors">
-                                <flux:icon.plus class="w-3.5 h-3.5" />
-                            </button>
-                        </div>
+                        @if(!$isExisting)
+                            <div class="flex items-center bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                <button wire:click="updateQuantity({{ $index }}, -1)" class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors">
+                                    <flux:icon.minus class="w-3.5 h-3.5" />
+                                </button>
+                                <span class="w-8 text-center font-semibold text-sm text-zinc-800 dark:text-zinc-100 tabular-nums">{{ $item['quantity'] }}</span>
+                                <button wire:click="updateQuantity({{ $index }}, 1)" class="w-8 h-8 flex items-center justify-center text-pink-500 hover:text-pink-600 transition-colors">
+                                    <flux:icon.plus class="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        @else
+                            <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-semibold">
+                                Qty: {{ $item['quantity'] }}
+                            </span>
+                        @endif
 
                         <div class="text-right">
                             <div class="text-xs text-zinc-400 tabular-nums">RM {{ number_format($eachPrice, 2) }} ea</div>

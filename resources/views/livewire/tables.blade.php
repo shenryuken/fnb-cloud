@@ -205,10 +205,18 @@
                                 <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="openReservationModal({{ $table->id }})">Reserve</flux:button>
                             @elseif($table->status === 'occupied')
-                                @if($table->currentOrder && $table->currentOrder->payment_status === 'unpaid')
-                                    <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click.stop="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                @if($table->currentOrder)
+                                    @if($table->currentOrder->payment_status === 'unpaid')
+                                        <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click.stop="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                    @endif
+                                    @if(in_array($table->currentOrder->kds_status, ['preparing', 'ready', 'served']))
+                                        <flux:button size="xs" variant="primary" wire:click.stop="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
+                                    @else
+                                        <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
+                                    @endif
+                                @else
+                                    <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                 @endif
-                                <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="setTableStatus({{ $table->id }}, 'dirty')">Clear</flux:button>
                             @elseif($table->status === 'reserved')
                                 <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
@@ -333,10 +341,18 @@
                                         @if($table->status === 'available')
                                             <flux:button size="sm" variant="primary" wire:click="quickSeatTable({{ $table->id }})">Seat</flux:button>
                                         @elseif($table->status === 'occupied')
-                                            @if($table->currentOrder && $table->currentOrder->payment_status === 'unpaid')
-                                                <flux:button size="sm" variant="filled" class="!bg-amber-500 hover:!bg-amber-600 !text-white" wire:click="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                            @if($table->currentOrder)
+                                                @if($table->currentOrder->payment_status === 'unpaid')
+                                                    <flux:button size="sm" variant="filled" class="!bg-amber-500 hover:!bg-amber-600 !text-white" wire:click="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                                @endif
+                                                @if(in_array($table->currentOrder->kds_status, ['preparing', 'ready', 'served']))
+                                                    <flux:button size="sm" variant="primary" wire:click="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
+                                                @else
+                                                    <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
+                                                @endif
+                                            @else
+                                                <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
                                             @endif
-                                            <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
                                         @endif
                                         <flux:dropdown position="bottom" align="end">
                                             <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" square />

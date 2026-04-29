@@ -63,6 +63,11 @@ class Pos extends Component
     #[Url(as: 'pay')]
     public ?int $payOrderId = null; // auto-open payment modal for this order
     
+    #[Url(as: 'addto')]
+    public ?int $addToOrderId = null; // load existing order for adding more items
+    
+    public ?Order $existingOrder = null; // the order we're adding items to
+    
     public string $orderType = 'dine_in'; // dine_in, takeaway
     public string $orderNotes = '';
 
@@ -338,6 +343,36 @@ class Pos extends Component
             
             // Clear the URL parameter
             $this->payOrderId = null;
+        }
+        
+        // Handle adding items to an existing order (?addto=123)
+        if ($this->addToOrderId) {
+            $order = Order::with('items.product')->find($this->addToOrderId);
+            
+            if ($order && in_array($order->kds_status, ['preparing', 'ready', 'served'])) {
+                $this->existingOrder = $order;
+                $this->orderType = $order->order_type ?? 'dine_in';
+                $this->orderNotes = $order->notes ?? '';
+                $this->customerId = $order->customer_id;
+                
+                // Load existing items into cart so staff can see what's already ordered
+                foreach ($order->items as $item) {
+                    $this->cartItems[] = [
+                        'id' => $item->product_id,
+                        'name' => $item->product_name,
+                        'price' => (float) $item->unit_price,
+                        'quantity' => $item->quantity,
+                        'modifiers' => $item->modifiers ?? [],
+                        'notes' => $item->notes ?? '',
+                        'existing' => true, // Mark as existing item (cannot be removed)
+                    ];
+                }
+                
+                $this->recalculateTotals();
+            }
+            
+            // Clear the URL parameter
+            $this->addToOrderId = null;
         }
     }
 
@@ -1375,10 +1410,17 @@ class Pos extends Component
     /**
      * Place order and send to kitchen without payment (Pay Later).
      * Customer eats first, pays when requesting the bill.
+     * Also handles adding items to an existing order.
      */
     public function placeOrderPayLater(): void
     {
-        if (empty($this->cart)) return;
+        // Filter out existing items - only process new items
+        $newItems = collect($this->cart)->filter(fn($item) => empty($item['existing']))->values()->all();
+        
+        if (empty($newItems)) {
+            $this->dispatch('notify', message: 'No new items to add.', type: 'error');
+            return;
+        }
 
         // For dine-in pay-later orders, a table must be selected
         if ($this->orderType === 'dine_in' && !$this->tableId) {
@@ -1386,7 +1428,12 @@ class Pos extends Component
             return;
         }
 
-        $this->lastOrder = DB::transaction(function () {
+        $this->lastOrder = DB::transaction(function () use ($newItems) {
+            // Check if we're adding to an existing order
+            if ($this->existingOrder) {
+                return $this->addItemsToExistingOrder($newItems);
+            }
+            
             $order = Order::create([
                 'shift_id' => $this->currentShift?->id,
                 'user_id' => Auth::id(),
@@ -1415,7 +1462,7 @@ class Pos extends Component
                 'change_amount' => 0,
             ]);
 
-            foreach ($this->cart as $item) {
+            foreach ($newItems as $item) {
                 $orderItem = $order->items()->create([
                     'product_id' => $item['product_id'],
                     'variant_id' => $item['variant_id'],
@@ -1468,12 +1515,82 @@ class Pos extends Component
         }
 
         $this->isPayLater = true;
-        $this->dispatch('notify', message: 'Order #' . $this->lastOrder->id . ' sent to kitchen. Payment pending.', type: 'success');
+        
+        $message = $this->existingOrder 
+            ? 'Added items to Order #' . $this->lastOrder->id . '. Sent to kitchen.'
+            : 'Order #' . $this->lastOrder->id . ' sent to kitchen. Payment pending.';
+        
+        $this->dispatch('notify', message: $message, type: 'success');
 
-        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'orderNotes', 'isPaying', 'showCartMobile']);
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'orderNotes', 'isPaying', 'showCartMobile', 'existingOrder']);
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
         // Keep tableId and tableNumber for potential follow-up orders at the same table
         $this->dispatch('order-placed');
+    }
+    
+    /**
+     * Add items to an existing order (when customer orders more after initial order sent to kitchen).
+     */
+    protected function addItemsToExistingOrder(array $newItems): Order
+    {
+        $order = $this->existingOrder;
+        
+        // Calculate new totals including existing items
+        $existingSubtotal = (float) $order->subtotal_amount;
+        $newSubtotal = collect($newItems)->sum('subtotal');
+        $combinedSubtotal = $existingSubtotal + $newSubtotal;
+        
+        // Recalculate tax on the combined total
+        $combinedTaxAmount = $combinedSubtotal * ($this->taxRate / 100);
+        $combinedTotal = $combinedSubtotal + $combinedTaxAmount - (float) $order->discount_amount;
+        
+        // Add new items to the existing order
+        foreach ($newItems as $item) {
+            $orderItem = $order->items()->create([
+                'product_id' => $item['product_id'],
+                'variant_id' => $item['variant_id'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'subtotal' => $item['subtotal'],
+                'notes' => $item['notes'],
+            ]);
+
+            if (!empty($item['addon_ids'])) {
+                foreach ($item['addon_ids'] as $addonId) {
+                    $addon = ProductAddon::find($addonId);
+                    $orderItem->addons()->create([
+                        'addon_id' => $addon->id,
+                        'name' => $addon->name,
+                        'price' => $addon->price,
+                    ]);
+                }
+            }
+
+            if (!empty($item['set_items'])) {
+                foreach ($item['set_items'] as $component) {
+                    $orderItem->components()->create([
+                        'product_id' => $component['product_id'] ?? null,
+                        'group_name' => $component['group_name'] ?? null,
+                        'name' => $component['name'] ?? '',
+                        'quantity' => 1,
+                        'extra_price' => $component['extra_price'] ?? 0,
+                    ]);
+                }
+            }
+        }
+        
+        // Update order totals
+        $order->update([
+            'subtotal_amount' => $combinedSubtotal,
+            'tax_amount' => $combinedTaxAmount,
+            'total_amount' => $combinedTotal,
+            'kds_status' => 'pending', // Reset KDS status so kitchen sees new items
+        ]);
+        
+        // Fire KDS event for new items
+        event(new \App\Events\KdsOrderUpdated($order->fresh()));
+        
+        return $order;
     }
 
     /**
