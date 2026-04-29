@@ -62,7 +62,7 @@ class UnshiftedOrders extends Component
     {
         return Shift::query()
             ->where('tenant_id', Auth::user()->tenant_id)
-            ->orderByDesc('started_at')
+            ->orderByDesc('opened_at')
             ->limit(10)
             ->get();
     }
