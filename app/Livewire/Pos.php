@@ -65,10 +65,12 @@ class Pos extends Component
 
     // Payment state
     public bool $isPaying = false;
+    public bool $isPayLater = false; // true = send to kitchen without payment (pay later)
     public string $paymentMethod = 'cash';   // kept for single-method fast path
     public float $amountReceived = 0;
     public float $changeAmount = 0;
     public ?Order $lastOrder = null;
+    public bool $showBillPreview = false; // for printing bill before payment
 
     // Split payment state
     public bool $isSplitPayment = false;
@@ -80,6 +82,8 @@ class Pos extends Component
     public bool $showCartMobile = false;
     public bool $showDiscountModal = false;
     public bool $showHeldOrdersModal = false;
+    public bool $showUnpaidOrdersModal = false;
+    public ?Order $selectedUnpaidOrder = null; // for collecting payment on existing order
     public string $discountTab = 'discount';
     public ?int $customerId = null;
     public string $customerSearch = '';
@@ -270,6 +274,29 @@ class Pos extends Component
                     'customer_name' => (string) ($payload['customer_name'] ?? ''),
                 ];
             })
+            ->all();
+    }
+
+    #[Computed]
+    public function unpaidOrders(): array
+    {
+        return Order::query()
+            ->where('payment_status', 'unpaid')
+            ->whereIn('status', ['pending', 'processing'])
+            ->with(['items', 'table'])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn (Order $o) => [
+                'id' => $o->id,
+                'table_number' => $o->table_number,
+                'table_id' => $o->table_id,
+                'order_type' => $o->order_type,
+                'total_amount' => (float) $o->total_amount,
+                'items_count' => $o->items->sum('quantity'),
+                'created_at' => $o->created_at?->format('M d, H:i'),
+                'kds_status' => $o->kds_status,
+            ])
             ->all();
     }
 
@@ -1329,12 +1356,227 @@ class Pos extends Component
     }
 
     /**
+     * Place order and send to kitchen without payment (Pay Later).
+     * Customer eats first, pays when requesting the bill.
+     */
+    public function placeOrderPayLater(): void
+    {
+        if (empty($this->cart)) return;
+
+        // For dine-in pay-later orders, a table must be selected
+        if ($this->orderType === 'dine_in' && !$this->tableId) {
+            $this->dispatch('notify', message: 'Please select a table for dine-in orders.', type: 'error');
+            return;
+        }
+
+        $this->lastOrder = DB::transaction(function () {
+            $order = Order::create([
+                'shift_id' => $this->currentShift?->id,
+                'user_id' => Auth::id(),
+                'customer_id' => $this->customerId,
+                'table_id' => $this->orderType === 'dine_in' ? $this->tableId : null,
+                'table_number' => $this->orderType === 'dine_in' ? $this->tableNumber : null,
+                'order_type' => $this->orderType,
+                'notes' => $this->orderNotes,
+                'status' => 'pending', // Order is pending until paid
+                'kds_status' => 'pending', // Send to kitchen
+                'total_amount' => $this->totalAmount,
+                'subtotal_amount' => $this->subTotalAmount,
+                'discount_type' => $this->discountType,
+                'discount_value' => $this->discountValue,
+                'discount_amount' => $this->discountAmount,
+                'voucher_id' => null, // Don't apply voucher until payment
+                'voucher_code' => null,
+                'points_redeemed' => 0, // Don't redeem points until payment
+                'points_earned' => 0,
+                'tax_rate' => $this->taxRate,
+                'tax_amount' => $this->taxAmount,
+                'payment_method' => null,
+                'payment_splits' => null,
+                'payment_status' => 'unpaid', // Not paid yet
+                'amount_paid' => 0,
+                'change_amount' => 0,
+            ]);
+
+            foreach ($this->cart as $item) {
+                $orderItem = $order->items()->create([
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => $item['subtotal'],
+                    'notes' => $item['notes'],
+                ]);
+
+                if (!empty($item['addon_ids'])) {
+                    foreach ($item['addon_ids'] as $addonId) {
+                        $addon = ProductAddon::find($addonId);
+                        $orderItem->addons()->create([
+                            'addon_id' => $addon->id,
+                            'name' => $addon->name,
+                            'price' => $addon->price,
+                        ]);
+                    }
+                }
+
+                if (!empty($item['set_items'])) {
+                    foreach ($item['set_items'] as $component) {
+                        $orderItem->components()->create([
+                            'product_id' => $component['product_id'] ?? null,
+                            'group_name' => $component['group_name'] ?? null,
+                            'name' => $component['name'] ?? '',
+                            'quantity' => 1,
+                            'extra_price' => $component['extra_price'] ?? 0,
+                        ]);
+                    }
+                }
+            }
+
+            // Update table to track the current order
+            if ($this->tableId && $this->orderType === 'dine_in') {
+                $table = RestaurantTable::find($this->tableId);
+                if ($table) {
+                    $table->update(['current_order_id' => $order->id]);
+                    if ($table->status === 'available' || $table->status === 'reserved') {
+                        $table->occupy();
+                    }
+                }
+            }
+
+            return $order;
+        });
+
+        if (!$this->lastOrder) {
+            return;
+        }
+
+        $this->isPayLater = true;
+        $this->dispatch('notify', message: 'Order #' . $this->lastOrder->id . ' sent to kitchen. Payment pending.', type: 'success');
+
+        $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'orderNotes', 'isPaying', 'showCartMobile']);
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
+        // Keep tableId and tableNumber for potential follow-up orders at the same table
+        $this->dispatch('order-placed');
+    }
+
+    /**
      * Reset POS for new order.
      */
     public function newOrder(): void
     {
         $this->issuedVoucherCodes = [];
+        $this->isPayLater = false;
+        $this->showBillPreview = false;
+        $this->selectedUnpaidOrder = null;
+        $this->showUnpaidOrdersModal = false;
         $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'tableId', 'orderType', 'orderNotes', 'isPaying', 'lastOrder', 'amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining', 'showCartMobile']);
+    }
+
+    /**
+     * Open modal to show unpaid orders.
+     */
+    public function openUnpaidOrdersModal(): void
+    {
+        unset($this->unpaidOrders);
+        $this->showUnpaidOrdersModal = true;
+    }
+
+    /**
+     * Select an unpaid order for payment collection.
+     */
+    public function selectUnpaidOrder(int $orderId): void
+    {
+        $order = Order::with(['items.product', 'items.variant', 'items.addons', 'table'])
+            ->where('payment_status', 'unpaid')
+            ->find($orderId);
+
+        if (!$order) {
+            $this->dispatch('notify', message: 'Order not found or already paid.', type: 'error');
+            return;
+        }
+
+        $this->selectedUnpaidOrder = $order;
+        $this->totalAmount = (float) $order->total_amount;
+        $this->amountReceived = 0;
+        $this->changeAmount = 0;
+        $this->paymentMethod = 'cash';
+        $this->isSplitPayment = false;
+        $this->paymentSplits = [];
+        $this->showUnpaidOrdersModal = false;
+        $this->isPaying = true;
+    }
+
+    /**
+     * Collect payment for an existing unpaid order.
+     */
+    public function collectPayment(): void
+    {
+        if (!$this->selectedUnpaidOrder) {
+            $this->dispatch('notify', message: 'No order selected.', type: 'error');
+            return;
+        }
+
+        // Validate split payment before entering transaction
+        if ($this->isSplitPayment) {
+            if (empty($this->paymentSplits)) {
+                $this->dispatch('notify', message: 'Add at least one payment split.', type: 'error');
+                return;
+            }
+            if ($this->splitRemaining > 0.01) {
+                $this->dispatch('notify', message: 'Split payments do not cover the full amount. Remaining: RM ' . number_format($this->splitRemaining, 2), type: 'error');
+                return;
+            }
+        }
+
+        $order = $this->selectedUnpaidOrder;
+
+        DB::transaction(function () use ($order) {
+            $order->update([
+                'payment_method' => $this->isSplitPayment
+                    ? implode('+', array_unique(array_column($this->paymentSplits, 'method')))
+                    : $this->paymentMethod,
+                'payment_splits' => $this->isSplitPayment ? $this->paymentSplits : null,
+                'payment_status' => 'paid',
+                'status' => 'completed',
+                'amount_paid' => $this->isSplitPayment
+                    ? round(collect($this->paymentSplits)->sum('amount'), 2)
+                    : $this->amountReceived,
+                'change_amount' => $this->isSplitPayment ? 0 : $this->changeAmount,
+            ]);
+
+            // Update table status to dirty after payment
+            if ($order->table_id) {
+                $table = RestaurantTable::find($order->table_id);
+                if ($table) {
+                    $table->markDirty();
+                    $table->update(['current_order_id' => null]);
+                }
+            }
+
+            // Update shift sales totals
+            if ($shift = $this->currentShift) {
+                $shift->recalculateSales();
+                unset($this->currentShift);
+            }
+        });
+
+        $this->lastOrder = $order->fresh();
+        $this->isPayLater = false;
+        $this->selectedUnpaidOrder = null;
+        $this->isPaying = false;
+
+        $this->dispatch('notify', message: 'Payment collected for Order #' . $order->id, type: 'success');
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
+    }
+
+    /**
+     * Cancel collecting payment for an unpaid order.
+     */
+    public function cancelCollectPayment(): void
+    {
+        $this->selectedUnpaidOrder = null;
+        $this->isPaying = false;
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
     }
 
     /**
