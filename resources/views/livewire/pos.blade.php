@@ -168,12 +168,12 @@
                             class="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                             <option value="">Select Table</option>
                             @foreach($this->availableTables as $table)
-                                <option value="{{ $table->id }}" 
-                                    @if($table->status === 'occupied' && $table->id !== $tableId) disabled @endif>
+                                <option value="{{ $table->id }}">
                                     {{ $table->name }} 
                                     ({{ $table->total_capacity }} seats)
                                     @if($table->status === 'occupied') - Occupied @endif
                                     @if($table->status === 'reserved') - Reserved @endif
+                                    @if($table->status === 'dirty') - Needs Cleaning @endif
                                 </option>
                             @endforeach
                         </select>
@@ -421,8 +421,7 @@
                                             class="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
                                             <option value="">Select Table</option>
                                             @foreach($this->availableTables as $table)
-                                                <option value="{{ $table->id }}" 
-                                                    @if($table->status === 'occupied' && $table->id !== $tableId) disabled @endif>
+                                                <option value="{{ $table->id }}">
                                                     {{ $table->name }} ({{ $table->total_capacity }})
                                                     @if($table->status !== 'available') - {{ $table->getStatusLabel() }} @endif
                                                 </option>
