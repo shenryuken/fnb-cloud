@@ -67,7 +67,7 @@
                     <div class="flex items-center gap-3">
                         <flux:checkbox 
                             wire:click="selectAll" 
-                            :checked="count($selectedOrderIds) === count($this->unshiftedOrders->items)"
+                            :checked="count($selectedOrderIds) === count($this->unshiftedOrders)"
                             label="Select all on page"
                         />
                         @if(!empty($selectedOrderIds))
