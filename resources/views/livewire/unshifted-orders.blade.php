@@ -167,9 +167,9 @@
                                         <a href="#" wire:click.prevent="addNote({{ $order->id }})" class="text-zinc-400 hover:text-pink-600 transition-colors" title="Add note">
                                             <flux:icon.pencil class="w-4 h-4" />
                                         </a>
-                                        <a href="{{ route('orders.show', $order) }}" target="_blank" class="text-zinc-400 hover:text-blue-600 transition-colors" title="View order">
-                                            <flux:icon.arrow-top-right class="w-4 h-4" />
-                                        </a>
+                                    <a href="{{ route('orders.show', $order) }}" target="_blank" class="text-zinc-400 hover:text-blue-600 transition-colors" title="View order">
+                                        <flux:icon.arrow-up-right class="w-4 h-4" />
+                                    </a>
                                     </div>
                                 </td>
                             </tr>
