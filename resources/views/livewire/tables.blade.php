@@ -613,9 +613,26 @@
                 @endif
                 
                 <div class="flex justify-between gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         @if($this->detailsTable->status === 'occupied')
-                            <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">View Order</flux:button>
+                            @if($this->detailsTable->currentOrder)
+                                <flux:button 
+                                    onclick="window.open('{{ route('pos.receipt', $this->detailsTable->currentOrder->id) }}', '_blank', 'width=400,height=600')"
+                                    variant="ghost" 
+                                    icon="eye">
+                                    View Order
+                                </flux:button>
+                                @if($this->detailsTable->currentOrder->payment_status === 'unpaid')
+                                    <flux:button wire:click="collectTablePayment({{ $this->detailsTable->id }})" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" icon="banknotes">Pay</flux:button>
+                                @endif
+                                @if(in_array($this->detailsTable->currentOrder->kds_status, ['preparing', 'ready', 'served']))
+                                    <flux:button wire:click="addToExistingOrder({{ $this->detailsTable->id }})" variant="primary" icon="plus">Add Items</flux:button>
+                                @else
+                                    <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">Order</flux:button>
+                                @endif
+                            @else
+                                <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">New Order</flux:button>
+                            @endif
                             <flux:button wire:click="setTableStatus({{ $this->detailsTable->id }}, 'dirty')" variant="ghost">Clear Table</flux:button>
                         @elseif($this->detailsTable->status === 'available')
                             <flux:button wire:click="quickSeatTable({{ $this->detailsTable->id }})" variant="primary">Seat Guests</flux:button>
