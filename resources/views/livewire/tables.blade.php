@@ -617,7 +617,7 @@
                         @if($this->detailsTable->status === 'occupied')
                             @if($this->detailsTable->currentOrder)
                                 <flux:button 
-                                    onclick="window.open('{{ route('pos.receipt', $this->detailsTable->currentOrder->id) }}', '_blank', 'width=400,height=600')"
+                                    wire:click="openOrder({{ $this->detailsTable->currentOrder->id }})"
                                     variant="ghost" 
                                     icon="eye">
                                     View Order
@@ -645,6 +645,153 @@
                         @endif
                     </div>
                     <flux:button wire:click="$set('showDetailsModal', false)" variant="ghost">Close</flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+
+    {{-- Order Detail Modal --}}
+    <flux:modal name="order-detail" wire:model="showOrderModal" class="max-w-3xl w-full">
+        @if($viewingOrder)
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.receipt-percent class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Order #{{ $viewingOrder->id }}</flux:heading>
+                    <flux:subheading>{{ $viewingOrder->created_at->format('M d, Y H:i') }}</flux:subheading>
+                </div>
+                @php
+                    $statusColor = match($viewingOrder->status) {
+                        'completed' => 'green',
+                        'cancelled' => 'red',
+                        'processing' => 'blue',
+                        default => 'yellow',
+                    };
+                @endphp
+                <flux:badge :color="$statusColor">{{ $viewingOrder->status }}</flux:badge>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {{-- Left: Customer + Items --}}
+                <div class="lg:col-span-3 space-y-4">
+                    <flux:card class="p-4 space-y-2">
+                        <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Order Info</flux:text>
+                        <div class="flex justify-between">
+                            <flux:text size="sm" class="text-zinc-500">Customer</flux:text>
+                            <flux:text size="sm" class="font-semibold">{{ $viewingOrder->customer?->name ?: ($viewingOrder->table_number ? 'Table '.$viewingOrder->table_number : 'Walk-in') }}</flux:text>
+                        </div>
+                        @if($viewingOrder->customer)
+                            <div class="flex justify-between">
+                                <flux:text size="sm" class="text-zinc-500">Contact</flux:text>
+                                <flux:text size="sm">{{ $viewingOrder->customer->email ?: ($viewingOrder->customer->mobile ?: '—') }}</flux:text>
+                            </div>
+                        @endif
+                        <div class="flex justify-between">
+                            <flux:text size="sm" class="text-zinc-500">Server</flux:text>
+                            <flux:text size="sm">{{ $viewingOrder->user?->name ?? 'System' }}</flux:text>
+                        </div>
+                        <div class="flex justify-between">
+                            <flux:text size="sm" class="text-zinc-500">Type</flux:text>
+                            <flux:badge size="sm" color="zinc">{{ str_replace('_', '-', $viewingOrder->order_type ?? 'dine-in') }}</flux:badge>
+                        </div>
+                    </flux:card>
+
+                    <flux:card class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Items</flux:text>
+                            <flux:badge size="sm" color="zinc">{{ $viewingOrder->items->count() }} lines</flux:badge>
+                        </div>
+                        <div class="space-y-3 divide-y divide-zinc-100 dark:divide-zinc-800">
+                            @foreach($viewingOrder->items as $item)
+                                <div class="flex items-start justify-between gap-4 pt-3 first:pt-0">
+                                    <div class="flex-1">
+                                        <flux:text class="font-semibold">
+                                            {{ (int) $item->quantity }}x {{ $item->product?->name }}
+                                            @if($item->variant)
+                                                <flux:text as="span" size="sm" class="text-zinc-400">({{ $item->variant->receipt_label ?: $item->variant->name }})</flux:text>
+                                            @endif
+                                        </flux:text>
+                                        @if($item->addons->count() > 0)
+                                            <flux:text size="sm" class="text-zinc-500 mt-0.5">+ {{ $item->addons->pluck('name')->implode(', ') }}</flux:text>
+                                        @endif
+                                        @if($item->components->count() > 0)
+                                            <flux:text size="sm" class="text-zinc-500 mt-0.5">Set: {{ $item->components->pluck('name')->implode(', ') }}</flux:text>
+                                        @endif
+                                        @if($item->notes)
+                                            <flux:badge size="sm" color="yellow" class="mt-1">{{ $item->notes }}</flux:badge>
+                                        @endif
+                                    </div>
+                                    <flux:text class="font-black tabular-nums shrink-0">${{ number_format((float) $item->subtotal, 2) }}</flux:text>
+                                </div>
+                            @endforeach
+                        </div>
+                    </flux:card>
+                </div>
+
+                {{-- Right: Totals + Payment --}}
+                <div class="lg:col-span-2 space-y-4">
+                    <flux:card class="p-4 space-y-2">
+                        <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Summary</flux:text>
+                        <div class="flex justify-between">
+                            <flux:text size="sm" class="text-zinc-500">Subtotal</flux:text>
+                            <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format((float) $viewingOrder->subtotal_amount, 2) }}</flux:text>
+                        </div>
+                        @if((float) ($viewingOrder->discount_amount ?? 0) > 0)
+                            <div class="flex justify-between">
+                                <flux:text size="sm" class="text-zinc-500">Discount</flux:text>
+                                <flux:text size="sm" class="font-semibold text-red-500 tabular-nums">- ${{ number_format((float) $viewingOrder->discount_amount, 2) }}</flux:text>
+                            </div>
+                        @endif
+                        @if((float) ($viewingOrder->tax_amount ?? 0) > 0)
+                            <div class="flex justify-between">
+                                <flux:text size="sm" class="text-zinc-500">Tax</flux:text>
+                                <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">${{ number_format((float) $viewingOrder->tax_amount, 2) }}</flux:text>
+                            </div>
+                        @endif
+                        <flux:separator />
+                        <div class="flex justify-between items-baseline">
+                            <flux:text class="font-black uppercase tracking-widest text-sm">Total</flux:text>
+                            <flux:heading size="xl" class="text-blue-600 tabular-nums">${{ number_format((float) $viewingOrder->total_amount, 2) }}</flux:heading>
+                        </div>
+                    </flux:card>
+
+                    <flux:card class="p-4 space-y-2">
+                        <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Payment</flux:text>
+                        @if(!empty($viewingOrder->payment_splits))
+                            @foreach($viewingOrder->payment_splits as $split)
+                                <div class="flex justify-between">
+                                    <flux:text size="sm" class="text-zinc-500 uppercase">{{ $split['method'] }}</flux:text>
+                                    <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format($split['amount'], 2) }}</flux:text>
+                                </div>
+                            @endforeach
+                            <flux:badge size="sm" color="blue">Split Payment</flux:badge>
+                        @else
+                            <div class="flex justify-between">
+                                <flux:text size="sm" class="text-zinc-500">Method</flux:text>
+                                <flux:text size="sm" class="font-semibold uppercase">{{ $viewingOrder->payment_method ?? '-' }}</flux:text>
+                            </div>
+                            <div class="flex justify-between">
+                                <flux:text size="sm" class="text-zinc-500">Paid</flux:text>
+                                <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format((float) ($viewingOrder->amount_paid ?? 0), 2) }}</flux:text>
+                            </div>
+                            @if((float) ($viewingOrder->change_amount ?? 0) > 0)
+                                <div class="flex justify-between">
+                                    <flux:text size="sm" class="text-zinc-500">Change</flux:text>
+                                    <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">${{ number_format((float) $viewingOrder->change_amount, 2) }}</flux:text>
+                                </div>
+                            @endif
+                        @endif
+                    </flux:card>
+
+                    <flux:button
+                        onclick="window.open('{{ route('pos.receipt', $viewingOrder) }}?preview=1', '_blank', 'width=420,height=700')"
+                        variant="primary"
+                        icon="printer"
+                        class="w-full"
+                    >
+                        View Receipt
+                    </flux:button>
                 </div>
             </div>
         @endif

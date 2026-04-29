@@ -55,6 +55,10 @@ class Tables extends Component
     // Table details modal
     public bool $showDetailsModal = false;
     public ?int $detailsTableId = null;
+    
+    // Order details modal
+    public bool $showOrderModal = false;
+    public ?Order $viewingOrder = null;
 
     public function mount()
     {
@@ -411,6 +415,33 @@ class Tables extends Component
     {
         $table = RestaurantTable::findOrFail($tableId);
         return redirect()->route('pos.index', ['table' => $tableId]);
+    }
+
+    /**
+     * Open order details modal for a specific order.
+     */
+    public function openOrder(Order $order): void
+    {
+        $this->viewingOrder = $order->load([
+            'items.product',
+            'items.variant',
+            'items.addons',
+            'items.components',
+            'customer',
+            'user',
+        ]);
+        $this->showOrderModal = true;
+        $this->dispatch('modal:open', name: 'order-detail');
+    }
+
+    /**
+     * Close the order details modal.
+     */
+    public function closeOrder(): void
+    {
+        $this->showOrderModal = false;
+        $this->viewingOrder = null;
+        $this->dispatch('modal:close', name: 'order-detail');
     }
 
     /**
