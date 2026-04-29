@@ -110,7 +110,7 @@
                 >
                     {{-- Table Card --}}
                     <div class="
-                        aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center transition-all
+                        aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all overflow-hidden relative
                         @if($table->status === 'available')
                             border-green-500 bg-green-500/10 hover:bg-green-500/20
                         @elseif($table->status === 'occupied')
@@ -122,34 +122,37 @@
                         @endif
                         {{ $table->shape === 'circle' || $table->shape === 'oval' ? 'rounded-full' : '' }}
                     ">
-                        {{-- Table Name --}}
-                        <flux:heading size="lg" class="font-bold">{{ $table->name }}</flux:heading>
-                        
-                        {{-- Capacity --}}
-                        <div class="flex items-center gap-1 mt-1">
-                            <flux:icon.users class="w-3 h-3 text-zinc-400" />
-                            <flux:text size="xs" class="text-zinc-400">{{ $table->total_capacity }}</flux:text>
+                        {{-- Main content --}}
+                        <div class="flex flex-col items-center justify-center p-4 w-full transition-transform duration-200 group-hover:-translate-y-1">
+                            {{-- Table Name --}}
+                            <flux:heading size="lg" class="font-bold">{{ $table->name }}</flux:heading>
+
+                            {{-- Capacity --}}
+                            <div class="flex items-center gap-1 mt-1">
+                                <flux:icon.users class="w-3 h-3 text-zinc-400" />
+                                <flux:text size="xs" class="text-zinc-400">{{ $table->total_capacity }}</flux:text>
+                            </div>
+
+                            {{-- Status badge --}}
+                            <flux:badge size="sm" :color="$table->getStatusColor()" class="mt-2">
+                                {{ $table->getStatusLabel() }}
+                            </flux:badge>
+
+                            {{-- Turn time --}}
+                            @if($table->status === 'occupied' && $table->turn_time_formatted)
+                                <flux:text size="xs" class="text-zinc-400 mt-1">
+                                    {{ $table->turn_time_formatted }}
+                                </flux:text>
+                            @endif
+
+                            {{-- Reservation name --}}
+                            @if($table->status === 'reserved' && $table->reservation_name)
+                                <flux:text size="xs" class="text-amber-500 mt-1 truncate max-w-full">
+                                    {{ $table->reservation_name }}
+                                </flux:text>
+                            @endif
                         </div>
-                        
-                        {{-- Status indicator --}}
-                        <flux:badge size="sm" :color="$table->getStatusColor()" class="mt-2">
-                            {{ $table->getStatusLabel() }}
-                        </flux:badge>
-                        
-                        {{-- Turn time for occupied tables --}}
-                        @if($table->status === 'occupied' && $table->turn_time_formatted)
-                            <flux:text size="xs" class="text-zinc-400 mt-1">
-                                {{ $table->turn_time_formatted }}
-                            </flux:text>
-                        @endif
-                        
-                        {{-- Reservation name --}}
-                        @if($table->status === 'reserved' && $table->reservation_name)
-                            <flux:text size="xs" class="text-amber-500 mt-1 truncate max-w-full">
-                                {{ $table->reservation_name }}
-                            </flux:text>
-                        @endif
-                        
+
                         {{-- Merged indicator --}}
                         @if(!empty($table->merged_table_ids))
                             <div class="absolute top-2 right-2">
@@ -158,22 +161,36 @@
                                 </flux:badge>
                             </div>
                         @endif
-                    </div>
-                    
-                    {{-- Quick Actions (on hover) --}}
-                    <div class="absolute inset-x-0 -bottom-2 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        @if($table->status === 'available')
-                            <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
-                            <flux:button size="xs" variant="ghost" wire:click.stop="openReservationModal({{ $table->id }})">Reserve</flux:button>
-                        @elseif($table->status === 'occupied')
-                            <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
-                            <flux:button size="xs" variant="ghost" wire:click.stop="setTableStatus({{ $table->id }}, 'dirty')">Clear</flux:button>
-                        @elseif($table->status === 'reserved')
-                            <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
-                            <flux:button size="xs" variant="ghost" wire:click.stop="cancelReservation({{ $table->id }})">Cancel</flux:button>
-                        @elseif($table->status === 'dirty')
-                            <flux:button size="xs" variant="primary" wire:click.stop="setTableStatus({{ $table->id }}, 'available')">Clean</flux:button>
-                        @endif
+
+                        {{-- Quick Actions — slide up from bottom, inside the card --}}
+                        <div class="
+                            absolute inset-x-0 bottom-0 
+                            flex items-center justify-center gap-1 px-2 py-2
+                            translate-y-full group-hover:translate-y-0
+                            transition-transform duration-200
+                            @if($table->status === 'available')
+                                bg-green-500/20
+                            @elseif($table->status === 'occupied')
+                                bg-red-500/20
+                            @elseif($table->status === 'reserved')
+                                bg-amber-500/20
+                            @else
+                                bg-zinc-500/20
+                            @endif
+                        ">
+                            @if($table->status === 'available')
+                                <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
+                                <flux:button size="xs" variant="ghost" wire:click.stop="openReservationModal({{ $table->id }})">Reserve</flux:button>
+                            @elseif($table->status === 'occupied')
+                                <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
+                                <flux:button size="xs" variant="ghost" wire:click.stop="setTableStatus({{ $table->id }}, 'dirty')">Clear</flux:button>
+                            @elseif($table->status === 'reserved')
+                                <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
+                                <flux:button size="xs" variant="ghost" wire:click.stop="cancelReservation({{ $table->id }})">Cancel</flux:button>
+                            @elseif($table->status === 'dirty')
+                                <flux:button size="xs" variant="primary" wire:click.stop="setTableStatus({{ $table->id }}, 'available')">Clean</flux:button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @empty
