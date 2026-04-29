@@ -138,6 +138,29 @@
                                 {{ $table->getStatusLabel() }}
                             </flux:badge>
 
+                            {{-- Order KDS Status --}}
+                            @if($table->status === 'occupied' && $table->currentOrder)
+                                @php $kds = $table->currentOrder->kds_status; @endphp
+                                <flux:badge size="sm" class="mt-1.5" :color="match($kds) {
+                                    'pending' => 'zinc',
+                                    'preparing' => 'amber',
+                                    'ready' => 'green',
+                                    'served' => 'blue',
+                                    default => 'zinc'
+                                }">
+                                    {{ match($kds) {
+                                        'pending' => 'Queued',
+                                        'preparing' => 'Preparing',
+                                        'ready' => 'Ready',
+                                        'served' => 'Served',
+                                        default => ucfirst($kds)
+                                    } }}
+                                </flux:badge>
+                                @if($table->currentOrder->payment_status === 'unpaid')
+                                    <flux:badge size="sm" class="mt-1" color="rose">Unpaid</flux:badge>
+                                @endif
+                            @endif
+
                             {{-- Turn time --}}
                             @if($table->status === 'occupied' && $table->turn_time_formatted)
                                 <flux:text size="xs" class="text-zinc-400 mt-1">
@@ -182,6 +205,9 @@
                                 <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="openReservationModal({{ $table->id }})">Reserve</flux:button>
                             @elseif($table->status === 'occupied')
+                                @if($table->currentOrder && $table->currentOrder->payment_status === 'unpaid')
+                                    <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click.stop="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                @endif
                                 <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="setTableStatus({{ $table->id }}, 'dirty')">Clear</flux:button>
                             @elseif($table->status === 'reserved')
@@ -215,6 +241,7 @@
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Floor</th>
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Capacity</th>
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Status</th>
+                            <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Order</th>
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Turn Time</th>
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Reservation</th>
                             <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
@@ -253,6 +280,35 @@
                                         {{ $table->getStatusLabel() }}
                                     </flux:badge>
                                 </td>
+                                <td class="py-3 px-4 text-center">
+                                    @if($table->status === 'occupied' && $table->currentOrder)
+                                        @php $kds = $table->currentOrder->kds_status; @endphp
+                                        <div class="flex flex-col items-center gap-1">
+                                            <flux:badge size="sm" :color="match($kds) {
+                                                'pending' => 'zinc',
+                                                'preparing' => 'amber',
+                                                'ready' => 'green',
+                                                'served' => 'blue',
+                                                default => 'zinc'
+                                            }">
+                                                {{ match($kds) {
+                                                    'pending' => 'Queued',
+                                                    'preparing' => 'Preparing',
+                                                    'ready' => 'Ready',
+                                                    'served' => 'Served',
+                                                    default => ucfirst($kds)
+                                                } }}
+                                            </flux:badge>
+                                            @if($table->currentOrder->payment_status === 'unpaid')
+                                                <flux:badge size="sm" color="rose">Unpaid</flux:badge>
+                                            @else
+                                                <flux:badge size="sm" color="green">Paid</flux:badge>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <flux:text class="text-zinc-400">-</flux:text>
+                                    @endif
+                                </td>
                                 <td class="py-3 px-4">
                                     @if($table->status === 'occupied' && $table->turn_time_formatted)
                                         <flux:text>{{ $table->turn_time_formatted }}</flux:text>
@@ -277,6 +333,9 @@
                                         @if($table->status === 'available')
                                             <flux:button size="sm" variant="primary" wire:click="quickSeatTable({{ $table->id }})">Seat</flux:button>
                                         @elseif($table->status === 'occupied')
+                                            @if($table->currentOrder && $table->currentOrder->payment_status === 'unpaid')
+                                                <flux:button size="sm" variant="filled" class="!bg-amber-500 hover:!bg-amber-600 !text-white" wire:click="collectTablePayment({{ $table->id }})">Pay</flux:button>
+                                            @endif
                                             <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
                                         @endif
                                         <flux:dropdown position="bottom" align="end">

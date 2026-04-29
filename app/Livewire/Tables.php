@@ -64,7 +64,8 @@ class Tables extends Component
     #[Computed]
     public function tables()
     {
-        $query = RestaurantTable::where('is_active', true)
+        $query = RestaurantTable::with('currentOrder')
+            ->where('is_active', true)
             ->whereNull('merged_into_id');
         
         if ($this->filterFloor) {
@@ -410,6 +411,25 @@ class Tables extends Component
     {
         $table = RestaurantTable::findOrFail($tableId);
         return redirect()->route('pos.index', ['table' => $tableId]);
+    }
+
+    /**
+     * Redirect to POS to collect payment for table's unpaid order.
+     */
+    public function collectTablePayment(int $tableId)
+    {
+        $table = RestaurantTable::with('currentOrder')->findOrFail($tableId);
+        
+        if (!$table->currentOrder || $table->currentOrder->payment_status !== 'unpaid') {
+            $this->dispatch('notify', message: 'No unpaid order for this table', type: 'error');
+            return;
+        }
+        
+        // Redirect to POS with pay parameter to auto-open payment modal
+        return redirect()->route('pos.index', [
+            'table' => $tableId,
+            'pay' => $table->currentOrder->id,
+        ]);
     }
 
     public function render()
