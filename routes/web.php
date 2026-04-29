@@ -50,6 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('pos.receipt')->middleware('permission:pos.access');
     
+    // Bill (for unpaid orders - customer requests bill before paying)
+    Route::get('pos/bill/{order}', function (\App\Models\Order $order) {
+        return view('pos.bill', [
+            'order' => $order->load(['items.product', 'items.variant', 'items.addons', 'items.components', 'user']),
+            'tenant' => Auth::user()->tenant,
+        ]);
+    })->name('pos.bill')->middleware('permission:pos.access');
+    
     // Menu Management
     Route::get('categories', Categories::class)->name('manage.categories.index')->middleware('permission:menu.manage');
     Route::get('products', Products::class)->name('manage.products.index')->middleware('permission:menu.manage');

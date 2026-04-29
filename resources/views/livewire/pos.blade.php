@@ -135,10 +135,13 @@
                     </div>
                     <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100">Current Order</h3>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                     <span class="px-2.5 py-1 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 text-xs font-semibold rounded-lg">
                         {{ count($cart) }} Items
                     </span>
+                    <button type="button" wire:click="openUnpaidOrdersModal" class="px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-semibold hover:bg-amber-500 hover:text-white transition-all" title="View unpaid orders">
+                        <flux:icon.clock class="w-3.5 h-3.5" />
+                    </button>
                     <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-xs font-semibold hover:bg-pink-500 hover:text-white disabled:opacity-40 transition-all">
                         Held ({{ count($this->heldOrders) }})
                     </button>
@@ -324,12 +327,24 @@
                 </div>
             </div>
 
-            <button wire:click="startPayment" 
-                @disabled(empty($cart))
-                class="w-full py-3 rounded-lg bg-pink-500 hover:bg-pink-600 disabled:bg-zinc-200 disabled:dark:bg-zinc-800 disabled:text-zinc-400 text-white font-semibold transition-all flex items-center justify-center gap-2">
-                <flux:icon.credit-card class="w-5 h-5" />
-                CHECKOUT
-            </button>
+            {{-- Payment Options: Pay Now vs Pay Later --}}
+            <div class="flex gap-2">
+                <button wire:click="startPayment" 
+                    @disabled(empty($cart))
+                    class="flex-1 py-3 rounded-lg bg-pink-500 hover:bg-pink-600 disabled:bg-zinc-200 disabled:dark:bg-zinc-800 disabled:text-zinc-400 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                    <flux:icon.credit-card class="w-4 h-4" />
+                    <span class="text-sm">PAY NOW</span>
+                </button>
+                @if($orderType === 'dine_in')
+                    <button wire:click="placeOrderPayLater" 
+                        @disabled(empty($cart) || !$tableId)
+                        title="{{ !$tableId ? 'Select a table first' : 'Send order to kitchen, pay later' }}"
+                        class="flex-1 py-3 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-200 disabled:dark:bg-zinc-800 disabled:text-zinc-400 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                        <flux:icon.fire class="w-4 h-4" />
+                        <span class="text-sm">KITCHEN</span>
+                    </button>
+                @endif
+            </div>
 
             @if(count($cart) > 0)
                 <div class="flex gap-2">
@@ -385,10 +400,16 @@
                                 <span class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black rounded-2xl tracking-widest uppercase">
                                     {{ count($cart) }} Items
                                 </span>
-                                <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 text-[10px] font-black uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-40 disabled:hover:bg-neutral-900/5 disabled:hover:text-neutral-500 transition-all">
-                                    <flux:icon.pause class="w-4 h-4" />
-                                    Held ({{ count($this->heldOrders) }})
-                                </button>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button type="button" wire:click="openUnpaidOrdersModal" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest border border-amber-200/60 dark:border-amber-500/20 hover:bg-amber-500 hover:text-white transition-all">
+                                        <flux:icon.clock class="w-4 h-4" />
+                                        Unpaid
+                                    </button>
+                                    <button type="button" wire:click="openHeldOrders" @disabled(count($this->heldOrders) === 0) class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-300 text-[10px] font-black uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-40 disabled:hover:bg-neutral-900/5 disabled:hover:text-neutral-500 transition-all">
+                                        <flux:icon.pause class="w-4 h-4" />
+                                        Held ({{ count($this->heldOrders) }})
+                                    </button>
+                                </div>
                                 @if(count($cart) > 0)
                                     <button type="button" wire:click="clearCart" class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-200/60 dark:border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                                         <flux:icon.trash class="w-4 h-4" />
@@ -572,12 +593,24 @@
                             </div>
                         </div>
 
-                        <button wire:click="startPayment"
-                            @disabled(empty($cart))
-                            class="w-full py-3 rounded-[1.75rem] bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-base shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-3 group">
-                            <flux:icon.credit-card class="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                            CHECKOUT
-                        </button>
+                        {{-- Payment Options: Pay Now vs Pay Later --}}
+                        <div class="flex gap-2">
+                            <button wire:click="startPayment"
+                                @disabled(empty($cart))
+                                class="flex-1 py-3 rounded-[1.75rem] bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
+                                <flux:icon.credit-card class="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                                PAY NOW
+                            </button>
+                            @if($orderType === 'dine_in')
+                                <button wire:click="placeOrderPayLater"
+                                    @disabled(empty($cart) || !$tableId)
+                                    title="{{ !$tableId ? 'Select a table first' : 'Send order to kitchen, pay later' }}"
+                                    class="flex-1 py-3 rounded-[1.75rem] bg-amber-500 hover:bg-amber-400 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
+                                    <flux:icon.fire class="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    KITCHEN
+                                </button>
+                            @endif
+                        </div>
 
                         @if(count($cart) > 0)
                             <button type="button" wire:click="holdOrder" class="w-full py-2 rounded-[1.75rem] bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-200 font-black text-xs uppercase tracking-widest border border-neutral-200 dark:border-neutral-700 hover:border-blue-500/40 hover:text-blue-600 transition-all">
@@ -636,6 +669,81 @@
                         @empty
                             <div class="py-16 text-center text-sm text-neutral-400 font-medium italic">
                                 No held orders.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Unpaid Orders Modal --}}
+    @if($showUnpaidOrdersModal)
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-neutral-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
+                <div class="p-6 border-b border-neutral-100 dark:border-neutral-800 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                            <flux:icon.clock class="w-5 h-5 text-white" />
+                        </div>
+                        <div class="flex flex-col leading-none">
+                            <span class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Payment Pending</span>
+                            <span class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Unpaid Orders</span>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="$set('showUnpaidOrdersModal', false)" class="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
+                        <flux:icon.x-mark class="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div class="p-6 max-h-[60vh] overflow-y-auto">
+                    <div class="space-y-3">
+                        @forelse($this->unpaidOrders as $order)
+                            <div class="p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-900/10 flex items-center justify-between gap-4 hover:border-amber-400 transition-all">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-black text-neutral-800 dark:text-neutral-100">Order #{{ $order['id'] }}</span>
+                                        @if($order['table_number'])
+                                            <span class="px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                                {{ $order['table_number'] }}
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
+                                                Takeaway
+                                            </span>
+                                        @endif
+                                        @if($order['kds_status'] === 'ready')
+                                            <span class="px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                                                Ready
+                                            </span>
+                                        @elseif($order['kds_status'] === 'preparing')
+                                            <span class="px-2 py-0.5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold">
+                                                Preparing
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">
+                                        {{ $order['items_count'] }} items - {{ $order['created_at'] }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="text-right">
+                                        <div class="text-xs text-neutral-400">Amount Due</div>
+                                        <div class="text-lg font-black text-amber-600">RM {{ number_format($order['total_amount'], 2) }}</div>
+                                    </div>
+                                    <button type="button" 
+                                        wire:click="selectUnpaidOrder({{ $order['id'] }})" 
+                                        class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black shadow-lg shadow-amber-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                        Collect
+                                    </button>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-16 text-center">
+                                <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                                    <flux:icon.check-circle class="w-8 h-8 text-green-500" />
+                                </div>
+                                <div class="text-sm text-neutral-500 font-medium">All orders have been paid!</div>
                             </div>
                         @endforelse
                     </div>
@@ -900,22 +1008,29 @@
             <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
 
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-pink-500 to-pink-600 p-5 text-white">
+                <div class="bg-gradient-to-r {{ $selectedUnpaidOrder ? 'from-amber-500 to-amber-600' : 'from-pink-500 to-pink-600' }} p-5 text-white">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
                                 <flux:icon.credit-card class="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold">Checkout</h3>
-                                <p class="text-pink-100 text-xs">
-                                    {{ $isSplitPayment ? 'Split Payment' : 'Select payment method' }}
-                                </p>
+                                @if($selectedUnpaidOrder)
+                                    <h3 class="text-lg font-bold">Collect Payment</h3>
+                                    <p class="text-amber-100 text-xs">
+                                        Order #{{ $selectedUnpaidOrder->id }} - {{ $selectedUnpaidOrder->table_number ?? 'Takeaway' }}
+                                    </p>
+                                @else
+                                    <h3 class="text-lg font-bold">Checkout</h3>
+                                    <p class="text-pink-100 text-xs">
+                                        {{ $isSplitPayment ? 'Split Payment' : 'Select payment method' }}
+                                    </p>
+                                @endif
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="block text-xs text-pink-200">Amount Due</span>
-                            <span class="text-2xl font-bold">RM {{ number_format($totalAmount, 2) }}</span>
+                            <span class="block text-xs {{ $selectedUnpaidOrder ? 'text-amber-200' : 'text-pink-200' }}">Amount Due</span>
+                            <span class="text-2xl font-bold">RM {{ number_format($selectedUnpaidOrder ? $selectedUnpaidOrder->total_amount : $totalAmount, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -925,40 +1040,73 @@
 
                     {{-- Order Summary --}}
                     <div class="rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-2">
-                        <div class="flex justify-between text-zinc-500 text-sm">
-                            <span>Subtotal</span>
-                            <span class="font-semibold">RM {{ number_format($subTotalAmount, 2) }}</span>
-                        </div>
-                        
-                        {{-- Discount/Voucher row with edit button --}}
-                        <button type="button" wire:click="openDiscountModal" class="w-full flex justify-between text-sm hover:bg-white dark:hover:bg-zinc-800 rounded px-1 py-0.5 -mx-1 transition-colors">
-                            <span class="text-zinc-500">Discount / Voucher</span>
-                            @if($discountAmount > 0)
-                                <span class="font-semibold text-red-500">- RM {{ number_format($discountAmount, 2) }}</span>
-                            @else
-                                <span class="text-pink-500 text-sm">+ Add</span>
-                            @endif
-                        </button>
-                        
-                        @if($taxAmount > 0)
-                            @if(count($taxBreakdown) > 1)
-                                @foreach($taxBreakdown as $row)
-                                    <div class="flex justify-between text-zinc-500 text-sm">
-                                        <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                                        <span class="font-semibold text-green-600">RM {{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                        @if($selectedUnpaidOrder)
+                            {{-- Show items for unpaid order --}}
+                            <div class="text-xs text-zinc-400 font-semibold uppercase tracking-wider mb-2">Order Items</div>
+                            <div class="max-h-32 overflow-y-auto space-y-1.5">
+                                @foreach($selectedUnpaidOrder->items as $item)
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-300">{{ $item->quantity }}x {{ $item->product->name }}</span>
+                                        <span class="font-semibold">RM {{ number_format($item->subtotal, 2) }}</span>
                                     </div>
                                 @endforeach
-                            @else
+                            </div>
+                            <div class="flex justify-between text-zinc-500 text-sm pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                                <span>Subtotal</span>
+                                <span class="font-semibold">RM {{ number_format($selectedUnpaidOrder->subtotal_amount, 2) }}</span>
+                            </div>
+                            @if($selectedUnpaidOrder->discount_amount > 0)
                                 <div class="flex justify-between text-zinc-500 text-sm">
-                                    <span>Tax ({{ $taxLabel }})</span>
-                                    <span class="font-semibold text-green-600">RM {{ number_format($taxAmount, 2) }}</span>
+                                    <span>Discount</span>
+                                    <span class="font-semibold text-red-500">- RM {{ number_format($selectedUnpaidOrder->discount_amount, 2) }}</span>
                                 </div>
                             @endif
+                            @if($selectedUnpaidOrder->tax_amount > 0)
+                                <div class="flex justify-between text-zinc-500 text-sm">
+                                    <span>Tax</span>
+                                    <span class="font-semibold text-green-600">RM {{ number_format($selectedUnpaidOrder->tax_amount, 2) }}</span>
+                                </div>
+                            @endif
+                            <div class="flex justify-between items-center pt-2 mt-1 border-t border-zinc-200 dark:border-zinc-700">
+                                <span class="font-semibold text-zinc-900 dark:text-zinc-100">Total</span>
+                                <span class="text-lg font-bold text-amber-500">RM {{ number_format($selectedUnpaidOrder->total_amount, 2) }}</span>
+                            </div>
+                        @else
+                            <div class="flex justify-between text-zinc-500 text-sm">
+                                <span>Subtotal</span>
+                                <span class="font-semibold">RM {{ number_format($subTotalAmount, 2) }}</span>
+                            </div>
+                            
+                            {{-- Discount/Voucher row with edit button --}}
+                            <button type="button" wire:click="openDiscountModal" class="w-full flex justify-between text-sm hover:bg-white dark:hover:bg-zinc-800 rounded px-1 py-0.5 -mx-1 transition-colors">
+                                <span class="text-zinc-500">Discount / Voucher</span>
+                                @if($discountAmount > 0)
+                                    <span class="font-semibold text-red-500">- RM {{ number_format($discountAmount, 2) }}</span>
+                                @else
+                                    <span class="text-pink-500 text-sm">+ Add</span>
+                                @endif
+                            </button>
+                            
+                            @if($taxAmount > 0)
+                                @if(count($taxBreakdown) > 1)
+                                    @foreach($taxBreakdown as $row)
+                                        <div class="flex justify-between text-zinc-500 text-sm">
+                                            <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
+                                            <span class="font-semibold text-green-600">RM {{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="flex justify-between text-zinc-500 text-sm">
+                                        <span>Tax ({{ $taxLabel }})</span>
+                                        <span class="font-semibold text-green-600">RM {{ number_format($taxAmount, 2) }}</span>
+                                    </div>
+                                @endif
+                            @endif
+                            <div class="flex justify-between items-center pt-2 mt-1 border-t border-zinc-200 dark:border-zinc-700">
+                                <span class="font-semibold text-zinc-900 dark:text-zinc-100">Total</span>
+                                <span class="text-lg font-bold text-pink-500">RM {{ number_format($totalAmount, 2) }}</span>
+                            </div>
                         @endif
-                        <div class="flex justify-between items-center pt-2 mt-1 border-t border-zinc-200 dark:border-zinc-700">
-                            <span class="font-semibold text-zinc-900 dark:text-zinc-100">Total</span>
-                            <span class="text-lg font-bold text-pink-500">RM {{ number_format($totalAmount, 2) }}</span>
-                        </div>
                     </div>
 
                     {{-- Split Payment Toggle --}}
@@ -1139,20 +1287,38 @@
 
                 <!-- Footer -->
                 <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
-                    <button wire:click="$set('isPaying', false)" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
-                        Back
-                    </button>
-                    <button wire:click="checkout"
-                        @php
-                            $checkoutDisabled = $isSplitPayment
-                                ? (empty($paymentSplits) || $splitRemaining > 0.01)
-                                : (!$isSplitPayment && $paymentMethod === 'cash' && $amountReceived < $totalAmount);
-                        @endphp
-                        {{ $checkoutDisabled ? 'disabled' : '' }}
-                        class="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
-                        <flux:icon.check-circle class="w-5 h-5" />
-                        Process Payment
-                    </button>
+                    @if($selectedUnpaidOrder)
+                        <button wire:click="cancelCollectPayment" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                            Cancel
+                        </button>
+                        <button wire:click="collectPayment"
+                            @php
+                                $orderTotal = (float) $selectedUnpaidOrder->total_amount;
+                                $checkoutDisabled = $isSplitPayment
+                                    ? (empty($paymentSplits) || $splitRemaining > 0.01)
+                                    : ($paymentMethod === 'cash' && $amountReceived < $orderTotal);
+                            @endphp
+                            {{ $checkoutDisabled ? 'disabled' : '' }}
+                            class="flex-1 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <flux:icon.check-circle class="w-5 h-5" />
+                            Collect Payment
+                        </button>
+                    @else
+                        <button wire:click="$set('isPaying', false)" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                            Back
+                        </button>
+                        <button wire:click="checkout"
+                            @php
+                                $checkoutDisabled = $isSplitPayment
+                                    ? (empty($paymentSplits) || $splitRemaining > 0.01)
+                                    : (!$isSplitPayment && $paymentMethod === 'cash' && $amountReceived < $totalAmount);
+                            @endphp
+                            {{ $checkoutDisabled ? 'disabled' : '' }}
+                            class="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <flux:icon.check-circle class="w-5 h-5" />
+                            Process Payment
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1164,14 +1330,24 @@
             <div class="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm lg:max-w-4xl overflow-hidden animate-in zoom-in duration-300">
                 <div class="grid lg:grid-cols-2">
                     <div class="p-8 text-center space-y-6">
-                        <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
-                            <flux:icon.check-circle class="w-12 h-12 text-green-600" />
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <h3 class="text-2xl font-black text-neutral-800 dark:text-neutral-100">Order Successful!</h3>
-                            <p class="text-neutral-500">Order #{{ $lastOrder->id }} has been placed and paid.</p>
-                        </div>
+                        {{-- Different icon/color for paid vs unpaid --}}
+                        @if($lastOrder->payment_status === 'paid')
+                            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                                <flux:icon.check-circle class="w-12 h-12 text-green-600" />
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="text-2xl font-black text-neutral-800 dark:text-neutral-100">Order Complete!</h3>
+                                <p class="text-neutral-500">Order #{{ $lastOrder->id }} has been placed and paid.</p>
+                            </div>
+                        @else
+                            <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto">
+                                <flux:icon.fire class="w-12 h-12 text-amber-600" />
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="text-2xl font-black text-neutral-800 dark:text-neutral-100">Sent to Kitchen!</h3>
+                                <p class="text-neutral-500">Order #{{ $lastOrder->id }} is being prepared. Payment pending.</p>
+                            </div>
+                        @endif
 
                         <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900 text-sm space-y-2">
                             <div class="flex justify-between">
@@ -1187,26 +1363,36 @@
                                 </span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Total</span>
-                                <span class="font-bold text-blue-600">${{ number_format($lastOrder->total_amount, 2) }}</span>
+                                <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Status</span>
+                                @if($lastOrder->payment_status === 'paid')
+                                    <span class="font-bold text-green-600 uppercase">Paid</span>
+                                @else
+                                    <span class="font-bold text-amber-600 uppercase">Unpaid</span>
+                                @endif
                             </div>
-                            @if(!empty($lastOrder->payment_splits))
-                                @foreach($lastOrder->payment_splits as $split)
+                            <div class="flex justify-between">
+                                <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Total</span>
+                                <span class="font-bold text-blue-600">RM {{ number_format($lastOrder->total_amount, 2) }}</span>
+                            </div>
+                            @if($lastOrder->payment_status === 'paid')
+                                @if(!empty($lastOrder->payment_splits))
+                                    @foreach($lastOrder->payment_splits as $split)
+                                        <div class="flex justify-between">
+                                            <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">{{ $split['method'] }}</span>
+                                            <span class="font-bold">RM {{ number_format($split['amount'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @else
                                     <div class="flex justify-between">
-                                        <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">{{ $split['method'] }}</span>
-                                        <span class="font-bold">${{ number_format($split['amount'], 2) }}</span>
+                                        <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Method</span>
+                                        <span class="font-bold uppercase">{{ $lastOrder->payment_method }}</span>
                                     </div>
-                                @endforeach
-                            @else
-                                <div class="flex justify-between">
-                                    <span class="text-neutral-500 font-black uppercase tracking-widest text-[10px]">Method</span>
-                                    <span class="font-bold uppercase">{{ $lastOrder->payment_method }}</span>
-                                </div>
-                                @if($lastOrder->change_amount > 0)
-                                    <div class="flex justify-between text-green-600">
-                                        <span>Change</span>
-                                        <span class="font-bold">${{ number_format($lastOrder->change_amount, 2) }}</span>
-                                    </div>
+                                    @if($lastOrder->change_amount > 0)
+                                        <div class="flex justify-between text-green-600">
+                                            <span>Change</span>
+                                            <span class="font-bold">RM {{ number_format($lastOrder->change_amount, 2) }}</span>
+                                        </div>
+                                    @endif
                                 @endif
                             @endif
                         </div>
@@ -1230,12 +1416,21 @@
                         @endif
 
                         <div class="flex flex-col gap-3">
-                            <button type="button" 
-                                onclick="window.open('{{ route('pos.receipt', $lastOrder) }}', '_blank', 'width=400,height=600')"
-                                class="w-full py-4 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold transition-all flex items-center justify-center gap-2">
-                                <flux:icon.printer class="w-5 h-5" />
-                                PRINT RECEIPT
-                            </button>
+                            @if($lastOrder->payment_status === 'paid')
+                                <button type="button" 
+                                    onclick="window.open('{{ route('pos.receipt', $lastOrder) }}', '_blank', 'width=400,height=600')"
+                                    class="w-full py-4 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold transition-all flex items-center justify-center gap-2">
+                                    <flux:icon.printer class="w-5 h-5" />
+                                    PRINT RECEIPT
+                                </button>
+                            @else
+                                <button type="button" 
+                                    onclick="window.open('{{ route('pos.bill', $lastOrder) }}', '_blank', 'width=400,height=600')"
+                                    class="w-full py-4 rounded-xl border-2 border-amber-600 text-amber-600 hover:bg-amber-50 font-bold transition-all flex items-center justify-center gap-2">
+                                    <flux:icon.document-text class="w-5 h-5" />
+                                    PRINT BILL
+                                </button>
+                            @endif
                             
                             <button wire:click="newOrder" class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg transition-all">
                                 NEW ORDER
@@ -1245,15 +1440,17 @@
 
                     <div class="hidden lg:flex flex-col border-l border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Receipt Preview</span>
+                            <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                                {{ $lastOrder->payment_status === 'paid' ? 'Receipt Preview' : 'Bill Preview' }}
+                            </span>
                             <button type="button"
-                                onclick="window.open('{{ route('pos.receipt', $lastOrder) }}', '_blank', 'width=400,height=600')"
+                                onclick="window.open('{{ $lastOrder->payment_status === 'paid' ? route('pos.receipt', $lastOrder) : route('pos.bill', $lastOrder) }}', '_blank', 'width=400,height=600')"
                                 class="px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-[10px] font-black text-neutral-600 dark:text-neutral-200 uppercase tracking-widest hover:border-blue-500 hover:text-blue-600 transition-all">
                                 Open
                             </button>
                         </div>
                         <iframe
-                            src="{{ route('pos.receipt', $lastOrder) }}?preview=1"
+                            src="{{ $lastOrder->payment_status === 'paid' ? route('pos.receipt', $lastOrder) : route('pos.bill', $lastOrder) }}?preview=1"
                             class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
                         ></iframe>
                     </div>
