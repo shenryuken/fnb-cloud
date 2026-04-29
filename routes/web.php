@@ -21,6 +21,7 @@ use App\Livewire\Settings\Roles;
 use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Loyalty as LoyaltySettings;
 use App\Livewire\Settings\QuickNotes as QuickNotesSettings;
+use App\Livewire\UnshiftedOrders;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Order Management
     Route::get('orders', Orders::class)->name('manage.orders.index')->middleware('permission:orders.manage');
+    Route::get('orders/unshifted', UnshiftedOrders::class)->name('manage.orders.unshifted')->middleware('permission:orders.manage');
     Route::get('kds', Kds::class)->name('kds.index')->middleware('permission:kds.access');
 
     // Reports
