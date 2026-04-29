@@ -269,7 +269,7 @@ class Pos extends Component
             ->all();
     }
 
-    public function mount(?int $table = null): void
+    public function mount(): void
     {
         $tenant = Auth::user()->tenant;
         $this->isKitchenBusy = (bool) $tenant->is_busy;
@@ -279,18 +279,14 @@ class Pos extends Component
         $this->discountInputType = $this->discountType;
         $this->discountInputValue = $this->discountValue;
 
-        // Handle table assignment from URL parameter
-        if ($table) {
-            $restaurantTable = RestaurantTable::find($table);
+        // Handle table assignment from URL query parameter (?table=1)
+        $tableParam = request()->query('table');
+        if ($tableParam) {
+            $restaurantTable = RestaurantTable::find((int) $tableParam);
             if ($restaurantTable && $restaurantTable->is_active) {
                 $this->tableId = $restaurantTable->id;
                 $this->tableNumber = $restaurantTable->name;
                 $this->orderType = 'dine_in';
-                
-                // If table has a current order, we might want to load it
-                if ($restaurantTable->current_order_id) {
-                    // Could implement order continuation here
-                }
             }
         }
     }
