@@ -1594,9 +1594,6 @@ class Pos extends Component
             'kds_status' => 'pending', // Reset KDS status so kitchen sees new items
         ]);
         
-        // Fire KDS event for new items
-        event(new \App\Events\KdsOrderUpdated($order->fresh()));
-        
         return $order;
     }
 
