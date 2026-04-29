@@ -16,6 +16,7 @@ use App\Models\RestaurantTable;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -55,7 +56,10 @@ class Pos extends Component
 
     // Order details
     public string $tableNumber = '';
+    
+    #[Url(as: 'table')]
     public ?int $tableId = null;
+    
     public string $orderType = 'dine_in'; // dine_in, takeaway
     public string $orderNotes = '';
 
@@ -280,14 +284,35 @@ class Pos extends Component
         $this->discountInputValue = $this->discountValue;
 
         // Handle table assignment from URL query parameter (?table=1)
-        $tableParam = request()->query('table');
-        if ($tableParam) {
-            $restaurantTable = RestaurantTable::find((int) $tableParam);
+        // The #[Url] attribute automatically populates $this->tableId from the query string
+        if ($this->tableId) {
+            $restaurantTable = RestaurantTable::find($this->tableId);
             if ($restaurantTable && $restaurantTable->is_active) {
-                $this->tableId = $restaurantTable->id;
                 $this->tableNumber = $restaurantTable->name;
                 $this->orderType = 'dine_in';
+            } else {
+                // Invalid table ID, reset it
+                $this->tableId = null;
             }
+        }
+    }
+
+    /**
+     * Called when tableId property is updated (from URL or select dropdown).
+     */
+    public function updatedTableId(?int $value): void
+    {
+        if ($value) {
+            $table = RestaurantTable::find($value);
+            if ($table && $table->is_active) {
+                $this->tableNumber = $table->name;
+                $this->orderType = 'dine_in';
+            } else {
+                $this->tableId = null;
+                $this->tableNumber = '';
+            }
+        } else {
+            $this->tableNumber = '';
         }
     }
 

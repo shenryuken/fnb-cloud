@@ -164,7 +164,7 @@
             @if($orderType === 'dine_in')
                 <div class="mt-3">
                     @if($this->availableTables->count() > 0)
-                        <select wire:model.live="tableId" wire:change="selectTable($event.target.value)"
+                        <select wire:model.live="tableId"
                             class="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
                             <option value="">Select Table</option>
                             @foreach($this->availableTables as $table)
@@ -417,7 +417,7 @@
                             @if($orderType === 'dine_in')
                                 <div class="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                     @if($this->availableTables->count() > 0)
-                                        <select wire:model.live="tableId" wire:change="selectTable($event.target.value)"
+                                        <select wire:model.live="tableId"
                                             class="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all">
                                             <option value="">Select Table</option>
                                             @foreach($this->availableTables as $table)
