@@ -41,6 +41,7 @@ class Order extends Model
         'amount_paid',
         'change_amount',
         'notes',
+        'shift_reassigned_at',
     ];
 
     protected $casts = [
@@ -56,6 +57,7 @@ class Order extends Model
         'amount_paid' => 'decimal:2',
         'change_amount' => 'decimal:2',
         'preparing_at' => 'datetime',
+        'shift_reassigned_at' => 'datetime',
         'prep_time_minutes' => 'integer',
     ];
 

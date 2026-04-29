@@ -6,9 +6,15 @@
             <flux:heading size="xl" level="2">Order History</flux:heading>
             <flux:subheading>Manage and track all restaurant transactions</flux:subheading>
         </div>
-        <flux:badge color="blue">
-            {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
-        </flux:badge>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('manage.orders.unshifted') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 font-medium text-sm transition-colors">
+                <flux:icon.clock class="w-4 h-4" />
+                Unshifted
+            </a>
+            <flux:badge color="blue">
+                {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
+            </flux:badge>
+        </div>
     </div>
 
     {{-- Filters --}}
