@@ -60,6 +60,9 @@ class Pos extends Component
     #[Url(as: 'table')]
     public ?int $tableId = null;
     
+    #[Url(as: 'pay')]
+    public ?int $payOrderId = null; // auto-open payment modal for this order
+    
     public string $orderType = 'dine_in'; // dine_in, takeaway
     public string $orderNotes = '';
 
@@ -321,6 +324,20 @@ class Pos extends Component
                 // Invalid table ID, reset it
                 $this->tableId = null;
             }
+        }
+        
+        // Handle auto-opening payment collection for an unpaid order (?pay=123)
+        if ($this->payOrderId) {
+            $order = Order::where('id', $this->payOrderId)
+                ->where('payment_status', 'unpaid')
+                ->first();
+            
+            if ($order) {
+                $this->selectUnpaidOrder($this->payOrderId);
+            }
+            
+            // Clear the URL parameter
+            $this->payOrderId = null;
         }
     }
 
