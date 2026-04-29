@@ -357,18 +357,25 @@ class Pos extends Component
                 
                 // Load existing items into cart so staff can see what's already ordered
                 foreach ($order->items as $item) {
-                    $this->cartItems[] = [
-                        'id' => $item->product_id,
-                        'name' => $item->product_name,
-                        'price' => (float) $item->unit_price,
+                    $this->cart[] = [
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product_name ?? $item->product?->name ?? 'Unknown',
+                        'variant_id' => $item->variant_id,
+                        'variant_name' => $item->variant?->name,
+                        'addon_ids' => [],
+                        'addons' => [],
+                        'set_items' => [],
                         'quantity' => $item->quantity,
-                        'modifiers' => $item->modifiers ?? [],
+                        'unit_price' => (float) $item->unit_price,
+                        'addons_total' => 0,
+                        'set_total' => 0,
+                        'subtotal' => (float) $item->subtotal,
                         'notes' => $item->notes ?? '',
                         'existing' => true, // Mark as existing item (cannot be removed)
                     ];
                 }
                 
-                $this->recalculateTotals();
+                $this->calculateTotal();
             }
             
             // Clear the URL parameter
