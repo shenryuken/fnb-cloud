@@ -349,7 +349,8 @@ class Pos extends Component
         if ($this->addToOrderId) {
             $order = Order::with('items.product')->find($this->addToOrderId);
             
-            if ($order && in_array($order->kds_status, ['preparing', 'ready', 'served'])) {
+            // Allow adding to any unpaid order (regardless of kds_status)
+            if ($order && $order->payment_status === 'unpaid') {
                 $this->existingOrder = $order;
                 $this->orderType = $order->order_type ?? 'dine_in';
                 $this->orderNotes = $order->notes ?? '';
