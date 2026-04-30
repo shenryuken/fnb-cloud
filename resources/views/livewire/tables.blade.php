@@ -208,11 +208,7 @@
                                 @if($table->currentOrder)
                                     @if($table->currentOrder->payment_status === 'unpaid')
                                         <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click.stop="collectTablePayment({{ $table->id }})">Pay</flux:button>
-                                    @endif
-                                    @if(in_array($table->currentOrder->kds_status, ['preparing', 'ready', 'served']))
                                         <flux:button size="xs" variant="primary" wire:click.stop="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
-                                    @else
-                                        <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                     @endif
                                 @else
                                     <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
@@ -344,11 +340,7 @@
                                             @if($table->currentOrder)
                                                 @if($table->currentOrder->payment_status === 'unpaid')
                                                     <flux:button size="sm" variant="filled" class="!bg-amber-500 hover:!bg-amber-600 !text-white" wire:click="collectTablePayment({{ $table->id }})">Pay</flux:button>
-                                                @endif
-                                                @if(in_array($table->currentOrder->kds_status, ['preparing', 'ready', 'served']))
                                                     <flux:button size="sm" variant="primary" wire:click="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
-                                                @else
-                                                    <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
                                                 @endif
                                             @else
                                                 <flux:button size="sm" variant="primary" wire:click="goToPOS({{ $table->id }})">Order</flux:button>
@@ -624,11 +616,7 @@
                                 </flux:button>
                                 @if($this->detailsTable->currentOrder->payment_status === 'unpaid')
                                     <flux:button wire:click="collectTablePayment({{ $this->detailsTable->id }})" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" icon="banknotes">Pay</flux:button>
-                                @endif
-                                @if(in_array($this->detailsTable->currentOrder->kds_status, ['preparing', 'ready', 'served']))
                                     <flux:button wire:click="addToExistingOrder({{ $this->detailsTable->id }})" variant="primary" icon="plus">Add Items</flux:button>
-                                @else
-                                    <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">Order</flux:button>
                                 @endif
                             @else
                                 <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">New Order</flux:button>
