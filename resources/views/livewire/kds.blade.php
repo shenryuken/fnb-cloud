@@ -68,6 +68,10 @@
                                 {{ $order->is_overdue ? 'Delayed' : $order->kds_status }}
                             </span>
                             @if($order->kds_status === 'preparing')
+                                @php
+                                    $pendingItemsCount = $order->items->where('kds_is_served', false)->count();
+                                    $pendingReadyCount = $order->items->where('kds_is_served', false)->where('kds_is_ready', true)->count();
+                                @endphp
                                 <div class="flex flex-col items-end gap-1">
                                     <span class="flex items-center gap-1 text-[9px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
                                         <flux:icon.clock class="w-3 h-3" />
@@ -76,7 +80,7 @@
 
                                     <span class="flex items-center gap-1 text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
                                         <flux:icon.check-circle class="w-3 h-3" />
-                                        {{ $order->items->where('kds_is_ready', true)->count() }}/{{ $order->items->count() }} Ready
+                                        {{ $pendingReadyCount }}/{{ $pendingItemsCount }} Ready
                                     </span>
                                     
                                     @if($order->is_overdue)
@@ -91,9 +95,13 @@
                                 </div>
                             @endif
                             @if($order->kds_status === 'ready')
+                                @php
+                                    $totalItems = $order->items->count();
+                                    $totalServed = $order->items->where('kds_is_served', true)->count();
+                                @endphp
                                 <span class="flex items-center gap-1 text-[9px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20 mt-1">
                                     <flux:icon.truck class="w-3 h-3" />
-                                    {{ $order->items->where('kds_is_served', true)->count() }}/{{ $order->items->count() }} Served
+                                    {{ $totalServed }}/{{ $totalItems }} Served
                                 </span>
                             @endif
                         </div>
@@ -101,9 +109,25 @@
                 </div>
 
                 <!-- Order Items -->
+                @php
+                    // Separate items: pending/new items vs already served items
+                    $pendingItems = $order->items->filter(fn($item) => !$item->kds_is_served);
+                    $servedItems = $order->items->filter(fn($item) => $item->kds_is_served);
+                @endphp
                 <div class="flex-1 p-5 space-y-4 overflow-y-auto max-h-[300px] scrollbar-hide">
-                    @foreach($order->items as $item)
-                        <div class="flex gap-4 items-start">
+                    {{-- Show NEW badge if there are both served and pending items --}}
+                    @if($servedItems->count() > 0 && $pendingItems->count() > 0)
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-500 text-white animate-pulse">
+                                NEW ITEMS ADDED
+                            </span>
+                            <span class="text-[9px] text-neutral-500">{{ $servedItems->count() }} item(s) already served</span>
+                        </div>
+                    @endif
+
+                    {{-- Show pending/new items first (items that need to be prepared) --}}
+                    @foreach($pendingItems as $item)
+                        <div class="flex gap-4 items-start {{ $servedItems->count() > 0 ? 'bg-amber-500/10 -mx-5 px-5 py-3 border-l-4 border-amber-500' : '' }}">
                             <div class="w-10 h-10 rounded-xl bg-neutral-900 flex items-center justify-center font-black text-lg text-neutral-400 border border-neutral-700">
                                 {{ $item->quantity }}
                             </div>
@@ -150,6 +174,27 @@
                             </div>
                         </div>
                     @endforeach
+
+                    {{-- Show served items collapsed/grayed out --}}
+                    @if($servedItems->count() > 0 && $order->kds_status !== 'served')
+                        <div class="mt-4 pt-4 border-t border-neutral-700/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <flux:icon.check-badge class="w-4 h-4 text-blue-500" />
+                                <span class="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Already Served ({{ $servedItems->count() }})</span>
+                            </div>
+                            @foreach($servedItems as $item)
+                                <div class="flex gap-4 items-start opacity-40 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-900/50 flex items-center justify-center font-black text-sm text-blue-400 border border-blue-700/50">
+                                        {{ $item->quantity }}
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-xs tracking-tight text-neutral-400 line-through">{{ $item->product?->name }}</h4>
+                                    </div>
+                                    <flux:icon.check-circle class="w-5 h-5 text-blue-500" />
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 @if($order->notes)
