@@ -361,7 +361,12 @@ class Pos extends Component
             // Allow adding to any unpaid order (regardless of kds_status)
             if ($order && $order->payment_status === 'unpaid') {
                 $this->existingOrder = $order;
-                $this->orderType = $order->order_type ?? 'dine_in';
+                // If a specific type is forced via URL (e.g. type=takeaway), honour it so
+                // new items default to that type while existing items keep their own type.
+                // Otherwise fall back to the order's own type.
+                $this->orderType = ($this->urlOrderType && in_array($this->urlOrderType, ['dine_in', 'takeaway']))
+                    ? $this->urlOrderType
+                    : ($order->order_type ?? 'dine_in');
                 $this->orderNotes = $order->notes ?? '';
                 $this->customerId = $order->customer_id;
                 

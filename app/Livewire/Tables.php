@@ -465,13 +465,27 @@ class Tables extends Component
     }
 
     /**
-     * Redirect to POS to create a new takeaway order from this table.
+     * Redirect to POS to add takeaway items to the existing dine-in order for this table.
+     * If no current order exists, create a new one with takeaway type.
+     * This allows combining dine-in and takeaway items into one bill.
      */
     public function createTakeawayOrder(int $tableId)
     {
+        $table = RestaurantTable::with('currentOrder')->findOrFail($tableId);
+        
+        // If table already has an unpaid order, add takeaway items to it (combined bill)
+        if ($table->currentOrder && $table->currentOrder->payment_status === 'unpaid') {
+            return redirect()->route('pos.index', [
+                'table' => $tableId,
+                'addto' => $table->currentOrder->id,
+                'type'  => 'takeaway',
+            ]);
+        }
+        
+        // No existing order — start a fresh order defaulting to takeaway type
         return redirect()->route('pos.index', [
             'table' => $tableId,
-            'type' => 'takeaway',
+            'type'  => 'takeaway',
         ]);
     }
 
