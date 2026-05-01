@@ -100,6 +100,9 @@
         <div class="item-row">
             <span style="flex: 2;">
                 {{ $item->product->name }}@if($item->variant) ({{ $item->variant->receipt_label ?: $item->variant->name }})@endif
+                @if(($item->item_type ?? 'dine_in') === 'takeaway')
+                    <span style="font-size: 10px; color: #f97316; font-weight: bold;">[PACK]</span>
+                @endif
                 <div style="font-size: 10px; color: #666; margin-top: 2px;">
                     ${{ number_format($each, 2) }}
                 </div>

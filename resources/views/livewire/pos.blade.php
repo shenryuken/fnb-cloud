@@ -497,13 +497,18 @@
                                 <div class="flex items-start gap-3">
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0">
-                                                <h4 class="font-black text-neutral-800 dark:text-neutral-100 leading-tight tracking-tight text-[13px] truncate">
-                                                    {{ $item['product_name'] }}
-                                                    @if(!empty($item['variant_name']))
-                                                        <span class="text-neutral-400 font-black">({{ $item['variant_name'] }})</span>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <h4 class="font-black text-neutral-800 dark:text-neutral-100 leading-tight tracking-tight text-[13px] truncate">
+                                                        {{ $item['product_name'] }}
+                                                        @if(!empty($item['variant_name']))
+                                                            <span class="text-neutral-400 font-black">({{ $item['variant_name'] }})</span>
+                                                        @endif
+                                                    </h4>
+                                                    @if(($item['item_type'] ?? 'dine_in') === 'takeaway')
+                                                        <flux:badge size="sm" color="orange" class="!text-xs !px-1.5">TA</flux:badge>
                                                     @endif
-                                                </h4>
+                                                </div>
                                                 @if(!empty($item['addon_names']))
                                                     <div class="mt-1 text-[10px] font-bold text-neutral-400 truncate">
                                                         Extras: {{ implode(', ', $item['addon_names']) }}

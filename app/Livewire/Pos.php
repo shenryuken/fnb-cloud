@@ -588,6 +588,7 @@ class Pos extends Component
             'addons_total' => 0,
             'subtotal' => round($unitPrice, 2),
             'notes' => '',
+            'item_type' => $this->orderType, // dine_in or takeaway
         ];
 
         $this->calculateTotal();
@@ -684,6 +685,7 @@ class Pos extends Component
             'addons_total' => $addonsPrice,
             'subtotal' => $subtotal,
             'notes' => $this->notes,
+            'item_type' => $this->orderType, // dine_in or takeaway
         ];
 
         $this->calculateTotal();
@@ -1492,6 +1494,7 @@ class Pos extends Component
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['subtotal'],
                     'notes' => $item['notes'],
+                    'item_type' => $item['item_type'] ?? 'dine_in', // dine_in or takeaway
                 ]);
 
                 if (!empty($item['addon_ids'])) {

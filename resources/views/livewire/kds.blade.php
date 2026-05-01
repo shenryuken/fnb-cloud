@@ -132,7 +132,14 @@
                                 {{ $item->quantity }}
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-black text-sm tracking-tight text-neutral-100 uppercase">{{ $item->product?->name }}</h4>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-black text-sm tracking-tight text-neutral-100 uppercase">{{ $item->product?->name }}</h4>
+                                    @if($item->item_type === 'takeaway')
+                                        <span class="px-2 py-0.5 rounded-lg text-[8px] font-black bg-orange-500/20 text-orange-400 uppercase tracking-widest border border-orange-500/30">Pack</span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-lg text-[8px] font-black bg-blue-500/20 text-blue-400 uppercase tracking-widest border border-blue-500/30">Plate</span>
+                                    @endif
+                                </div>
                                 @if($item->variant)
                                     <span class="text-[9px] font-black text-orange-500 uppercase tracking-widest">{{ $item->variant->name }}</span>
                                 @endif
