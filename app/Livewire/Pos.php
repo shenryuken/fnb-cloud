@@ -66,6 +66,9 @@ class Pos extends Component
     #[Url(as: 'addto')]
     public ?int $addToOrderId = null; // load existing order for adding more items
     
+    #[Url(as: 'type')]
+    public ?string $urlOrderType = null; // order type from URL (dine_in, takeaway)
+    
     public ?Order $existingOrder = null; // the order we're adding items to
     
     public string $orderType = 'dine_in'; // dine_in, takeaway
@@ -324,11 +327,17 @@ class Pos extends Component
             $restaurantTable = RestaurantTable::find($this->tableId);
             if ($restaurantTable && $restaurantTable->is_active) {
                 $this->tableNumber = $restaurantTable->name;
-                $this->orderType = 'dine_in';
+                // Use URL order type if provided, otherwise default to dine_in
+                $this->orderType = $this->urlOrderType ?? 'dine_in';
             } else {
                 // Invalid table ID, reset it
                 $this->tableId = null;
             }
+        }
+        
+        // Handle explicit order type from URL (?type=takeaway)
+        if ($this->urlOrderType && in_array($this->urlOrderType, ['dine_in', 'takeaway'])) {
+            $this->orderType = $this->urlOrderType;
         }
         
         // Handle auto-opening payment collection for an unpaid order (?pay=123)

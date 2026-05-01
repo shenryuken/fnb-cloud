@@ -162,10 +162,25 @@
                             @endif
 
                             {{-- Turn time --}}
-                            @if($table->status === 'occupied' && $table->turn_time_formatted)
-                                <flux:text size="xs" class="text-zinc-400 mt-1">
-                                    {{ $table->turn_time_formatted }}
-                                </flux:text>
+                            @if($table->status === 'occupied')
+                                @if($table->turn_time_formatted)
+                                    <flux:text size="xs" class="text-zinc-400 mt-1">
+                                        {{ $table->turn_time_formatted }}
+                                    </flux:text>
+                                @endif
+                                {{-- Show order type badges --}}
+                                @if($table->currentOrder)
+                                    <div class="flex flex-wrap gap-1 mt-1">
+                                        <flux:badge size="sm" :color="$table->currentOrder->order_type === 'takeaway' ? 'blue' : 'zinc'">
+                                            {{ $table->currentOrder->order_type === 'takeaway' ? 'TA' : 'DI' }}
+                                        </flux:badge>
+                                        @if($table->activeOrders->where('order_type', 'takeaway')->where('id', '!=', $table->current_order_id)->count() > 0)
+                                            <flux:badge size="sm" color="blue">
+                                                +{{ $table->activeOrders->where('order_type', 'takeaway')->where('id', '!=', $table->current_order_id)->count() }} TA
+                                            </flux:badge>
+                                        @endif
+                                    </div>
+                                @endif
                             @endif
 
                             {{-- Reservation name --}}
@@ -213,6 +228,7 @@
                                 @else
                                     <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                 @endif
+                                <flux:button size="xs" variant="ghost" class="!text-blue-400" wire:click.stop="createTakeawayOrder({{ $table->id }})" title="New Takeaway">TA</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="setTableStatus({{ $table->id }}, 'dirty')">Clear</flux:button>
                             @elseif($table->status === 'reserved')
                                 <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
@@ -571,13 +587,38 @@
                             <flux:text size="sm" class="text-red-600 font-medium">Turn Time</flux:text>
                             <flux:heading class="text-red-600">{{ $this->detailsTable->turn_time_formatted ?? '0m' }}</flux:heading>
                         </div>
-                        @if($this->detailsTable->currentOrder)
-                            <flux:text size="sm" class="text-zinc-500">
-                                Order #{{ $this->detailsTable->currentOrder->id }} - 
-                                ${{ number_format($this->detailsTable->currentOrder->total_amount, 2) }}
-                            </flux:text>
-                        @endif
                     </div>
+                    
+                    {{-- Active Orders List --}}
+                    @if($this->detailsTable->activeOrders->count() > 0)
+                        <div class="space-y-2">
+                            <flux:text size="sm" class="text-zinc-500 font-medium">Active Orders</flux:text>
+                            @foreach($this->detailsTable->activeOrders as $order)
+                                <div class="p-3 rounded-lg border {{ $order->order_type === 'takeaway' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700' }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <flux:badge size="sm" :color="$order->order_type === 'takeaway' ? 'blue' : 'zinc'">
+                                                {{ $order->order_type === 'takeaway' ? 'Takeaway' : 'Dine-in' }}
+                                            </flux:badge>
+                                            <flux:text size="sm" class="font-semibold">Order #{{ $order->id }}</flux:text>
+                                        </div>
+                                        <flux:text size="sm" class="font-bold">${{ number_format($order->total_amount, 2) }}</flux:text>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <flux:badge size="sm" :color="$order->kds_status === 'served' ? 'green' : ($order->kds_status === 'ready' ? 'blue' : 'yellow')">
+                                            {{ ucfirst($order->kds_status) }}
+                                        </flux:badge>
+                                        <div class="flex gap-1">
+                                            <flux:button size="xs" variant="ghost" wire:click="openOrder({{ $order->id }})">View</flux:button>
+                                            @if($order->payment_status === 'unpaid')
+                                                <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click="collectPaymentForOrder({{ $order->id }})">Pay</flux:button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 @endif
                 
                 @if($this->detailsTable->status === 'reserved')
@@ -608,19 +649,13 @@
                     <div class="flex flex-wrap gap-2">
                         @if($this->detailsTable->status === 'occupied')
                             @if($this->detailsTable->currentOrder)
-                                <flux:button 
-                                    wire:click="openOrder({{ $this->detailsTable->currentOrder->id }})"
-                                    variant="ghost" 
-                                    icon="eye">
-                                    View Order
-                                </flux:button>
                                 @if($this->detailsTable->currentOrder->payment_status === 'unpaid')
-                                    <flux:button wire:click="collectTablePayment({{ $this->detailsTable->id }})" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" icon="banknotes">Pay</flux:button>
-                                    <flux:button wire:click="addToExistingOrder({{ $this->detailsTable->id }})" variant="primary" icon="plus">Add Items</flux:button>
+                                    <flux:button wire:click="addToExistingOrder({{ $this->detailsTable->id }})" variant="primary" icon="plus">Add to Order</flux:button>
                                 @endif
                             @else
-                                <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">New Order</flux:button>
+                                <flux:button wire:click="goToPOS({{ $this->detailsTable->id }})" variant="primary" icon="shopping-cart">New Dine-in</flux:button>
                             @endif
+                            <flux:button wire:click="createTakeawayOrder({{ $this->detailsTable->id }})" variant="ghost" icon="shopping-bag" class="!text-blue-600">New Takeaway</flux:button>
                             <flux:button wire:click="setTableStatus({{ $this->detailsTable->id }}, 'dirty')" variant="ghost">Clear Table</flux:button>
                         @elseif($this->detailsTable->status === 'available')
                             <flux:button wire:click="quickSeatTable({{ $this->detailsTable->id }})" variant="primary">Seat Guests</flux:button>

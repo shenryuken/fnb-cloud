@@ -68,7 +68,7 @@ class Tables extends Component
     #[Computed]
     public function tables()
     {
-        $query = RestaurantTable::with('currentOrder')
+        $query = RestaurantTable::with(['currentOrder', 'activeOrders'])
             ->where('is_active', true)
             ->whereNull('merged_into_id');
         
@@ -394,7 +394,7 @@ class Tables extends Component
     public function detailsTable()
     {
         if (!$this->detailsTableId) return null;
-        return RestaurantTable::with(['currentOrder.items.product', 'mergedTables'])->find($this->detailsTableId);
+        return RestaurantTable::with(['currentOrder.items.product', 'activeOrders', 'mergedTables'])->find($this->detailsTableId);
     }
 
     // Quick actions from floor plan
@@ -465,6 +465,17 @@ class Tables extends Component
     }
 
     /**
+     * Redirect to POS to create a new takeaway order from this table.
+     */
+    public function createTakeawayOrder(int $tableId)
+    {
+        return redirect()->route('pos.index', [
+            'table' => $tableId,
+            'type' => 'takeaway',
+        ]);
+    }
+
+    /**
      * Redirect to POS to collect payment for table's unpaid order.
      */
     public function collectTablePayment(int $tableId)
@@ -480,6 +491,25 @@ class Tables extends Component
         return redirect()->route('pos.index', [
             'table' => $tableId,
             'pay' => $table->currentOrder->id,
+        ]);
+    }
+
+    /**
+     * Redirect to POS to collect payment for a specific order.
+     */
+    public function collectPaymentForOrder(int $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+        
+        if ($order->payment_status !== 'unpaid') {
+            $this->dispatch('notify', message: 'Order is already paid', type: 'error');
+            return;
+        }
+        
+        // Redirect to POS with pay parameter to auto-open payment modal
+        return redirect()->route('pos.index', [
+            'table' => $order->table_id,
+            'pay' => $order->id,
         ]);
     }
 

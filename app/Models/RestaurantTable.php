@@ -67,6 +67,34 @@ class RestaurantTable extends Model
     }
 
     /**
+     * Get all active (unpaid) orders for this table.
+     * Includes both dine-in and takeaway orders.
+     */
+    public function activeOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'table_id')
+            ->where('payment_status', 'unpaid')
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get the active dine-in order for this table.
+     */
+    public function activeDineInOrder(): HasMany
+    {
+        return $this->activeOrders()->where('order_type', 'dine_in');
+    }
+
+    /**
+     * Get active takeaway orders from this table.
+     */
+    public function activeTakeawayOrders(): HasMany
+    {
+        return $this->activeOrders()->where('order_type', 'takeaway');
+    }
+
+    /**
      * Get the table this one is merged into.
      */
     public function mergedInto(): BelongsTo
