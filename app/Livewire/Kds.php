@@ -126,17 +126,15 @@ class Kds extends Component
             $readyCount = $order->items->where('kds_is_ready', true)->count();
             $servedCount = $order->items->where('kds_is_served', true)->count();
 
-            if ($total > 0 && $readyCount === $total) {
-                $order->update(['kds_status' => 'ready']);
-            } else {
-                $order->update(['kds_status' => 'preparing']);
-            }
-
             if ($total > 0 && $servedCount === $total) {
                 $order->update(['kds_status' => 'served']);
                 if ($order->status === 'processing') {
                     $order->update(['status' => 'completed']);
                 }
+            } elseif ($total > 0 && $readyCount === $total) {
+                $order->update(['kds_status' => 'ready']);
+            } else {
+                $order->update(['kds_status' => 'preparing']);
             }
         });
     }
@@ -174,10 +172,7 @@ class Kds extends Component
                 if ($order->status === 'processing') {
                     $order->update(['status' => 'completed']);
                 }
-                return;
-            }
-
-            if ($total > 0 && $readyCount === $total) {
+            } elseif ($total > 0 && $readyCount === $total) {
                 $order->update(['kds_status' => 'ready']);
             } else {
                 $order->update(['kds_status' => 'preparing']);

@@ -1688,12 +1688,11 @@ class Pos extends Component
                 'change_amount' => $this->isSplitPayment ? 0 : $this->changeAmount,
             ]);
 
-            // Update table status to dirty after payment
+            // Update table status to dirty after payment (markDirty clears current_order_id)
             if ($order->table_id) {
                 $table = RestaurantTable::find($order->table_id);
                 if ($table) {
                     $table->markDirty();
-                    $table->update(['current_order_id' => null]);
                 }
             }
 
