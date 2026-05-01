@@ -21,6 +21,7 @@ class OrderItem extends Model
         'variant_price',
         'subtotal',
         'notes',
+        'item_type', // dine_in or takeaway
         'kds_is_ready',
         'kds_ready_at',
         'kds_is_served',
@@ -31,6 +32,7 @@ class OrderItem extends Model
         'unit_price' => 'decimal:2',
         'variant_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'item_type' => 'string',
         'kds_is_ready' => 'boolean',
         'kds_ready_at' => 'datetime',
         'kds_is_served' => 'boolean',
