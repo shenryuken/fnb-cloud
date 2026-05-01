@@ -102,6 +102,29 @@ class Orders extends Component
     {
         if (in_array($status, ['pending', 'processing', 'completed', 'cancelled'])) {
             $order->update(['status' => $status]);
+            
+            // Clean up table when order is cancelled or completed
+            if (in_array($status, ['cancelled', 'completed']) && $order->table_id) {
+                $table = \App\Models\RestaurantTable::find($order->table_id);
+                if ($table && $table->current_order_id === $order->id) {
+                    $table->markDirty();
+                }
+            }
+            
+            $this->dispatch('order-updated');
+        }
+    }
+    
+    public function updateKdsStatus(Order $order, string $kdsStatus): void
+    {
+        if (in_array($kdsStatus, ['pending', 'preparing', 'ready', 'served'])) {
+            $order->update(['kds_status' => $kdsStatus]);
+            
+            // Auto-complete order when served and paid
+            if ($kdsStatus === 'served' && $order->payment_status === 'paid' && $order->status === 'processing') {
+                $order->update(['status' => 'completed']);
+            }
+            
             $this->dispatch('order-updated');
         }
     }
