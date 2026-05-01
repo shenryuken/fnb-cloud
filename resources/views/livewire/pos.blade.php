@@ -10,11 +10,21 @@
     
     {{-- Adding to Existing Order Banner --}}
     @if($existingOrder)
-        <div class="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3 {{ !$this->currentShift ? 'top-10' : '' }}">
-            <flux:icon.plus-circle class="w-5 h-5" />
-            <span>Adding items to Order #{{ $existingOrder->id }} ({{ ucfirst($existingOrder->kds_status) }})</span>
-            <span class="text-blue-200">|</span>
-            <span>Table: {{ $tableNumber }}</span>
+        @php $isTakeawayAdd = $orderType === 'takeaway'; @endphp
+        <div class="fixed top-0 left-0 right-0 z-50 {{ $isTakeawayAdd ? 'bg-orange-500' : 'bg-blue-600' }} text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3 {{ !$this->currentShift ? 'top-10' : '' }}">
+            @if($isTakeawayAdd)
+                <flux:icon.shopping-bag class="w-5 h-5" />
+                <span>Adding TAKEAWAY items to Order #{{ $existingOrder->id }}</span>
+                <span class="opacity-60">|</span>
+                <span>Table: {{ $tableNumber }}</span>
+                <span class="opacity-60">|</span>
+                <span class="text-orange-100 text-xs font-normal">Use KITCHEN to add &amp; pay later, or PAY NOW to pay all</span>
+            @else
+                <flux:icon.plus-circle class="w-5 h-5" />
+                <span>Adding items to Order #{{ $existingOrder->id }} ({{ ucfirst($existingOrder->kds_status) }})</span>
+                <span class="opacity-60">|</span>
+                <span>Table: {{ $tableNumber }}</span>
+            @endif
         </div>
     @endif
 
@@ -630,10 +640,11 @@
                                 <flux:icon.credit-card class="w-4 h-4 group-hover:rotate-12 transition-transform" />
                                 PAY NOW
                             </button>
-                            @if($orderType === 'dine_in')
+                            @if($orderType === 'dine_in' || $existingOrder)
+                                {{-- Show KITCHEN (pay later) when dine_in OR when adding to an existing table order --}}
                                 <button wire:click="placeOrderPayLater"
                                     @disabled(empty($cart) || !$tableId)
-                                    title="{{ !$tableId ? 'Select a table first' : 'Send order to kitchen, pay later' }}"
+                                    title="{{ !$tableId ? 'Select a table first' : 'Send to kitchen, pay later' }}"
                                     class="flex-1 py-3 rounded-[1.75rem] bg-amber-500 hover:bg-amber-400 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
                                     <flux:icon.fire class="w-4 h-4 group-hover:scale-110 transition-transform" />
                                     KITCHEN
