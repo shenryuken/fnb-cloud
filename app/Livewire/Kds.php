@@ -66,11 +66,10 @@ class Kds extends Component
 
             if ($status === 'preparing') {
                 $data['preparing_at'] = now();
-                $order->items()->update([
+                // Only reset items that are NOT already served (preserve served items)
+                $order->items()->where('kds_is_served', false)->update([
                     'kds_is_ready' => false,
                     'kds_ready_at' => null,
-                    'kds_is_served' => false,
-                    'kds_served_at' => null,
                 ]);
             }
 
