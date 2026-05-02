@@ -220,12 +220,16 @@
                                 <flux:button size="xs" variant="primary" wire:click.stop="quickSeatTable({{ $table->id }})">Seat</flux:button>
                                 <flux:button size="xs" variant="ghost" wire:click.stop="openReservationModal({{ $table->id }})">Reserve</flux:button>
                             @elseif($table->status === 'occupied')
-                                @if($table->currentOrder)
-                                    @if($table->currentOrder->payment_status === 'unpaid')
-                                        <flux:button size="xs" variant="filled" class="!bg-amber-500 hover:!bg-amber-600" wire:click.stop="collectTablePayment({{ $table->id }})">Pay</flux:button>
-                                        <flux:button size="xs" variant="primary" wire:click.stop="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
-                                    @endif
-                                @else
+                                @php
+                                    $unpaidOrders = $table->activeOrders->where('payment_status', 'unpaid');
+                                    $unpaidCount = $unpaidOrders->count();
+                                @endphp
+                                @if($unpaidCount > 0)
+                                    <flux:button size="xs" variant="filled" class="{{ $unpaidCount > 1 ? '!bg-green-500 hover:!bg-green-600' : '!bg-amber-500 hover:!bg-amber-600' }}" wire:click.stop="collectTablePayment({{ $table->id }})">
+                                        {{ $unpaidCount > 1 ? 'Pay All' : 'Pay' }}
+                                    </flux:button>
+                                    <flux:button size="xs" variant="primary" wire:click.stop="addToExistingOrder({{ $table->id }})">+ Add</flux:button>
+                                @elseif(!$table->currentOrder)
                                     <flux:button size="xs" variant="primary" wire:click.stop="goToPOS({{ $table->id }})">Order</flux:button>
                                 @endif
                                 <flux:button size="xs" variant="ghost" class="!text-orange-400" wire:click.stop="createTakeawayOrder({{ $table->id }})" title="New Takeaway Order">TA</flux:button>
