@@ -173,7 +173,7 @@ class Users extends Component
         $user = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
         
         // Only allow setting PIN for users with manager/admin roles
-        if (!$user->hasAnyRole(['admin', 'manager', 'super-admin'])) {
+        if (!$user->hasRole('admin') && !$user->hasRole('manager') && !$user->hasRole('super-admin')) {
             session()->flash('error', 'Only managers and admins can have a PIN.');
             return;
         }
