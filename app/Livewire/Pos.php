@@ -1813,7 +1813,7 @@ class Pos extends Component
         $this->isPaying = false;
 
         $this->dispatch('notify', message: 'Payment collected for ' . $orders->count() . ' orders (Total: RM ' . number_format($combinedTotal, 2) . ')', type: 'success');
-        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'cartTotal']);
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod']);
     }
 
     /**
