@@ -35,7 +35,8 @@ class User extends Authenticatable
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class);
+        // Bypass tenant scope to include global roles (tenant_id = null)
+        return $this->belongsToMany(Role::class)->withoutGlobalScopes();
     }
 
     public function hasPermission(string $permission): bool
