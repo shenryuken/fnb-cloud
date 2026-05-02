@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\RestaurantTable;
 use App\Models\Order;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
