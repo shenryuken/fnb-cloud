@@ -86,6 +86,7 @@ class Pos extends Component
     public float $amountReceived = 0;
     public float $changeAmount = 0;
     public ?Order $lastOrder = null;
+    public array $lastOrders = []; // store all paid orders for combined payment
     public bool $showBillPreview = false; // for printing bill before payment
 
     // Split payment state
@@ -1809,6 +1810,7 @@ class Pos extends Component
         });
 
         $this->lastOrder = $orders->first()->fresh();
+        $this->lastOrders = $orders->fresh()->toArray(); // store all paid orders
         $this->ordersToPayTogether = [];
         $this->isPaying = false;
 

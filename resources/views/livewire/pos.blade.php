@@ -1491,14 +1491,33 @@
                         @endif
 
                         <div class="flex flex-col gap-3">
-                            @if($lastOrder->payment_status === 'paid')
+                            {{-- Show receipt buttons for all paid orders (combined payment) --}}
+                            @if(!empty($lastOrders))
+                                @foreach($lastOrders as $order)
+                                    @if($order['payment_status'] === 'paid')
+                                        <button type="button" 
+                                            onclick="window.open('{{ route('pos.receipt', \App\Models\Order::find($order['id'])) }}', '_blank', 'width=400,height=600')"
+                                            class="w-full py-3 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                                            <flux:icon.printer class="w-4 h-4" />
+                                            RECEIPT #{{ $order['id'] }}
+                                        </button>
+                                    @else
+                                        <button type="button" 
+                                            onclick="window.open('{{ route('pos.bill', \App\Models\Order::find($order['id'])) }}', '_blank', 'width=400,height=600')"
+                                            class="w-full py-3 rounded-xl border-2 border-amber-600 text-amber-600 hover:bg-amber-50 font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                                            <flux:icon.document-text class="w-4 h-4" />
+                                            BILL #{{ $order['id'] }}
+                                        </button>
+                                    @endif
+                                @endforeach
+                            @elseif($lastOrder && $lastOrder->payment_status === 'paid')
                                 <button type="button" 
                                     onclick="window.open('{{ route('pos.receipt', $lastOrder) }}', '_blank', 'width=400,height=600')"
                                     class="w-full py-4 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold transition-all flex items-center justify-center gap-2">
                                     <flux:icon.printer class="w-5 h-5" />
                                     PRINT RECEIPT
                                 </button>
-                            @else
+                            @elseif($lastOrder)
                                 <button type="button" 
                                     onclick="window.open('{{ route('pos.bill', $lastOrder) }}', '_blank', 'width=400,height=600')"
                                     class="w-full py-4 rounded-xl border-2 border-amber-600 text-amber-600 hover:bg-amber-50 font-bold transition-all flex items-center justify-center gap-2">
@@ -1514,18 +1533,24 @@
                     </div>
 
                     <div class="hidden lg:flex flex-col border-l border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
+                        @php
+                            $displayOrder = !empty($lastOrders) ? \App\Models\Order::find($lastOrders[0]['id']) : $lastOrder;
+                        @endphp
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                                {{ $lastOrder->payment_status === 'paid' ? 'Receipt Preview' : 'Bill Preview' }}
+                                {{ $displayOrder && $displayOrder->payment_status === 'paid' ? 'Receipt Preview' : 'Bill Preview' }}
+                                @if(!empty($lastOrders) && count($lastOrders) > 1)
+                                    <span class="text-[9px] text-neutral-400">(showing order #{{ $displayOrder->id }})</span>
+                                @endif
                             </span>
                             <button type="button"
-                                onclick="window.open('{{ $lastOrder->payment_status === 'paid' ? route('pos.receipt', $lastOrder) : route('pos.bill', $lastOrder) }}', '_blank', 'width=400,height=600')"
+                                onclick="window.open('{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}', '_blank', 'width=400,height=600')"
                                 class="px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-[10px] font-black text-neutral-600 dark:text-neutral-200 uppercase tracking-widest hover:border-blue-500 hover:text-blue-600 transition-all">
                                 Open
                             </button>
                         </div>
                         <iframe
-                            src="{{ $lastOrder->payment_status === 'paid' ? route('pos.receipt', $lastOrder) : route('pos.bill', $lastOrder) }}?preview=1"
+                            src="{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}?preview=1"
                             class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
                         ></iframe>
                     </div>
