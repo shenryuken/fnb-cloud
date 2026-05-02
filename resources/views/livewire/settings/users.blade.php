@@ -95,6 +95,9 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $user->id }})" title="Edit" />
                                     <flux:button size="sm" variant="ghost" icon="key" wire:click="openResetPassword({{ $user->id }})" title="Reset Password" />
+                                    @if($user->hasAnyRole(['admin', 'manager', 'super-admin']))
+                                        <flux:button size="sm" variant="ghost" icon="shield-check" wire:click="openSetPin({{ $user->id }})" title="Set Manager PIN" class="text-blue-400 hover:text-blue-600" />
+                                    @endif
                                     @if($user->id !== auth()->id())
                                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $user->id }})" wire:confirm="Remove '{{ $user->name }}' from your team?" class="text-red-400 hover:text-red-600" title="Delete" />
                                     @endif
@@ -238,6 +241,56 @@
                         <flux:button type="button" wire:click="$set('showResetPasswordModal', false)" variant="ghost">Cancel</flux:button>
                         <flux:button type="submit" variant="primary" class="flex-1" icon="check-circle">
                             Reset Password
+                        </flux:button>
+                    </div>
+                </form>
+            </flux:card>
+        </div>
+    @endif
+    
+    {{-- Manager PIN Modal --}}
+    @if($showPinModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <flux:card class="w-full max-w-md overflow-hidden p-0">
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                            <flux:icon.shield-check class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <flux:heading size="lg">Set Manager PIN</flux:heading>
+                            <flux:subheading>4-digit PIN for authorizing voids.</flux:subheading>
+                        </div>
+                    </div>
+                    <flux:button wire:click="$set('showPinModal', false)" variant="ghost" icon="x-mark" />
+                </div>
+
+                {{-- Modal Body --}}
+                <form wire:submit="setPin">
+                    <div class="p-5 flex flex-col gap-4">
+                        <flux:callout variant="info" icon="information-circle">
+                            This PIN is used for authorizing void operations and clearing tables with unpaid orders.
+                        </flux:callout>
+                        
+                        <flux:field>
+                            <flux:label>4-Digit PIN</flux:label>
+                            <flux:input type="password" inputmode="numeric" wire:model="newPin" placeholder="e.g. 1234" maxlength="4" />
+                            <flux:error name="newPin" />
+                            <flux:text size="xs" class="text-zinc-400 mt-1">Must be exactly 4 numbers</flux:text>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Confirm PIN</flux:label>
+                            <flux:input type="password" inputmode="numeric" wire:model="newPin_confirmation" placeholder="Repeat PIN" maxlength="4" />
+                        </flux:field>
+                    </div>
+
+                    {{-- Modal Footer --}}
+                    <div class="flex gap-3 p-5 border-t border-zinc-100 dark:border-zinc-800">
+                        <flux:button type="button" wire:click="$set('showPinModal', false)" variant="ghost">Cancel</flux:button>
+                        <flux:button type="submit" variant="primary" class="flex-1" icon="check-circle">
+                            Set PIN
                         </flux:button>
                     </div>
                 </form>
