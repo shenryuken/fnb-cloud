@@ -185,11 +185,11 @@ class Users extends Component
     public function setPin(): void
     {
         $this->validate([
-            'newPin' => 'required|numeric|digits:4|confirmed',
+            'newPin' => 'required|numeric|min_digits:4|confirmed',
         ], [
             'newPin.required' => 'PIN is required.',
             'newPin.numeric' => 'PIN must contain only numbers.',
-            'newPin.digits' => 'PIN must be exactly 4 digits.',
+            'newPin.min_digits' => 'PIN must be at least 4 digits.',
             'newPin.confirmed' => 'PINs do not match.',
         ]);
 

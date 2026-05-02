@@ -258,7 +258,7 @@
                         </div>
                         <div>
                             <flux:heading size="lg">Set Manager PIN</flux:heading>
-                            <flux:subheading>4-digit PIN for authorizing voids.</flux:subheading>
+                            <flux:subheading>PIN (4 or more digits) for authorizing voids.</flux:subheading>
                         </div>
                     </div>
                     <flux:button wire:click="$set('showPinModal', false)" variant="ghost" icon="x-mark" />
@@ -272,15 +272,15 @@
                         </flux:callout>
                         
                         <flux:field>
-                            <flux:label>4-Digit PIN</flux:label>
-                            <flux:input type="password" inputmode="numeric" wire:model="newPin" placeholder="e.g. 1234" maxlength="4" />
+                            <flux:label>PIN</flux:label>
+                            <flux:input type="password" inputmode="numeric" wire:model="newPin" placeholder="e.g. 1234 or more digits" />
                             <flux:error name="newPin" />
-                            <flux:text size="xs" class="text-zinc-400 mt-1">Must be exactly 4 numbers</flux:text>
+                            <flux:text size="xs" class="text-zinc-400 mt-1">Minimum 4 digits, numbers only</flux:text>
                         </flux:field>
 
                         <flux:field>
                             <flux:label>Confirm PIN</flux:label>
-                            <flux:input type="password" inputmode="numeric" wire:model="newPin_confirmation" placeholder="Repeat PIN" maxlength="4" />
+                            <flux:input type="password" inputmode="numeric" wire:model="newPin_confirmation" placeholder="Repeat PIN" />
                         </flux:field>
                     </div>
 
