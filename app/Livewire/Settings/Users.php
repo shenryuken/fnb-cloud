@@ -31,6 +31,12 @@ class Users extends Component
     public ?int $resetPasswordUserId = null;
     public string $newPassword = '';
     public string $newPassword_confirmation = '';
+    
+    // Manager PIN modal
+    public bool $showPinModal = false;
+    public ?int $pinUserId = null;
+    public string $newPin = '';
+    public string $newPin_confirmation = '';
 
     protected function rules(): array
     {
@@ -160,6 +166,42 @@ class Users extends Component
         $this->reset(['resetPasswordUserId', 'newPassword', 'newPassword_confirmation']);
 
         session()->flash('status', 'Password reset successfully.');
+    }
+    
+    public function openSetPin(int $id): void
+    {
+        $user = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
+        
+        // Only allow setting PIN for users with manager/admin roles
+        if (!$user->hasAnyRole(['admin', 'manager', 'super-admin'])) {
+            session()->flash('error', 'Only managers and admins can have a PIN.');
+            return;
+        }
+        
+        $this->pinUserId = $id;
+        $this->newPin = '';
+        $this->newPin_confirmation = '';
+        $this->showPinModal = true;
+    }
+    
+    public function setPin(): void
+    {
+        $this->validate([
+            'newPin' => 'required|numeric|digits:4|confirmed',
+        ], [
+            'newPin.required' => 'PIN is required.',
+            'newPin.numeric' => 'PIN must contain only numbers.',
+            'newPin.digits' => 'PIN must be exactly 4 digits.',
+            'newPin.confirmed' => 'PINs do not match.',
+        ]);
+
+        $user = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->pinUserId);
+        $user->update(['pin' => $this->newPin]);
+
+        $this->showPinModal = false;
+        $this->reset(['pinUserId', 'newPin', 'newPin_confirmation']);
+
+        session()->flash('status', "Manager PIN set successfully for {$user->name}.");
     }
 
     public function render()
