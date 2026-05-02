@@ -77,6 +77,11 @@ class DefaultRolesSeeder extends Seeder
                 'permissions' => array_keys($permissions), // all
             ],
             [
+                'name'        => 'Manager',
+                'slug'        => 'manager',
+                'permissions' => array_keys($permissions), // all (same as owner)
+            ],
+            [
                 'name'        => 'Kitchen Staff',
                 'slug'        => 'kitchen-staff',
                 'permissions' => ['kds.access', 'orders.manage'],
