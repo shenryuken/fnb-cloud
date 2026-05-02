@@ -59,6 +59,22 @@ class Tables extends Component
     // Order details modal
     public bool $showOrderModal = false;
     public ?Order $viewingOrder = null;
+    
+    // Void/Clear table modal (for tables with unpaid orders)
+    public bool $showVoidModal = false;
+    public ?int $voidTableId = null;
+    public string $voidReason = '';
+    public string $voidNotes = '';
+    public string $managerPin = '';
+    public array $voidReasons = [
+        'customer_left' => 'Customer Left Without Paying',
+        'order_error' => 'Order Entry Error',
+        'food_quality' => 'Food Quality Issue / Comp',
+        'manager_comp' => 'Manager Complimentary',
+        'test_order' => 'Test Order',
+        'duplicate' => 'Duplicate Order',
+        'other' => 'Other (specify in notes)',
+    ];
 
     public function mount()
     {
@@ -312,7 +328,22 @@ class Tables extends Component
     // Status changes
     public function setTableStatus(int $tableId, string $status)
     {
-        $table = RestaurantTable::findOrFail($tableId);
+        $table = RestaurantTable::with('activeOrders')->findOrFail($tableId);
+        
+        // If clearing table (marking dirty) and there are unpaid orders, show void modal
+        if ($status === 'dirty') {
+            $unpaidOrders = $table->activeOrders->where('payment_status', 'unpaid');
+            
+            if ($unpaidOrders->isNotEmpty()) {
+                // Cannot clear table with unpaid orders - show void confirmation modal
+                $this->voidTableId = $tableId;
+                $this->voidReason = '';
+                $this->voidNotes = '';
+                $this->managerPin = '';
+                $this->showVoidModal = true;
+                return;
+            }
+        }
         
         match($status) {
             'available' => $table->release(),
@@ -322,6 +353,85 @@ class Tables extends Component
         };
         
         $this->dispatch('notify', message: 'Table status updated', type: 'success');
+    }
+    
+    /**
+     * Void all unpaid orders and clear the table.
+     * Requires manager PIN and void reason.
+     */
+    public function confirmVoidAndClearTable()
+    {
+        $this->validate([
+            'voidReason' => 'required|string',
+            'voidNotes' => 'nullable|string|max:500',
+            'managerPin' => 'required|string|min:4',
+        ], [
+            'voidReason.required' => 'Please select a reason for voiding.',
+            'managerPin.required' => 'Manager PIN is required to void orders.',
+            'managerPin.min' => 'PIN must be at least 4 characters.',
+        ]);
+        
+        // Verify manager PIN (check against users with manager/admin role)
+        $manager = \App\Models\User::where('pin', $this->managerPin)
+            ->whereHas('roles', fn($q) => $q->whereIn('name', ['admin', 'manager', 'super-admin']))
+            ->first();
+        
+        if (!$manager) {
+            $this->addError('managerPin', 'Invalid manager PIN.');
+            return;
+        }
+        
+        $table = RestaurantTable::with('activeOrders')->findOrFail($this->voidTableId);
+        $unpaidOrders = $table->activeOrders->where('payment_status', 'unpaid');
+        
+        if ($unpaidOrders->isEmpty()) {
+            $this->dispatch('notify', message: 'No unpaid orders to void.', type: 'info');
+            $this->closeVoidModal();
+            return;
+        }
+        
+        $voidedCount = 0;
+        $voidedTotal = 0;
+        
+        DB::transaction(function () use ($unpaidOrders, $manager, &$voidedCount, &$voidedTotal) {
+            foreach ($unpaidOrders as $order) {
+                $voidedTotal += $order->total_amount;
+                
+                $order->update([
+                    'status' => 'voided',
+                    'payment_status' => 'voided',
+                    'kds_status' => 'cancelled',
+                    'voided_at' => now(),
+                    'voided_by' => $manager->id,
+                    'void_reason' => $this->voidReasons[$this->voidReason] ?? $this->voidReason,
+                    'void_notes' => $this->voidNotes ?: null,
+                ]);
+                
+                $voidedCount++;
+            }
+        });
+        
+        // Now clear the table
+        $table->markDirty();
+        
+        // Close modals
+        $this->closeVoidModal();
+        $this->showDetailsModal = false;
+        
+        $this->dispatch('notify', 
+            message: "Voided {$voidedCount} order(s) totaling RM " . number_format($voidedTotal, 2) . ". Table cleared.", 
+            type: 'warning'
+        );
+    }
+    
+    public function closeVoidModal()
+    {
+        $this->showVoidModal = false;
+        $this->voidTableId = null;
+        $this->voidReason = '';
+        $this->voidNotes = '';
+        $this->managerPin = '';
+        $this->resetValidation();
     }
 
     // Reservations
