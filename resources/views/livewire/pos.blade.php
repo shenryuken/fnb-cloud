@@ -1,4 +1,21 @@
 <div x-data="{}" class="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] gap-4 p-4 overflow-y-auto lg:overflow-hidden bg-zinc-50 dark:bg-zinc-950" wire:poll.15s>
+    <script>
+        function printAllReceipts(orderIds) {
+            // Open each receipt in a separate window
+            orderIds.forEach((orderId, index) => {
+                const receiptUrl = `/pos/receipt/${orderId}`;
+                const printWindow = window.open(receiptUrl, `receipt_${orderId}`, 'width=400,height=600');
+                if (printWindow) {
+                    printWindow.addEventListener('load', function() {
+                        // Auto-print after a short delay to ensure content is fully loaded
+                        setTimeout(() => {
+                            printWindow.print();
+                        }, 500);
+                    });
+                }
+            });
+        }
+    </script>
     {{-- No Shift Warning --}}
     @if(!$this->currentShift)
         <div class="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3">
@@ -1493,6 +1510,16 @@
                         <div class="flex flex-col gap-3">
                             {{-- Show receipt buttons for all paid orders (combined payment) --}}
                             @if(!empty($lastOrders))
+                                {{-- Print All button for combined receipts --}}
+                                @if(count($lastOrders) > 1)
+                                    <button type="button" 
+                                        onclick="printAllReceipts({{ json_encode(collect($lastOrders)->pluck('id')->toArray()) }})"
+                                        class="w-full py-3 rounded-xl border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                                        <flux:icon.printer class="w-4 h-4" />
+                                        PRINT ALL RECEIPTS
+                                    </button>
+                                @endif
+                                
                                 @foreach($lastOrders as $order)
                                     @if($order['payment_status'] === 'paid')
                                         <button type="button" 
@@ -1535,24 +1562,56 @@
                     <div class="hidden lg:flex flex-col border-l border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
                         @php
                             $displayOrder = !empty($lastOrders) ? \App\Models\Order::find($lastOrders[0]['id']) : $lastOrder;
+                            $isMultiOrder = !empty($lastOrders) && count($lastOrders) > 1;
                         @endphp
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                                {{ $displayOrder && $displayOrder->payment_status === 'paid' ? 'Receipt Preview' : 'Bill Preview' }}
-                                @if(!empty($lastOrders) && count($lastOrders) > 1)
-                                    <span class="text-[9px] text-neutral-400">(showing order #{{ $displayOrder->id }})</span>
-                                @endif
+                                {{ $displayOrder && $displayOrder->payment_status === 'paid' ? ($isMultiOrder ? 'Combined Receipts Preview' : 'Receipt Preview') : 'Bill Preview' }}
                             </span>
-                            <button type="button"
-                                onclick="window.open('{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}', '_blank', 'width=400,height=600')"
-                                class="px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-[10px] font-black text-neutral-600 dark:text-neutral-200 uppercase tracking-widest hover:border-blue-500 hover:text-blue-600 transition-all">
-                                Open
-                            </button>
+                            @if($isMultiOrder)
+                                <button type="button"
+                                    onclick="printAllReceipts({{ json_encode(collect($lastOrders)->pluck('id')->toArray()) }})"
+                                    class="px-3 py-1.5 rounded-xl bg-green-600 hover:bg-green-700 border border-green-600 text-[10px] font-black text-white uppercase tracking-widest transition-all">
+                                    Print All
+                                </button>
+                            @else
+                                <button type="button"
+                                    onclick="window.open('{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}', '_blank', 'width=400,height=600')"
+                                    class="px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-[10px] font-black text-neutral-600 dark:text-neutral-200 uppercase tracking-widest hover:border-blue-500 hover:text-blue-600 transition-all">
+                                    Open
+                                </button>
+                            @endif
                         </div>
-                        <iframe
-                            src="{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}?preview=1"
-                            class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
-                        ></iframe>
+                        @if($isMultiOrder)
+                            {{-- Show combined receipts preview with page break --}}
+                            <iframe
+                                srcdoc="
+                                    <html>
+                                    <head>
+                                        <style>
+                                            body { margin: 0; padding: 10px; font-family: monospace; font-size: 11px; }
+                                            .receipt { page-break-after: always; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #ddd; }
+                                            .receipt:last-child { border-bottom: none; page-break-after: auto; }
+                                            @media print { .receipt { page-break-after: always; } }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        @foreach($lastOrders as $order)
+                                            <div class='receipt'>
+                                                <iframe src='{{ route('pos.receipt', \App\Models\Order::find($order['id'])) }}?preview=1' style='width:100%; height:600px; border: none;'></iframe>
+                                            </div>
+                                        @endforeach
+                                    </body>
+                                    </html>
+                                "
+                                class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
+                            ></iframe>
+                        @else
+                            <iframe
+                                src="{{ $displayOrder && $displayOrder->payment_status === 'paid' ? route('pos.receipt', $displayOrder) : route('pos.bill', $displayOrder) }}?preview=1"
+                                class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
+                            ></iframe>
+                        @endif
                     </div>
                 </div>
             </div>
