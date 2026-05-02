@@ -831,7 +831,7 @@
     </flux:modal>
     
     {{-- Void Orders & Clear Table Modal --}}
-    <flux:modal name="void-orders-modal" :show="$showVoidModal" class="max-w-lg">
+    <flux:modal wire:model="showVoidModal" class="max-w-lg">
         <div class="space-y-6">
             {{-- Header --}}
             <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
