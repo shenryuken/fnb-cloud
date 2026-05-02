@@ -51,6 +51,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('pos.receipt')->middleware('permission:pos.access');
     
+    // Combined receipts (for multiple orders paid together)
+    Route::get('pos/receipts/{orderIds}', function (string $orderIds) {
+        $ids = array_filter(array_map('intval', explode(',', $orderIds)));
+        $orders = \App\Models\Order::whereIn('id', $ids)
+            ->with(['items.product', 'items.variant', 'items.addons', 'items.components', 'user'])
+            ->get();
+        
+        return view('pos.combined-receipt', [
+            'orders' => $orders,
+            'tenant' => Auth::user()->tenant,
+        ]);
+    })->name('pos.receipts')->middleware('permission:pos.access');
+    
     // Bill (for unpaid orders - customer requests bill before paying)
     Route::get('pos/bill/{order}', function (\App\Models\Order $order) {
         return view('pos.bill', [

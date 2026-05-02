@@ -1,21 +1,4 @@
 <div x-data="{}" class="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] gap-4 p-4 overflow-y-auto lg:overflow-hidden bg-zinc-50 dark:bg-zinc-950" wire:poll.15s>
-    <script>
-        function printAllReceipts(orderIds) {
-            // Open each receipt in a separate window
-            orderIds.forEach((orderId, index) => {
-                const receiptUrl = `/pos/receipt/${orderId}`;
-                const printWindow = window.open(receiptUrl, `receipt_${orderId}`, 'width=400,height=600');
-                if (printWindow) {
-                    printWindow.addEventListener('load', function() {
-                        // Auto-print after a short delay to ensure content is fully loaded
-                        setTimeout(() => {
-                            printWindow.print();
-                        }, 500);
-                    });
-                }
-            });
-        }
-    </script>
     {{-- No Shift Warning --}}
     @if(!$this->currentShift)
         <div class="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 text-center text-sm font-semibold flex items-center justify-center gap-3">
@@ -1512,9 +1495,10 @@
                             @if(!empty($lastOrders))
                                 {{-- Print All button for combined receipts --}}
                                 @if(count($lastOrders) > 1)
+                                    @php $orderIds = implode(',', collect($lastOrders)->pluck('id')->toArray()); @endphp
                                     <button type="button" 
-                                        onclick="printAllReceipts({{ json_encode(collect($lastOrders)->pluck('id')->toArray()) }})"
-                                        class="w-full py-3 rounded-xl border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                                        onclick="window.open('{{ route('pos.receipts', $orderIds) }}', '_blank', 'width=400,height=700')"
+                                        class="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-all flex items-center justify-center gap-2 text-sm">
                                         <flux:icon.printer class="w-4 h-4" />
                                         PRINT ALL RECEIPTS
                                     </button>
@@ -1569,8 +1553,9 @@
                                 {{ $displayOrder && $displayOrder->payment_status === 'paid' ? ($isMultiOrder ? 'Combined Receipts Preview' : 'Receipt Preview') : 'Bill Preview' }}
                             </span>
                             @if($isMultiOrder)
+                                @php $previewOrderIds = implode(',', collect($lastOrders)->pluck('id')->toArray()); @endphp
                                 <button type="button"
-                                    onclick="printAllReceipts({{ json_encode(collect($lastOrders)->pluck('id')->toArray()) }})"
+                                    onclick="window.open('{{ route('pos.receipts', $previewOrderIds) }}', '_blank', 'width=400,height=700')"
                                     class="px-3 py-1.5 rounded-xl bg-green-600 hover:bg-green-700 border border-green-600 text-[10px] font-black text-white uppercase tracking-widest transition-all">
                                     Print All
                                 </button>
@@ -1583,27 +1568,9 @@
                             @endif
                         </div>
                         @if($isMultiOrder)
-                            {{-- Show combined receipts preview with page break --}}
+                            {{-- Show combined receipts preview --}}
                             <iframe
-                                srcdoc="
-                                    <html>
-                                    <head>
-                                        <style>
-                                            body { margin: 0; padding: 10px; font-family: monospace; font-size: 11px; }
-                                            .receipt { page-break-after: always; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #ddd; }
-                                            .receipt:last-child { border-bottom: none; page-break-after: auto; }
-                                            @media print { .receipt { page-break-after: always; } }
-                                        </style>
-                                    </head>
-                                    <body>
-                                        @foreach($lastOrders as $order)
-                                            <div class='receipt'>
-                                                <iframe src='{{ route('pos.receipt', \App\Models\Order::find($order['id'])) }}?preview=1' style='width:100%; height:600px; border: none;'></iframe>
-                                            </div>
-                                        @endforeach
-                                    </body>
-                                    </html>
-                                "
+                                src="{{ route('pos.receipts', $previewOrderIds) }}?preview=1"
                                 class="w-full flex-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white"
                             ></iframe>
                         @else
