@@ -465,24 +465,53 @@ class Tables extends Component
     }
 
     /**
-     * Redirect to POS to add takeaway items to the existing dine-in order for this table.
-     * If no current order exists, create a new one with takeaway type.
-     * This allows combining dine-in and takeaway items into one bill.
+     * Redirect to POS to add more items to a specific order by ID.
+     */
+    public function addToExistingOrderById(int $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+        
+        if ($order->payment_status !== 'unpaid') {
+            $this->dispatch('notify', message: 'Cannot add to a paid order', type: 'error');
+            return;
+        }
+        
+        return redirect()->route('pos.index', [
+            'table' => $order->table_id,
+            'addto' => $order->id,
+            'type'  => $order->order_type, // preserve order type (dine_in or takeaway)
+        ]);
+    }
+
+    /**
+     * Redirect to POS to pay all unpaid orders for a table at once.
+     */
+    public function payAllOrders(int $tableId)
+    {
+        $table = RestaurantTable::with('activeOrders')->findOrFail($tableId);
+        $unpaidOrderIds = $table->activeOrders->where('payment_status', 'unpaid')->pluck('id')->toArray();
+        
+        if (empty($unpaidOrderIds)) {
+            $this->dispatch('notify', message: 'No unpaid orders', type: 'error');
+            return;
+        }
+        
+        // Redirect to POS with payall parameter containing comma-separated order IDs
+        return redirect()->route('pos.index', [
+            'table'  => $tableId,
+            'payall' => implode(',', $unpaidOrderIds),
+        ]);
+    }
+
+    /**
+     * Redirect to POS to create a NEW takeaway order for this table.
+     * Creates a separate order (not combined with dine-in) to avoid KDS workflow conflicts.
+     * Each order has independent KDS status. Payment can be combined at checkout.
      */
     public function createTakeawayOrder(int $tableId)
     {
-        $table = RestaurantTable::with('currentOrder')->findOrFail($tableId);
-        
-        // If table already has an unpaid order, add takeaway items to it (combined bill)
-        if ($table->currentOrder && $table->currentOrder->payment_status === 'unpaid') {
-            return redirect()->route('pos.index', [
-                'table' => $tableId,
-                'addto' => $table->currentOrder->id,
-                'type'  => 'takeaway',
-            ]);
-        }
-        
-        // No existing order — start a fresh order defaulting to takeaway type
+        // Always create a new separate order for takeaway
+        // This avoids resetting dine-in order KDS status when adding takeaway
         return redirect()->route('pos.index', [
             'table' => $tableId,
             'type'  => 'takeaway',
