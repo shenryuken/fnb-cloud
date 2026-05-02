@@ -15,16 +15,12 @@
             @if($isTakeawayAdd)
                 <flux:icon.shopping-bag class="w-5 h-5" />
                 <span>Adding TAKEAWAY items to Order #{{ $addToOrderId }}</span>
-                <span class="opacity-60">|</span>
-                <span>Table: {{ $tableNumber }}</span>
-                <span class="opacity-60">|</span>
-                <span class="text-orange-100 text-xs font-normal">Use KITCHEN to add &amp; pay later, or PAY NOW to pay all</span>
             @else
                 <flux:icon.plus-circle class="w-5 h-5" />
-                <span>Adding items to Order #{{ $addToOrderId }}</span>
-                <span class="opacity-60">|</span>
-                <span>Table: {{ $tableNumber }}</span>
+                <span>Adding DINE-IN items to Order #{{ $addToOrderId }}</span>
             @endif
+            <span class="opacity-60">|</span>
+            <span>Table: {{ $tableNumber }}</span>
         </div>
     @endif
 
@@ -634,22 +630,19 @@
 
                         {{-- Payment Options: Pay Now vs Pay Later --}}
                         <div class="flex gap-2">
+                            <button wire:click="placeOrderPayLater"
+                                @disabled(empty($cart) || !$tableId)
+                                title="{{ !$tableId ? 'Select a table first' : 'Send to kitchen, pay later' }}"
+                                class="flex-1 py-3 rounded-[1.75rem] bg-amber-500 hover:bg-amber-400 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
+                                <flux:icon.fire class="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                KITCHEN
+                            </button>
                             <button wire:click="startPayment"
                                 @disabled(empty($cart))
                                 class="flex-1 py-3 rounded-[1.75rem] bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
                                 <flux:icon.credit-card class="w-4 h-4 group-hover:rotate-12 transition-transform" />
                                 PAY NOW
                             </button>
-                            @if($orderType === 'dine_in' || $addToOrderId)
-                                {{-- Show KITCHEN (pay later) for dine_in OR when adding to an existing table order --}}
-                                <button wire:click="placeOrderPayLater"
-                                    @disabled(empty($cart) || !$tableId)
-                                    title="{{ !$tableId ? 'Select a table first' : 'Send to kitchen, pay later' }}"
-                                    class="flex-1 py-3 rounded-[1.75rem] bg-amber-500 hover:bg-amber-400 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
-                                    <flux:icon.fire class="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                    KITCHEN
-                                </button>
-                            @endif
                         </div>
 
                         @if(count($cart) > 0)
