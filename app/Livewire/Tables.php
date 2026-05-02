@@ -519,21 +519,33 @@ class Tables extends Component
     }
 
     /**
-     * Redirect to POS to collect payment for table's unpaid order.
+     * Redirect to POS to collect payment for table's unpaid orders.
+     * If multiple unpaid orders exist, combines them into one payment.
      */
     public function collectTablePayment(int $tableId)
     {
-        $table = RestaurantTable::with('currentOrder')->findOrFail($tableId);
+        $table = RestaurantTable::with('activeOrders')->findOrFail($tableId);
         
-        if (!$table->currentOrder || $table->currentOrder->payment_status !== 'unpaid') {
-            $this->dispatch('notify', message: 'No unpaid order for this table', type: 'error');
+        $unpaidOrders = $table->activeOrders->where('payment_status', 'unpaid');
+        
+        if ($unpaidOrders->isEmpty()) {
+            $this->dispatch('notify', message: 'No unpaid orders for this table', type: 'error');
             return;
         }
         
-        // Redirect to POS with pay parameter to auto-open payment modal
+        // If multiple unpaid orders, use payall to combine them
+        if ($unpaidOrders->count() > 1) {
+            $unpaidOrderIds = $unpaidOrders->pluck('id')->toArray();
+            return redirect()->route('pos.index', [
+                'table'  => $tableId,
+                'payall' => implode(',', $unpaidOrderIds),
+            ]);
+        }
+        
+        // Single unpaid order - pay just that one
         return redirect()->route('pos.index', [
             'table' => $tableId,
-            'pay' => $table->currentOrder->id,
+            'pay' => $unpaidOrders->first()->id,
         ]);
     }
 
