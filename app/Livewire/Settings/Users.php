@@ -72,8 +72,12 @@ class Users extends Component
     #[Computed]
     public function roles()
     {
-        return Role::query()
-            ->where('tenant_id', auth()->user()->tenant_id)
+        // Include both global roles (tenant_id = null) and tenant-specific roles
+        return Role::withoutGlobalScopes()
+            ->where(function ($q) {
+                $q->whereNull('tenant_id')
+                  ->orWhere('tenant_id', auth()->user()->tenant_id);
+            })
             ->orderBy('name')
             ->get();
     }
