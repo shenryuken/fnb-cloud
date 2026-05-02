@@ -412,11 +412,8 @@ class Pos extends Component
             
             if ($orders->count() > 0) {
                 $this->ordersToPayTogether = $orders->toArray();
-                
-                // Calculate combined total and auto-open payment
-                $combinedTotal = $orders->sum('total_amount');
-                $this->cartTotal = $combinedTotal;
-                $this->amountReceived = $combinedTotal;
+                $this->amountReceived = 0;
+                $this->changeAmount  = 0;
                 $this->isPaying = true;
             }
             
@@ -1050,7 +1047,7 @@ class Pos extends Component
 
     public function setExactAmount(): void
     {
-        $this->amountReceived = round((float)$this->totalAmount, 2);
+        $this->amountReceived = round((float) $this->getEffectiveTotal(), 2);
         $this->calculateChange();
     }
 
@@ -1071,7 +1068,26 @@ class Pos extends Component
             $paid = 0.0;
         }
 
-        $this->changeAmount = round(max(0, $paid - (float) $this->totalAmount), 2);
+        $this->changeAmount = round(max(0, $paid - (float) $this->getEffectiveTotal()), 2);
+    }
+
+    /**
+     * Returns the amount due for the current payment context.
+     * For combined (multi-order) payment it uses the sum of those orders,
+     * for a single unpaid order it uses that order's total,
+     * otherwise falls back to the cart total.
+     */
+    private function getEffectiveTotal(): float
+    {
+        if (!empty($this->ordersToPayTogether)) {
+            return (float) collect($this->ordersToPayTogether)->sum('total_amount');
+        }
+
+        if ($this->selectedUnpaidOrder) {
+            return (float) $this->selectedUnpaidOrder->total_amount;
+        }
+
+        return (float) $this->totalAmount;
     }
 
     /**
@@ -1083,14 +1099,14 @@ class Pos extends Component
         $this->calculateChange();
     }
 
-    // ─── Split Payment Methods ─────────────────────────────────────────────────
+    // ─── Split Payment Methods ───────────────────��─────────────────────────────
 
     public function enableSplitPayment(): void
     {
         $this->isSplitPayment = true;
         $this->paymentSplits = [];
         $this->splitMethod = 'cash';
-        $this->splitAmount = round((float) $this->totalAmount, 2);
+        $this->splitAmount = round((float) $this->getEffectiveTotal(), 2);
         $this->recalculateSplitRemaining();
     }
 
