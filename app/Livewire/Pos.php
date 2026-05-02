@@ -63,6 +63,9 @@ class Pos extends Component
     #[Url(as: 'pay')]
     public ?int $payOrderId = null; // auto-open payment modal for this order
     
+    #[Url(as: 'payall')]
+    public ?string $payAllOrderIds = null; // comma-separated order IDs to pay together
+    
     #[Url(as: 'addto')]
     public ?int $addToOrderId = null; // load existing order for adding more items
     
@@ -70,6 +73,8 @@ class Pos extends Component
     public ?string $urlOrderType = null; // order type from URL (dine_in, takeaway)
     
     public ?Order $existingOrder = null; // the order we're adding items to
+    
+    public array $ordersToPayTogether = []; // multiple orders to combine payment
     
     public string $orderType = 'dine_in'; // dine_in, takeaway
     public string $orderNotes = '';
@@ -395,6 +400,26 @@ class Pos extends Component
             
             // Clear the URL parameter
             $this->addToOrderId = null;
+        }
+        
+        // Handle pay all orders (multiple orders combined payment)
+        if ($this->payAllOrderIds) {
+            $orderIds = array_filter(array_map('intval', explode(',', $this->payAllOrderIds)));
+            $orders = Order::whereIn('id', $orderIds)
+                ->where('payment_status', 'unpaid')
+                ->get();
+            
+            if ($orders->count() > 0) {
+                $this->ordersToPayTogether = $orders->toArray();
+                
+                // Calculate combined total and auto-open payment
+                $combinedTotal = $orders->sum('total_amount');
+                $this->cartTotal = $combinedTotal;
+                $this->amountReceived = $combinedTotal;
+                $this->isPaying = true;
+            }
+            
+            $this->payAllOrderIds = null;
         }
     }
 
@@ -1467,8 +1492,9 @@ class Pos extends Component
                 'shift_id' => $this->currentShift?->id,
                 'user_id' => Auth::id(),
                 'customer_id' => $this->customerId,
-                'table_id' => $this->orderType === 'dine_in' ? $this->tableId : null,
-                'table_number' => $this->orderType === 'dine_in' ? $this->tableNumber : null,
+                // Always link to table if provided - allows tracking takeaway orders from tables
+                'table_id' => $this->tableId,
+                'table_number' => $this->tableNumber,
                 'order_type' => $this->orderType,
                 'notes' => $this->orderNotes,
                 'status' => 'pending', // Order is pending until paid
@@ -1730,11 +1756,73 @@ class Pos extends Component
     }
 
     /**
+     * Collect payment for multiple orders at once (combined payment).
+     */
+    public function collectPaymentForMultipleOrders(): void
+    {
+        if (empty($this->ordersToPayTogether)) {
+            $this->dispatch('notify', message: 'No orders selected for combined payment.', type: 'error');
+            return;
+        }
+
+        $orderIds = collect($this->ordersToPayTogether)->pluck('id')->toArray();
+        $orders = Order::whereIn('id', $orderIds)->where('payment_status', 'unpaid')->get();
+        
+        if ($orders->isEmpty()) {
+            $this->dispatch('notify', message: 'No unpaid orders found.', type: 'error');
+            return;
+        }
+
+        $combinedTotal = $orders->sum('total_amount');
+        $tableId = $orders->first()->table_id;
+
+        DB::transaction(function () use ($orders, $combinedTotal, $tableId) {
+            foreach ($orders as $order) {
+                $order->update([
+                    'payment_method' => $this->paymentMethod,
+                    'payment_status' => 'paid',
+                    'status' => 'completed',
+                    'amount_paid' => $order->total_amount,
+                    'change_amount' => 0,
+                ]);
+            }
+
+            // Update table status - only mark dirty if ALL orders for this table are now paid
+            if ($tableId) {
+                $table = RestaurantTable::find($tableId);
+                if ($table) {
+                    $remainingUnpaid = Order::where('table_id', $tableId)
+                        ->where('payment_status', 'unpaid')
+                        ->count();
+                    
+                    if ($remainingUnpaid === 0) {
+                        $table->markDirty();
+                    }
+                }
+            }
+
+            // Update shift sales totals
+            if ($shift = $this->currentShift) {
+                $shift->recalculateSales();
+                unset($this->currentShift);
+            }
+        });
+
+        $this->lastOrder = $orders->first()->fresh();
+        $this->ordersToPayTogether = [];
+        $this->isPaying = false;
+
+        $this->dispatch('notify', message: 'Payment collected for ' . $orders->count() . ' orders (Total: RM ' . number_format($combinedTotal, 2) . ')', type: 'success');
+        $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'cartTotal']);
+    }
+
+    /**
      * Cancel collecting payment for an unpaid order.
      */
     public function cancelCollectPayment(): void
     {
         $this->selectedUnpaidOrder = null;
+        $this->ordersToPayTogether = [];
         $this->isPaying = false;
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
     }

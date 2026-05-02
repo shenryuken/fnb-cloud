@@ -1039,14 +1039,23 @@
             <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
 
                 <!-- Header -->
-                <div class="bg-gradient-to-r {{ $selectedUnpaidOrder ? 'from-amber-500 to-amber-600' : 'from-pink-500 to-pink-600' }} p-5 text-white">
+                @php
+                    $isMultiOrder = !empty($ordersToPayTogether);
+                    $multiOrderTotal = $isMultiOrder ? collect($ordersToPayTogether)->sum('total_amount') : 0;
+                @endphp
+                <div class="bg-gradient-to-r {{ $isMultiOrder ? 'from-green-500 to-green-600' : ($selectedUnpaidOrder ? 'from-amber-500 to-amber-600' : 'from-pink-500 to-pink-600') }} p-5 text-white">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
                                 <flux:icon.credit-card class="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                @if($selectedUnpaidOrder)
+                                @if($isMultiOrder)
+                                    <h3 class="text-lg font-bold">Combined Payment</h3>
+                                    <p class="text-green-100 text-xs">
+                                        {{ count($ordersToPayTogether) }} orders combined
+                                    </p>
+                                @elseif($selectedUnpaidOrder)
                                     <h3 class="text-lg font-bold">Collect Payment</h3>
                                     <p class="text-amber-100 text-xs">
                                         Order #{{ $selectedUnpaidOrder->id }} - {{ $selectedUnpaidOrder->table_number ?? 'Takeaway' }}
@@ -1060,8 +1069,8 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="block text-xs {{ $selectedUnpaidOrder ? 'text-amber-200' : 'text-pink-200' }}">Amount Due</span>
-                            <span class="text-2xl font-bold">RM {{ number_format($selectedUnpaidOrder ? $selectedUnpaidOrder->total_amount : $totalAmount, 2) }}</span>
+                            <span class="block text-xs {{ $isMultiOrder ? 'text-green-200' : ($selectedUnpaidOrder ? 'text-amber-200' : 'text-pink-200') }}">Amount Due</span>
+                            <span class="text-2xl font-bold">RM {{ number_format($isMultiOrder ? $multiOrderTotal : ($selectedUnpaidOrder ? $selectedUnpaidOrder->total_amount : $totalAmount), 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -1071,7 +1080,29 @@
 
                     {{-- Order Summary --}}
                     <div class="rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-2">
-                        @if($selectedUnpaidOrder)
+                        @if($isMultiOrder)
+                            {{-- Show combined orders --}}
+                            <div class="text-xs text-zinc-400 font-semibold uppercase tracking-wider mb-2">Combined Orders</div>
+                            <div class="max-h-48 overflow-y-auto space-y-3">
+                                @foreach($ordersToPayTogether as $orderData)
+                                    <div class="p-2 rounded-lg border {{ ($orderData['order_type'] ?? 'dine_in') === 'takeaway' ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800' }}">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                                                Order #{{ $orderData['id'] }}
+                                                <span class="text-xs px-1.5 py-0.5 rounded {{ ($orderData['order_type'] ?? 'dine_in') === 'takeaway' ? 'bg-orange-200 text-orange-700 dark:bg-orange-800 dark:text-orange-200' : 'bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300' }}">
+                                                    {{ ($orderData['order_type'] ?? 'dine_in') === 'takeaway' ? 'Takeaway' : 'Dine-in' }}
+                                                </span>
+                                            </span>
+                                            <span class="font-bold text-zinc-900 dark:text-zinc-100">RM {{ number_format($orderData['total_amount'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="flex justify-between items-center pt-2 mt-1 border-t border-zinc-200 dark:border-zinc-700">
+                                <span class="font-semibold text-zinc-900 dark:text-zinc-100">Combined Total</span>
+                                <span class="text-lg font-bold text-green-500">RM {{ number_format($multiOrderTotal, 2) }}</span>
+                            </div>
+                        @elseif($selectedUnpaidOrder)
                             {{-- Show items for unpaid order --}}
                             <div class="text-xs text-zinc-400 font-semibold uppercase tracking-wider mb-2">Order Items</div>
                             <div class="max-h-32 overflow-y-auto space-y-1.5">
@@ -1318,7 +1349,20 @@
 
                 <!-- Footer -->
                 <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
-                    @if($selectedUnpaidOrder)
+                    @if($isMultiOrder)
+                        <button wire:click="cancelCollectPayment" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                            Cancel
+                        </button>
+                        <button wire:click="collectPaymentForMultipleOrders"
+                            @php
+                                $checkoutDisabled = $paymentMethod === 'cash' && $amountReceived < $multiOrderTotal;
+                            @endphp
+                            {{ $checkoutDisabled ? 'disabled' : '' }}
+                            class="flex-1 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <flux:icon.check-circle class="w-5 h-5" />
+                            Pay All ({{ count($ordersToPayTogether) }} Orders)
+                        </button>
+                    @elseif($selectedUnpaidOrder)
                         <button wire:click="cancelCollectPayment" class="px-6 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
                             Cancel
                         </button>
