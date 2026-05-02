@@ -95,7 +95,7 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $user->id }})" title="Edit" />
                                     <flux:button size="sm" variant="ghost" icon="key" wire:click="openResetPassword({{ $user->id }})" title="Reset Password" />
-                                    @if($user->hasAnyRole(['admin', 'manager', 'super-admin']))
+                                    @if($user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('super-admin'))
                                         <flux:button size="sm" variant="ghost" icon="shield-check" wire:click="openSetPin({{ $user->id }})" title="Set Manager PIN" class="text-blue-400 hover:text-blue-600" />
                                     @endif
                                     @if($user->id !== auth()->id())
