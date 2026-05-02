@@ -894,7 +894,7 @@
             {{-- Manager PIN --}}
             <div class="space-y-2">
                 <flux:label required>Manager PIN</flux:label>
-                <flux:input type="password" wire:model="managerPin" placeholder="Enter manager PIN to authorize" maxlength="6" />
+                <flux:input type="password" wire:model="managerPin" placeholder="Enter manager PIN to authorize" inputmode="numeric" />
                 @error('managerPin') <flux:text size="sm" class="text-red-500">{{ $message }}</flux:text> @enderror
                 <flux:text size="xs" class="text-zinc-400">A manager or admin must authorize this void action.</flux:text>
             </div>
