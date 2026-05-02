@@ -829,4 +829,86 @@
             </div>
         @endif
     </flux:modal>
+    
+    {{-- Void Orders & Clear Table Modal --}}
+    <flux:modal name="void-orders-modal" :show="$showVoidModal" class="max-w-lg">
+        <div class="space-y-6">
+            {{-- Header --}}
+            <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                    <flux:icon.exclamation-triangle class="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                    <flux:heading size="lg" class="text-red-700 dark:text-red-400">Void Unpaid Orders</flux:heading>
+                    <flux:text size="sm" class="text-red-600 dark:text-red-400">This action requires manager authorization</flux:text>
+                </div>
+            </div>
+            
+            @if($voidTableId)
+                @php
+                    $voidTable = \App\Models\RestaurantTable::with('activeOrders')->find($voidTableId);
+                    $unpaidOrders = $voidTable?->activeOrders->where('payment_status', 'unpaid') ?? collect();
+                    $totalToVoid = $unpaidOrders->sum('total_amount');
+                @endphp
+                
+                {{-- Orders to be voided --}}
+                <div class="space-y-2">
+                    <flux:text size="sm" class="text-zinc-500 font-semibold uppercase tracking-wider">Orders to Void</flux:text>
+                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                        @foreach($unpaidOrders as $order)
+                            <div class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <flux:badge size="sm" :color="$order->order_type === 'takeaway' ? 'orange' : 'zinc'">
+                                        {{ $order->order_type === 'takeaway' ? 'Takeaway' : 'Dine-in' }}
+                                    </flux:badge>
+                                    <flux:text size="sm" class="font-semibold">Order #{{ $order->id }}</flux:text>
+                                </div>
+                                <flux:text size="sm" class="font-bold text-red-600">RM {{ number_format($order->total_amount, 2) }}</flux:text>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                        <flux:text class="font-semibold">Total to Void</flux:text>
+                        <flux:text class="text-xl font-bold text-red-600">RM {{ number_format($totalToVoid, 2) }}</flux:text>
+                    </div>
+                </div>
+            @endif
+            
+            {{-- Void Reason --}}
+            <div class="space-y-2">
+                <flux:label required>Reason for Voiding</flux:label>
+                <flux:select wire:model="voidReason" placeholder="Select a reason...">
+                    @foreach($voidReasons as $key => $label)
+                        <flux:select.option value="{{ $key }}">{{ $label }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                @error('voidReason') <flux:text size="sm" class="text-red-500">{{ $message }}</flux:text> @enderror
+            </div>
+            
+            {{-- Additional Notes --}}
+            <div class="space-y-2">
+                <flux:label>Additional Notes</flux:label>
+                <flux:textarea wire:model="voidNotes" placeholder="Enter any additional details..." rows="2" />
+            </div>
+            
+            {{-- Manager PIN --}}
+            <div class="space-y-2">
+                <flux:label required>Manager PIN</flux:label>
+                <flux:input type="password" wire:model="managerPin" placeholder="Enter manager PIN to authorize" maxlength="6" />
+                @error('managerPin') <flux:text size="sm" class="text-red-500">{{ $message }}</flux:text> @enderror
+                <flux:text size="xs" class="text-zinc-400">A manager or admin must authorize this void action.</flux:text>
+            </div>
+            
+            {{-- Actions --}}
+            <div class="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                <flux:button wire:click="closeVoidModal" variant="ghost" class="flex-1">
+                    Cancel
+                </flux:button>
+                <flux:button wire:click="confirmVoidAndClearTable" variant="danger" class="flex-1">
+                    <flux:icon.trash class="w-4 h-4 mr-1" />
+                    Void Orders & Clear Table
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

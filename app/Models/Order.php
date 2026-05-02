@@ -42,6 +42,11 @@ class Order extends Model
         'change_amount',
         'notes',
         'shift_reassigned_at',
+        // Void tracking
+        'voided_at',
+        'voided_by',
+        'void_reason',
+        'void_notes',
     ];
 
     protected $casts = [
@@ -59,6 +64,7 @@ class Order extends Model
         'preparing_at' => 'datetime',
         'shift_reassigned_at' => 'datetime',
         'prep_time_minutes' => 'integer',
+        'voided_at' => 'datetime',
     ];
 
     /**
@@ -137,6 +143,11 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+    
+    public function voidedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'voided_by');
     }
 
     public function voucher(): BelongsTo
