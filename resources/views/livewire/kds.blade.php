@@ -56,7 +56,13 @@
                                 <span>Table {{ $order->table_number ?? '?' }}</span>
                             @else
                                 <flux:icon.shopping-bag class="w-4 h-4 text-orange-500" />
-                                <span>Takeaway</span>
+                                @if($order->table_number)
+                                    {{-- Takeaway order linked to a table (dine-in customer adding takeaway) --}}
+                                    <span>Table {{ $order->table_number }} <span class="text-orange-400 text-sm">(Pack)</span></span>
+                                @else
+                                    {{-- Standalone takeaway order --}}
+                                    <span>Takeaway</span>
+                                @endif
                             @endif
                         </h3>
                     </div>
