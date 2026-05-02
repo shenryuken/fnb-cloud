@@ -371,9 +371,11 @@ class Tables extends Component
             'managerPin.min' => 'PIN must be at least 4 characters.',
         ]);
         
-        // Verify manager PIN (check against users with manager/admin role)
+        // Verify manager PIN (check against users with manager/admin/owner role)
+        // Use slug field and bypass tenant scope for global roles
         $manager = \App\Models\User::where('pin', $this->managerPin)
-            ->whereHas('roles', fn($q) => $q->whereIn('name', ['admin', 'manager', 'super-admin']))
+            ->whereHas('roles', fn($q) => $q->withoutGlobalScopes()
+                ->whereIn('slug', ['admin', 'owner', 'superadmin', 'manager']))
             ->first();
         
         if (!$manager) {
