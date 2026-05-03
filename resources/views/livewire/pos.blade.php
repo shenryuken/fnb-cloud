@@ -1008,8 +1008,13 @@
                             <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
                                 <span class="text-xs font-medium text-zinc-500">Register New Customer</span>
 
+                                <div class="space-y-2">
+                                    <input type="text" wire:model="newCustomerName" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Customer Name *">
+                                    @error('newCustomerName') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    
                                     <input type="email" wire:model="newCustomerEmail" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Email (optional)">
                                     @error('newCustomerEmail') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    
                                     <input type="text" wire:model="newCustomerMobile" class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm" placeholder="Mobile (optional)">
                                     @error('newCustomerMobile') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
