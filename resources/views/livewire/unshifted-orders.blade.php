@@ -65,11 +65,15 @@
             @if(count($this->unshiftedOrders) > 0)
                 <div class="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-4">
                     <div class="flex items-center gap-3">
-                        <flux:checkbox 
-                            wire:click="selectAll" 
-                            :checked="count($selectedOrderIds) === count($this->unshiftedOrders)"
-                            label="Select all on page"
-                        />
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input 
+                                type="checkbox"
+                                wire:click="{{ count($selectedOrderIds) === count($this->unshiftedOrders) ? 'deselectAll' : 'selectAll' }}"
+                                @checked(count($selectedOrderIds) > 0 && count($selectedOrderIds) === count($this->unshiftedOrders))
+                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-pink-600 focus:ring-pink-500 dark:bg-zinc-800"
+                            />
+                            <span class="text-sm text-zinc-700 dark:text-zinc-300">Select all on page</span>
+                        </label>
                         @if(!empty($selectedOrderIds))
                             <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                                 {{ count($selectedOrderIds) }} selected
@@ -99,9 +103,11 @@
                     <thead class="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
                         <tr>
                             <th class="px-4 py-3 text-left">
-                                <flux:checkbox 
-                                    wire:click="selectAll"
-                                    :checked="count($selectedOrderIds) > 0"
+                                <input 
+                                    type="checkbox"
+                                    wire:click="{{ count($selectedOrderIds) === count($this->unshiftedOrders) ? 'deselectAll' : 'selectAll' }}"
+                                    @checked(count($selectedOrderIds) > 0 && count($selectedOrderIds) === count($this->unshiftedOrders))
+                                    class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-pink-600 focus:ring-pink-500 dark:bg-zinc-800"
                                 />
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">Order ID</th>
@@ -117,9 +123,11 @@
                         @foreach($this->unshiftedOrders as $order)
                             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                                 <td class="px-4 py-3">
-                                    <flux:checkbox 
+                                    <input 
+                                        type="checkbox"
                                         wire:click="toggleOrder({{ $order->id }})"
-                                        :checked="in_array($order->id, $selectedOrderIds)"
+                                        @checked(in_array($order->id, $selectedOrderIds))
+                                        class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-pink-600 focus:ring-pink-500 dark:bg-zinc-800"
                                     />
                                 </td>
                                 <td class="px-4 py-3">
