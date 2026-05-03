@@ -607,6 +607,7 @@ class Pos extends Component
                 $this->cart[$index]['quantity'] = (int) $this->cart[$index]['quantity'] + 1;
                 $this->cart[$index]['subtotal'] = round($unitPrice * (int) $this->cart[$index]['quantity'], 2);
                 $this->calculateTotal();
+                $this->dispatch('sound', name: 'tap');
                 return;
             }
         }
@@ -630,6 +631,7 @@ class Pos extends Component
         ];
 
         $this->calculateTotal();
+        $this->dispatch('sound', name: 'tap');
     }
 
     /**
@@ -735,6 +737,7 @@ class Pos extends Component
 
         $this->calculateTotal();
         $this->cancelSelection();
+        $this->dispatch('sound', name: 'tap');
     }
 
     public function applyQuickNote(string $text): void
