@@ -367,6 +367,44 @@
                         </flux:card>
                     @endif
 
+                    {{-- Void Reason Section (for voided orders) --}}
+                    @if($viewingOrder && $viewingOrder->status === 'voided')
+                        <flux:card class="p-4 space-y-3 border-l-4 border-l-yellow-500">
+                            <div class="flex items-center gap-2">
+                                <flux:icon.exclamation-triangle class="w-5 h-5 text-yellow-600" />
+                                <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Void Information</flux:text>
+                            </div>
+                            
+                            @if($viewingOrder->void_reason)
+                                <div class="space-y-1">
+                                    <flux:text size="xs" class="text-zinc-500 uppercase">Reason</flux:text>
+                                    <flux:text size="sm" class="font-semibold">{{ $viewingOrder->void_reason }}</flux:text>
+                                </div>
+                            @endif
+                            
+                            @if($viewingOrder->void_notes)
+                                <div class="space-y-1">
+                                    <flux:text size="xs" class="text-zinc-500 uppercase">Notes</flux:text>
+                                    <flux:text size="sm" class="text-zinc-300">{{ $viewingOrder->void_notes }}</flux:text>
+                                </div>
+                            @endif
+                            
+                            @if($viewingOrder->voided_by)
+                                <div class="space-y-1">
+                                    <flux:text size="xs" class="text-zinc-500 uppercase">Voided By</flux:text>
+                                    <flux:text size="sm" class="font-semibold">{{ $viewingOrder->voidedByUser?->name ?? 'Unknown' }}</flux:text>
+                                </div>
+                            @endif
+                            
+                            @if($viewingOrder->voided_at)
+                                <div class="space-y-1">
+                                    <flux:text size="xs" class="text-zinc-500 uppercase">Voided At</flux:text>
+                                    <flux:text size="sm" class="font-semibold">{{ $viewingOrder->voided_at->format('M d, Y H:i') }}</flux:text>
+                                </div>
+                            @endif
+                        </flux:card>
+                    @endif
+
                     <flux:button
                         onclick="window.open('{{ route('pos.receipt', $viewingOrder) }}?preview=1', '_blank', 'width=420,height=700')"
                         variant="primary"
