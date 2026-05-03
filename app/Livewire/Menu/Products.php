@@ -33,6 +33,7 @@ class Products extends Component
     public array $set_groups = [];
     public int $sort_order = 0;
     public bool $is_active = true;
+    public bool $is_available = true;
     public array $addons = [];
 
     // Variants and Addons for the form
@@ -71,6 +72,7 @@ class Products extends Component
         'tile_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         'sort_order' => 'required|integer|min:0',
         'is_active' => 'boolean',
+        'is_available' => 'boolean',
         'set_groups' => 'array',
         'variants.*.name' => 'required|string|max:255',
         'variants.*.receipt_label' => 'nullable|string|max:10',
@@ -87,7 +89,7 @@ class Products extends Component
      */
     public function create(): void
     {
-        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'editing', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
+        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'is_available', 'editing', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
         $this->product_type = 'ala_carte';
         $this->isCreating = true;
     }
@@ -110,6 +112,7 @@ class Products extends Component
         $this->use_tile_color = filled($this->tile_color);
         $this->sort_order = $product->sort_order;
         $this->is_active = $product->is_active;
+        $this->is_available = (bool) ($product->is_available ?? true);
         $this->variants = $product->variants()->get()->toArray();
         $this->selectedGroups = $product->addonGroups()->pluck('addon_groups.id')->toArray();
         $this->selectedStandaloneAddons = $product->addons()->whereNull('addon_group_id')->pluck('product_addons.id')->toArray();
@@ -294,7 +297,7 @@ class Products extends Component
             }
         });
 
-        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'editing', 'isCreating', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
+        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'is_available', 'editing', 'isCreating', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
         $this->dispatch('product-saved');
     }
 
@@ -332,6 +335,7 @@ class Products extends Component
                 'tile_color' => $product->tile_color,
                 'sort_order' => (int) $product->sort_order + 1,
                 'is_active' => false,
+                'is_available' => (bool) ($product->is_available ?? true),
             ]);
 
             $newProduct->addonGroups()->sync($product->addonGroups->pluck('id')->all());
@@ -381,6 +385,20 @@ class Products extends Component
     public function delete(Product $product): void
     {
         $product->delete();
+    }
+
+    public function toggleActive(Product $product): void
+    {
+        $product->update([
+            'is_active' => !$product->is_active,
+        ]);
+    }
+
+    public function toggleAvailability(Product $product): void
+    {
+        $product->update([
+            'is_available' => !(bool) ($product->is_available ?? true),
+        ]);
     }
 
     /**

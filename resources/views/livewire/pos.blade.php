@@ -69,8 +69,11 @@
         <!-- Product Grid -->
         <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-4 scrollbar-hide">
             @foreach($this->products as $product)
-                <div wire:click="quickAddProduct({{ $product->id }})" 
-                    class="group flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-pointer hover:border-pink-500/50 hover:shadow-lg transition-all duration-200 relative">
+                <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
+                    class="group flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden transition-all duration-200 relative
+                        {{ ($product->is_available ?? true)
+                            ? 'cursor-pointer hover:border-pink-500/50 hover:shadow-lg'
+                            : 'cursor-not-allowed opacity-60' }}">
                     <div class="{{ $product->tile_color ? 'flex-1' : 'aspect-[4/3]' }} bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden relative">
                         @if($product->image_url)
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -100,11 +103,17 @@
                         </div>
 
                         {{-- Customize button --}}
-                        @if(($product->product_type ?? 'ala_carte') === 'set' || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
+                        @if(($product->is_available ?? true) && (($product->product_type ?? 'ala_carte') === 'set' || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0))
                             <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
                                 class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
                                 Customize
                             </button>
+                        @endif
+
+                        @if(!($product->is_available ?? true))
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <span class="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-widest">Sold Out</span>
+                            </div>
                         @endif
                     </div>
                     @if(!$product->tile_color || $product->image_url)

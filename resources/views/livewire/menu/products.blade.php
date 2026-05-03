@@ -568,9 +568,25 @@
                             </td>
 
                             <td class="py-3 px-4 text-center">
-                                <flux:badge :color="$product->is_active ? 'green' : 'zinc'" size="sm">
-                                    {{ $product->is_active ? 'Active' : 'Hidden' }}
-                                </flux:badge>
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <button type="button"
+                                        wire:click="toggleActive({{ $product->id }})"
+                                        class="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border transition-colors
+                                            {{ $product->is_active
+                                                ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-900/40 dark:hover:bg-green-900/45'
+                                                : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700' }}">
+                                        {{ $product->is_active ? 'Active' : 'Hidden' }}
+                                    </button>
+
+                                    <button type="button"
+                                        wire:click="toggleAvailability({{ $product->id }})"
+                                        class="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border transition-colors
+                                            {{ ($product->is_available ?? true)
+                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/40 dark:hover:bg-emerald-900/45'
+                                                : 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/40 dark:hover:bg-red-900/35' }}">
+                                        {{ ($product->is_available ?? true) ? 'Available' : 'Sold out' }}
+                                    </button>
+                                </div>
                             </td>
 
                             <td class="py-3 px-4 text-right">

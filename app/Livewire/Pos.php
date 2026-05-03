@@ -564,6 +564,11 @@ class Pos extends Component
      */
     public function selectProduct(Product $product): void
     {
+        if (!(bool) ($product->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            return;
+        }
+
         $this->selectingProduct = $product->load(['variants', 'addonGroups.items', 'addons', 'setGroups.items.product']);
         $this->selectedVariantId = null;
         $this->selectedAddonIds = [];
@@ -574,6 +579,11 @@ class Pos extends Component
 
     public function quickAddProduct(Product $product): void
     {
+        if (!(bool) ($product->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            return;
+        }
+
         if (($product->product_type ?? 'ala_carte') === 'set') {
             $this->selectProduct($product);
             return;
@@ -637,6 +647,13 @@ class Pos extends Component
     public function addToCart(): void
     {
         if (!$this->selectingProduct) return;
+
+        $fresh = $this->selectingProduct->fresh();
+        if (!$fresh || !(bool) ($fresh->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            $this->cancelSelection();
+            return;
+        }
 
         $variant = null;
         if ($this->selectedVariantId) {
