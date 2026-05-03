@@ -363,6 +363,116 @@
             })();
         </script>
 
+        <script>
+            (() => {
+                if (window.__fnbAudioInit) return;
+                window.__fnbAudioInit = true;
+
+                const state = {
+                    ctx: null,
+                    master: null,
+                };
+
+                const ensure = () => {
+                    if (state.ctx) return state.ctx;
+                    const Ctx = window.AudioContext || window.webkitAudioContext;
+                    if (!Ctx) return null;
+                    state.ctx = new Ctx();
+                    state.master = state.ctx.createGain();
+                    state.master.gain.value = 0.2;
+                    state.master.connect(state.ctx.destination);
+                    return state.ctx;
+                };
+
+                const resume = async () => {
+                    const ctx = ensure();
+                    if (!ctx) return false;
+                    try {
+                        if (ctx.state === 'suspended') await ctx.resume();
+                        return ctx.state === 'running';
+                    } catch (_) {
+                        return false;
+                    }
+                };
+
+                const toneAt = (startAt, frequency, durationMs, volume) => {
+                    const ctx = ensure();
+                    if (!ctx || !state.master || ctx.state !== 'running') return;
+
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'square';
+                    osc.frequency.value = frequency;
+
+                    const dur = Math.max(0.02, durationMs / 1000);
+                    gain.gain.setValueAtTime(0.0001, startAt);
+                    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, 0.35 * (volume ?? 1)), startAt + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+
+                    osc.connect(gain);
+                    gain.connect(state.master);
+
+                    osc.start(startAt);
+                    osc.stop(startAt + dur + 0.02);
+                };
+
+                const play = async (name) => {
+                    const ok = await resume();
+                    if (!ok) return;
+
+                    const ctx = ensure();
+                    if (!ctx) return;
+
+                    const now = ctx.currentTime + 0.01;
+                    const steps =
+                        name === 'tap'
+                            ? [{ f: 880, d: 40, v: 0.7, gap: 0 }]
+                            : name === 'success'
+                                ? [{ f: 523.25, d: 80, v: 1, gap: 20 }, { f: 659.25, d: 120, v: 1, gap: 0 }]
+                                : name === 'warning'
+                                    ? [{ f: 440, d: 110, v: 1, gap: 40 }, { f: 330, d: 140, v: 1, gap: 0 }]
+                                    : name === 'error'
+                                        ? [{ f: 220, d: 140, v: 1, gap: 40 }, { f: 196, d: 180, v: 1, gap: 0 }]
+                                        : name === 'order'
+                                            ? [{ f: 880, d: 90, v: 1, gap: 40 }, { f: 660, d: 90, v: 1, gap: 40 }, { f: 880, d: 140, v: 1, gap: 0 }]
+                                            : [{ f: 660, d: 50, v: 0.6, gap: 0 }];
+
+                    let t = now;
+                    for (const s of steps) {
+                        toneAt(t, s.f, s.d, s.v);
+                        t += (s.d / 1000) + ((s.gap ?? 0) / 1000);
+                    }
+                };
+
+                const unlockHandler = () => {
+                    resume();
+                    window.removeEventListener('pointerdown', unlockHandler, true);
+                    window.removeEventListener('keydown', unlockHandler, true);
+                    window.removeEventListener('touchstart', unlockHandler, true);
+                };
+
+                window.addEventListener('pointerdown', unlockHandler, true);
+                window.addEventListener('keydown', unlockHandler, true);
+                window.addEventListener('touchstart', unlockHandler, true);
+
+                window.addEventListener('sound', (e) => {
+                    const detail = e?.detail;
+                    const name = typeof detail === 'string' ? detail : detail?.name;
+                    if (!name) return;
+                    play(name);
+                });
+
+                window.addEventListener('notify', (e) => {
+                    const detail = e?.detail;
+                    const type = typeof detail === 'object' && detail ? detail.type : null;
+                    if (type === 'success') play('success');
+                    else if (type === 'warning') play('warning');
+                    else if (type === 'error') play('error');
+                });
+            })();
+        </script>
+
         @fluxScripts
     </body>
 </html>
