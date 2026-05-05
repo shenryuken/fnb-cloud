@@ -34,6 +34,10 @@ class UserGuide extends Component
                 'title' => 'Order Management',
                 'icon'  => 'clipboard-list',
             ],
+            'voiding' => [
+                'title' => 'Voiding Orders',
+                'icon'  => 'exclamation-triangle',
+            ],
             'kds' => [
                 'title' => 'Kitchen Display (KDS)',
                 'icon'  => 'fire',
