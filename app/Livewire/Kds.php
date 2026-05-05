@@ -20,7 +20,6 @@ class Kds extends Component
     public function mount()
     {
         $this->isBusy = (bool) Auth::user()->tenant->is_busy;
-        session()->put('kds:last_seen_order_id', (int) ($this->orders->max('id') ?? 0));
     }
 
     public function placeholder()
@@ -183,17 +182,8 @@ class Kds extends Component
 
     public function render()
     {
-        $orders = $this->orders;
-        $latestId = (int) ($orders->max('id') ?? 0);
-        $seen = (int) session()->get('kds:last_seen_order_id', 0);
-
-        if ($latestId > $seen) {
-            session()->put('kds:last_seen_order_id', $latestId);
-            $this->dispatch('sound', name: 'order');
-        }
-
         return view('livewire.kds', [
-            'orders' => $orders
+            'orders' => $this->orders
         ]);
     }
 }
