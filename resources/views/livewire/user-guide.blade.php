@@ -46,8 +46,9 @@
                                 ['Take Orders via POS', 'Use the POS screen to add items to the cart and process payments.'],
                                 ['Monitor Kitchen via KDS', 'Kitchen staff can view and update order status on the KDS screen.'],
                                 ['Track Orders', 'View all orders from the Orders page. Update status as needed.'],
+                                ['Handle Unpaid Orders', 'If a table has unpaid orders, you can void them with manager PIN authorization. Document the reason for audit purposes.'],
                                 ['Close Your Shift', 'At end of day, go to Shifts, click the active shift and close it by entering the actual cash in the drawer.'],
-                                ['Review Reports', 'Check the Sales Report and Cashier Report to review the day\'s performance.'],
+                                ['Review Reports', 'Check the Sales Report and Cashier Report to review the day\'s performance, including voided orders.'],
                             ] as [$step, $desc])
                             <li class="flex gap-4">
                                 <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-pink-500/20 text-pink-400 text-sm font-bold">{{ $loop->iteration }}</span>
@@ -72,7 +73,8 @@
                                 </thead>
                                 <tbody class="divide-y divide-zinc-800">
                                     @foreach([
-                                        ['Owner / Admin', 'Full access to all features, settings, reports, and user management.'],
+                                        ['Owner / Admin', 'Full access to all features, settings, reports, and user management. Can authorize void operations.'],
+                                        ['Manager', 'Full POS and order access, staff management, and void authorization. Can set PIN for security.'],
                                         ['Cashier', 'POS, Shifts, and Orders access.'],
                                         ['Waiter', 'POS access to take orders.'],
                                         ['Kitchen Staff', 'Kitchen Display System (KDS) access only.'],
@@ -237,6 +239,65 @@
                     <div>
                         <h3 class="text-base font-semibold text-zinc-100 mb-3">Viewing Order Details</h3>
                         <p class="text-sm text-zinc-400">Click on any order row to open the full order details including items, quantities, payment method, and timestamps. You can also print a receipt from the order detail view.</p>
+                    </div>
+                </div>
+            </flux:card>
+            @endif
+
+            {{-- Voiding Orders --}}
+            @if($activeSection === 'voiding')
+            <flux:card class="p-6 md:p-8">
+                <flux:heading size="xl" level="2" class="mb-1">Voiding Orders</flux:heading>
+                <flux:text class="text-zinc-400 mb-8">Cancel unpaid orders and clear tables with manager authorization.</flux:text>
+
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">When to Void an Order</h3>
+                        <p class="text-sm text-zinc-400 mb-3">Voiding is used to cancel orders with unpaid balances. Common reasons include:</p>
+                        <ul class="space-y-2 text-sm text-zinc-400 list-disc list-inside">
+                            <li>Customer left without paying</li>
+                            <li>Order entry error or duplicate order</li>
+                            <li>Food quality issue requiring compensation</li>
+                            <li>Manager approval for complimentary orders</li>
+                            <li>Test or training orders</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Clearing a Table with Unpaid Orders</h3>
+                        <ol class="space-y-2 text-sm text-zinc-300 list-decimal list-inside">
+                            <li>At the table, attempt to clear. If unpaid orders exist, the void confirmation modal appears.</li>
+                            <li>Review the orders and total amount to be voided.</li>
+                            <li>Select a <span class="font-medium text-zinc-100">reason</span> from the dropdown (e.g., "Customer Left Without Paying").</li>
+                            <li>Optionally add <span class="font-medium text-zinc-100">additional notes</span> to document the void.</li>
+                            <li>Enter the <span class="font-medium text-zinc-100">manager's PIN</span> (4 or more digits) to authorize.</li>
+                            <li>Click <span class="font-medium text-zinc-100">Void Orders & Clear Table</span> to complete.</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Manager PIN Setup</h3>
+                        <p class="text-sm text-zinc-400 mb-3">Managers and owners must set a PIN to authorize void operations:</p>
+                        <ol class="space-y-2 text-sm text-zinc-300 list-decimal list-inside">
+                            <li>Go to <span class="font-medium text-zinc-100">Settings &rarr; Team Members</span>.</li>
+                            <li>Find the manager/owner name and click the <span class="font-medium text-pink-400">shield icon</span> to "Set Manager PIN".</li>
+                            <li>Enter a PIN of <span class="font-medium text-zinc-100">4 or more digits</span>.</li>
+                            <li>Confirm the PIN and click <span class="font-medium text-zinc-100">Set PIN</span>.</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Viewing Voided Orders</h3>
+                        <p class="text-sm text-zinc-400">In the <span class="font-medium text-zinc-100">Orders</span> page, voided orders display with a <span class="text-yellow-400 font-medium">"Voided"</span> status badge. Click any voided order to view:</p>
+                        <ul class="space-y-1 text-sm text-zinc-400 list-disc list-inside mt-2">
+                            <li>Void reason and any notes provided</li>
+                            <li>Name of the manager who authorized</li>
+                            <li>Date and time the order was voided</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <p class="text-sm text-yellow-200"><span class="font-semibold">Important:</span> All void operations are recorded in the audit trail for compliance and reporting purposes.</p>
                     </div>
                 </div>
             </flux:card>
