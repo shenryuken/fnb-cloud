@@ -10,11 +10,12 @@ A comprehensive guide to using the FnB Cloud Point of Sale system for restaurant
 2. [Shift Management](#shift-management)
 3. [Point of Sale (POS)](#point-of-sale-pos)
 4. [Order Management](#order-management)
-5. [Kitchen Display System (KDS)](#kitchen-display-system-kds)
-6. [Menu Management](#menu-management)
-7. [Loyalty Program](#loyalty-program)
-8. [Reports](#reports)
-9. [Settings](#settings)
+5. [Voiding Orders](#voiding-orders)
+6. [Kitchen Display System (KDS)](#kitchen-display-system-kds)
+7. [Menu Management](#menu-management)
+8. [Loyalty Program](#loyalty-program)
+9. [Reports](#reports)
+10. [Settings](#settings)
 
 ---
 
@@ -235,6 +236,74 @@ View and manage all orders from the **Orders** page.
 
 ---
 
+## Voiding Orders
+
+Voiding is used to cancel orders with unpaid balances and clear tables. This feature requires manager authorization via PIN.
+
+### When to Void an Order
+
+- Customer left without paying
+- Order entry error
+- Food quality issues requiring comp
+- Manager approval for complimentary orders
+- Duplicate or test orders
+
+### Clearing a Table with Unpaid Orders
+
+When you try to clear a table that has unpaid orders:
+
+1. A void confirmation modal appears showing:
+   - Orders to be voided and their amounts
+   - Total amount being voided
+
+2. **Select a Reason** for voiding:
+   - Customer Left Without Paying
+   - Order Entry Error
+   - Food Quality Issue / Comp
+   - Manager Complimentary
+   - Test Order
+   - Duplicate Order
+   - Other (with optional notes)
+
+3. **Add Additional Notes** (optional):
+   - Document any special circumstances
+   - Provide context for the void
+
+4. **Manager PIN Authorization**:
+   - Enter the manager's PIN (4+ digits)
+   - PIN must be set by owner/manager in Settings > Team Members
+   - Click **Void Orders & Clear Table**
+
+5. **Audit Trail**:
+   - Void is recorded with:
+     - Reason and notes
+     - Manager who authorized
+     - Date and time of void
+     - Order status changed to "Voided"
+
+### Viewing Voided Orders
+
+In the **Orders** page:
+- Voided orders display with "Voided" status badge
+- Click to view order details including:
+  - Void reason and notes
+  - Who authorized the void
+  - When the order was voided
+
+### Manager PIN Setup
+
+Managers and owners must set their PIN to authorize void operations:
+
+1. Go to **Settings > Team Members**
+2. Click the **shield icon** next to the manager/owner name
+3. Enter a **PIN (4 or more digits)**
+4. Confirm the PIN
+5. Click **Set PIN**
+
+**Important**: PINs are stored securely and required for any void authorization.
+
+---
+
 ## Kitchen Display System (KDS)
 
 The KDS shows orders for kitchen staff to prepare.
@@ -430,19 +499,41 @@ Pre-defined notes for order items:
 
 Manage staff accounts:
 
-1. Go to **Settings > Users**
+1. Go to **Settings > Team Members**
 2. Add new users with email and password
-3. Assign roles (Owner, Cashier, Kitchen Staff, Waiter)
+3. Assign roles (Owner, Manager, Kitchen Staff, Waiter, Cashier, Staff)
 4. Each role has specific permissions
+
+#### Setting Manager PIN
+
+Managers and owners must have a PIN for authorizing void operations:
+
+1. In **Settings > Team Members**, click the **shield icon** (Set Manager PIN)
+2. Enter a 4-digit PIN or longer
+3. Confirm the PIN
+4. Click **Set PIN**
+
+The PIN will be required when authorizing void operations on the POS.
+
+#### Resetting Password
+
+If a user forgets their password:
+
+1. In **Settings > Team Members**, click the **key icon** (Reset Password)
+2. Enter a new temporary password
+3. Click **Reset Password**
+4. Provide the new password to the user
 
 ### Roles & Permissions
 
 Available roles:
 
-- **Owner**: Full access to all features
-- **Cashier**: POS access, view orders
+- **Owner**: Full access to all features, can authorize voids
+- **Manager**: Full access including POS, void authorization, staff management
 - **Kitchen Staff**: KDS access only
 - **Waiter**: POS access, limited settings
+- **Cashier**: POS access, view orders
+- **Staff**: Limited access for basic operations
 
 ---
 
@@ -453,16 +544,19 @@ Available roles:
 1. **Start of Day**:
    - Open a shift with starting cash
    - Verify products are available
+   - Ensure managers/owners have PIN set up
 
 2. **During Service**:
    - Process orders through POS
    - Monitor KDS for order flow
    - Record any cash movements
+   - Use void feature when needed with PIN authorization
 
 3. **End of Day**:
+   - Void any remaining unpaid orders with proper documentation
    - Count cash drawer
    - Close shift with actual cash
-   - Review daily sales report
+   - Review daily sales report and void history
 
 ### Cash Management
 
@@ -514,6 +608,22 @@ Ensure:
 - Customer is linked to the order
 - Customer has sufficient points
 - Points meet minimum redemption threshold
+
+### Manager PIN Not Working
+
+Check:
+- PIN is set for the manager/owner (Settings > Team Members > shield icon)
+- Correct PIN is entered (4 or more digits)
+- Manager has appropriate role (Owner or Manager)
+- PIN hasn't been changed recently
+
+### Cannot Clear Table
+
+If you see "This table has unpaid orders":
+1. Check if the table has any incomplete or unpaid orders
+2. Go to table details to review orders
+3. Either pay the orders or void them with manager PIN
+4. Void confirmation will appear if orders are unpaid
 
 ---
 
