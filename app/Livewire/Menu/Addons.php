@@ -59,9 +59,16 @@ class Addons extends Component
             'group_name' => 'required|string|max:255',
             'group_description' => 'nullable|string',
             'min_select' => 'required|integer|min:0',
-            'max_select' => 'required|integer|min:1',
+            'max_select' => 'required|integer|min:0',
             'group_is_active' => 'boolean',
         ]);
+
+        $min = (int) $validated['min_select'];
+        $max = (int) $validated['max_select'];
+        if ($max > 0 && $max < $min) {
+            $this->addError('max_select', 'The max select field must be greater than or equal to min, or 0 for unlimited.');
+            return;
+        }
 
         if ($this->editingGroup) {
             $this->editingGroup->update([

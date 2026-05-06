@@ -1733,7 +1733,11 @@
                             <div class="flex items-center justify-between">
                                 <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{{ $group->name }}</h4>
                                 <span class="text-xs text-zinc-400">
-                                    Select {{ $group->min_select }}{{ $group->max_select > $group->min_select ? '-' . $group->max_select : '' }}
+                                    @if((int) $group->max_select === 0)
+                                        Select {{ (int) $group->min_select === 0 ? 'any' : ((int) $group->min_select . '+') }}
+                                    @else
+                                        Select {{ (int) $group->min_select }}{{ (int) $group->max_select > (int) $group->min_select ? '-' . (int) $group->max_select : '' }}
+                                    @endif
                                 </span>
                             </div>
                             <div class="space-y-1.5">
