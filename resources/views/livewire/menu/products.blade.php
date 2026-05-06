@@ -241,9 +241,10 @@
                     </flux:fieldset>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:select wire:model="category_id" label="Category" placeholder="Select category" icon="tag">
+                        <flux:select wire:model.live="category_id" label="Category" placeholder="Select category" icon="tag">
+                            <flux:select.option value="">Select category</flux:select.option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
@@ -377,8 +378,9 @@
                                                             <div>
                                                                 <flux:label class="text-xs text-zinc-400 mb-1">Product</flux:label>
                                                                 <flux:select wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.product_id" placeholder="Select product">
+                                                                    <flux:select.option value="">Select product</flux:select.option>
                                                                     @foreach($allProducts as $p)
-                                                                        <option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</option>
+                                                                        <flux:select.option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</flux:select.option>
                                                                     @endforeach
                                                                 </flux:select>
                                                                 @error("set_groups.$gIndex.items.$iIndex.product_id") <flux:error class="text-xs mt-1">{{ $message }}</flux:error> @enderror
