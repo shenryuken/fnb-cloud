@@ -99,8 +99,13 @@
                             @endif
                         </div>
 
-                        {{-- Customize button --}}
-                        @if(($product->product_type ?? 'ala_carte') === 'set' || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
+                        @php
+                            $variantCount = $product->variants?->count() ?? 0;
+                            $hasVariantPricing = $variantCount > 0
+                                ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
+                                : false;
+                        @endphp
+                        @if(($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
                             <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
                                 class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
                                 Customize
