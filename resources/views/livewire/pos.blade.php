@@ -100,16 +100,37 @@
                         </div>
 
                         @php
-                            $variantCount = $product->variants?->count() ?? 0;
-                            $hasVariantPricing = $variantCount > 0
-                                ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
-                                : false;
+                            $activeVariants = ($product->variants ?? collect())->where('is_active', true)->values();
+                            $canQuickVariants = ($product->product_type ?? 'ala_carte') !== 'set'
+                                && ($product->addons?->count() ?? 0) === 0
+                                && ($product->addonGroups?->count() ?? 0) === 0
+                                && $activeVariants->count() > 0
+                                && $activeVariants->count() <= 3;
                         @endphp
-                        @if(($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
-                            <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
-                                class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
-                                Customize
-                            </button>
+
+                        @if($canQuickVariants)
+                            <div class="absolute bottom-2 left-2 right-2 flex gap-1.5">
+                                @foreach($activeVariants as $variant)
+                                    <button type="button"
+                                        wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
+                                        class="flex-1 py-2 rounded-lg bg-zinc-900/90 text-white text-[10px] font-black uppercase tracking-widest hover:bg-pink-500 transition-colors">
+                                        {{ $variant->receipt_label ?: $variant->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @else
+                            @php
+                                $variantCount = $product->variants?->count() ?? 0;
+                                $hasVariantPricing = $variantCount > 0
+                                    ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
+                                    : false;
+                            @endphp
+                            @if(($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
+                                <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
+                                    class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
+                                    Customize
+                                </button>
+                            @endif
                         @endif
                     </div>
                     @if(!$product->tile_color || $product->image_url)

@@ -564,6 +564,11 @@ class Pos extends Component
      */
     public function selectProduct(Product $product): void
     {
+        if (!(bool) ($product->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            return;
+        }
+
         $this->selectingProduct = $product->load(['variants', 'addonGroups.items', 'addons', 'setGroups.items.product']);
         $this->selectedVariantId = null;
         $this->selectedAddonIds = [];
@@ -574,6 +579,11 @@ class Pos extends Component
 
     public function quickAddProduct(Product $product): void
     {
+        if (!(bool) ($product->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            return;
+        }
+
         if (($product->product_type ?? 'ala_carte') === 'set') {
             $this->selectProduct($product);
             return;
@@ -597,6 +607,7 @@ class Pos extends Component
                 $this->cart[$index]['quantity'] = (int) $this->cart[$index]['quantity'] + 1;
                 $this->cart[$index]['subtotal'] = round($unitPrice * (int) $this->cart[$index]['quantity'], 2);
                 $this->calculateTotal();
+                $this->dispatch('sound', name: 'tap');
                 return;
             }
         }
@@ -620,6 +631,73 @@ class Pos extends Component
         ];
 
         $this->calculateTotal();
+        $this->dispatch('sound', name: 'tap');
+    }
+
+    public function quickAddVariant(Product $product, ProductVariant $variant): void
+    {
+        if ((int) $variant->product_id !== (int) $product->id) {
+            $this->dispatch('notify', message: 'Variant is not valid for this item.', type: 'error');
+            return;
+        }
+
+        if (!(bool) ($variant->is_active ?? true)) {
+            $this->dispatch('notify', message: 'Variant is not available.', type: 'warning');
+            return;
+        }
+
+        if (!(bool) ($product->is_available ?? true)) {
+            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            return;
+        }
+
+        if (($product->product_type ?? 'ala_carte') === 'set') {
+            $this->selectProduct($product);
+            return;
+        }
+
+        $variantId = (int) $variant->id;
+        $unitPrice = (float) $variant->price;
+
+        foreach ($this->cart as $index => $cartItem) {
+            if (!empty($cartItem['existing'])) {
+                continue;
+            }
+
+            if (
+                (int) $cartItem['product_id'] === (int) $product->id
+                && (int) ($cartItem['variant_id'] ?? 0) === $variantId
+                && empty($cartItem['addon_ids'])
+                && ($cartItem['notes'] ?? '') === ''
+            ) {
+                $this->cart[$index]['quantity'] = (int) $this->cart[$index]['quantity'] + 1;
+                $this->cart[$index]['subtotal'] = round($unitPrice * (int) $this->cart[$index]['quantity'], 2);
+                $this->calculateTotal();
+                $this->dispatch('sound', name: 'tap');
+                return;
+            }
+        }
+
+        $this->cart[] = [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'variant_id' => $variantId,
+            'variant_name' => (string) ($variant->name ?? ''),
+            'addon_ids' => [],
+            'addon_names' => [],
+            'set_items' => [],
+            'set_total' => 0,
+            'set_summary' => '',
+            'quantity' => 1,
+            'unit_price' => $unitPrice,
+            'addons_total' => 0,
+            'subtotal' => round($unitPrice, 2),
+            'notes' => '',
+            'item_type' => $this->orderType, // dine_in or takeaway
+        ];
+
+        $this->calculateTotal();
+        $this->dispatch('sound', name: 'tap');
     }
 
     /**
