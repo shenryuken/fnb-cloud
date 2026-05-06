@@ -69,35 +69,51 @@
         <!-- Product Grid -->
         <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-4 scrollbar-hide">
             @foreach($this->products as $product)
-                <div wire:click="quickAddProduct({{ $product->id }})" 
-                    class="group flex flex-col bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-pointer hover:border-pink-500/50 hover:shadow-lg transition-all duration-200 relative">
-                    <div class="{{ $product->tile_color ? 'flex-1' : 'aspect-[4/3]' }} bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden relative">
+                <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
+                    class="group flex flex-col rounded-2xl border bg-white dark:bg-zinc-900 overflow-hidden transition-all duration-200 relative
+                        {{ ($product->is_available ?? true)
+                            ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-lg hover:shadow-black/10'
+                            : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                    <div class="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                         @if($product->image_url)
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @elseif($product->tile_color)
-                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-center px-3" style="background-color: {{ $product->tile_color }};">
-                                <span class="text-white text-sm sm:text-base font-semibold leading-tight line-clamp-2">{{ $product->name }}</span>
-                                <span class="text-white/90 text-base font-bold">RM {{ number_format($product->price, 2) }}</span>
+                            <div class="absolute inset-0" style="background-color: {{ $product->tile_color }};"></div>
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/25"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-white/85 text-3xl font-black tracking-tight">
+                                    {{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}
+                                </span>
                             </div>
                         @else
-                            <flux:icon.package class="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <flux:icon.package class="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
+                            </div>
                         @endif
 
                         {{-- Badges --}}
                         <div class="absolute top-2 left-2 flex flex-col gap-1.5 pointer-events-none">
                             @if(isset($this->autoBadges[$product->id]))
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest
                                     {{ $this->autoBadges[$product->id] === 'Top Sale' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white' }}">
                                     {{ $this->autoBadges[$product->id] }}
                                 </span>
                             @endif
 
                             @if($product->badge_text)
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500 text-white">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white">
                                     {{ $product->badge_text }}
                                 </span>
                             @endif
                         </div>
+
+                        @if(!($product->is_available ?? true))
+                            <div class="absolute top-2 right-2 pointer-events-none">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
+                                    Sold Out
+                                </span>
+                            </div>
+                        @endif
 
                         @php
                             $activeVariants = ($product->variants ?? collect())->where('is_active', true)->values();
@@ -108,15 +124,17 @@
                                 && $activeVariants->count() <= 3;
                         @endphp
 
-                        @if($canQuickVariants)
-                            <div class="absolute bottom-2 left-2 right-2 flex gap-1.5">
-                                @foreach($activeVariants as $variant)
-                                    <button type="button"
-                                        wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
-                                        class="flex-1 py-2 rounded-lg bg-zinc-900/90 text-white text-[10px] font-black uppercase tracking-widest hover:bg-pink-500 transition-colors">
-                                        {{ $variant->receipt_label ?: $variant->name }}
-                                    </button>
-                                @endforeach
+                        @if(($product->is_available ?? true) && $canQuickVariants)
+                            <div class="absolute bottom-2 left-2 right-2">
+                                <div class="grid grid-cols-{{ max(1, min(3, $activeVariants->count())) }} gap-1.5 rounded-xl border border-white/10 bg-black/35 backdrop-blur-md p-1.5">
+                                    @foreach($activeVariants as $variant)
+                                        <button type="button"
+                                            wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
+                                            class="py-1.5 rounded-lg bg-white/10 hover:bg-pink-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors">
+                                            {{ $variant->receipt_label ?: $variant->name }}
+                                        </button>
+                                    @endforeach
+                                </div>
                             </div>
                         @else
                             @php
@@ -125,25 +143,27 @@
                                     ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
                                     : false;
                             @endphp
-                            @if(($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0)
+                            @if(($product->is_available ?? true) && (($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0))
                                 <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
-                                    class="absolute bottom-2 left-2 right-2 py-2 rounded-lg bg-zinc-900/90 text-white text-xs font-semibold hover:bg-pink-500 transition-colors">
+                                    class="absolute bottom-2 left-2 right-2 py-2 rounded-xl border border-white/10 bg-black/35 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-widest hover:bg-pink-500 transition-colors">
                                     Customize
                                 </button>
                             @endif
                         @endif
                     </div>
-                    @if(!$product->tile_color || $product->image_url)
-                        <div class="p-3">
+                    <div class="px-3.5 py-3">
+                        <div class="flex items-start justify-between gap-2">
                             <h3 class="font-semibold text-zinc-800 dark:text-zinc-100 truncate text-sm">
                                 {{ $product->name }}
                             </h3>
-                            <div class="flex items-center justify-between mt-1">
-                                <span class="text-xs text-zinc-400">{{ $product->category->name }}</span>
-                                <span class="text-sm font-bold text-pink-500">RM {{ number_format($product->price, 2) }}</span>
-                            </div>
+                            <span class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
+                                RM {{ number_format($product->price, 2) }}
+                            </span>
                         </div>
-                    @endif
+                        <div class="mt-1 text-[11px] text-zinc-400 truncate">
+                            {{ $product->category->name ?? '' }}
+                        </div>
+                    </div>
                 </div>
             @endforeach
         </div>
