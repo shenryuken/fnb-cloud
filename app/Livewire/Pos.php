@@ -29,6 +29,9 @@ class Pos extends Component
 {
     public $search = '';
     public $selectedCategoryId = null;
+
+    #[Url(as: 'layout')]
+    public string $productLayout = 'grid';
     
     // Cart management
     public array $cart = [];
