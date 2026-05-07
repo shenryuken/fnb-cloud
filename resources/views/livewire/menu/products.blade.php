@@ -524,7 +524,8 @@
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Order</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Category</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Price</th>
-                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Active</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Availability</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -574,19 +575,20 @@
                                     $rowActive = $rowIsActive[(string) $product->id] ?? (bool) $product->is_active;
                                     $rowAvailable = $rowIsAvailable[(string) $product->id] ?? (bool) ($product->is_available ?? true);
                                 @endphp
-                                <div class="mx-auto w-40 space-y-1.5">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <span class="text-xs font-semibold {{ $rowActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-300' }}">
-                                            Active
-                                        </span>
-                                        <flux:switch wire:model.live="rowIsActive.{{ $product->id }}" />
-                                    </div>
-                                    <div class="flex items-center justify-between gap-3">
-                                        <span class="text-xs font-semibold {{ $rowAvailable ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-300' }}">
-                                            Available
-                                        </span>
-                                        <flux:switch wire:model.live="rowIsAvailable.{{ $product->id }}" />
-                                    </div>
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <flux:switch wire:model.live="rowIsActive.{{ $product->id }}" />
+                                    <span class="text-[11px] font-semibold {{ $rowActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                        {{ $rowActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="py-3 px-4 text-center">
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <flux:switch wire:model.live="rowIsAvailable.{{ $product->id }}" />
+                                    <span class="text-[11px] font-semibold {{ $rowAvailable ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                        {{ $rowAvailable ? 'Available' : 'Unavailable' }}
+                                    </span>
                                 </div>
                             </td>
 
@@ -600,7 +602,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-24 text-center">
+                            <td colspan="7" class="py-24 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <flux:icon.cube class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
                                     <flux:heading>No products yet</flux:heading>
