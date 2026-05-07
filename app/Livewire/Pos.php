@@ -568,7 +568,7 @@ class Pos extends Component
     public function selectProduct(Product $product): void
     {
         if (!(bool) ($product->is_available ?? true)) {
-            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            $this->dispatch('notify', message: 'Item is unavailable.', type: 'warning');
             return;
         }
 
@@ -583,7 +583,7 @@ class Pos extends Component
     public function quickAddProduct(Product $product): void
     {
         if (!(bool) ($product->is_available ?? true)) {
-            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            $this->dispatch('notify', message: 'Item is unavailable.', type: 'warning');
             return;
         }
 
@@ -650,7 +650,7 @@ class Pos extends Component
         }
 
         if (!(bool) ($product->is_available ?? true)) {
-            $this->dispatch('notify', message: 'Item is sold out.', type: 'warning');
+            $this->dispatch('notify', message: 'Item is unavailable.', type: 'warning');
             return;
         }
 

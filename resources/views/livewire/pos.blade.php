@@ -132,7 +132,7 @@
                             @if(!($product->is_available ?? true))
                                 <div class="mt-1">
                                     <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
-                                        Sold Out
+                                        Unavailable
                                     </span>
                                 </div>
                             @endif
@@ -207,7 +207,7 @@
                             @if(!($product->is_available ?? true))
                                 <div class="absolute top-2 right-2 pointer-events-none">
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
-                                        Sold Out
+                                        Unavailable
                                     </span>
                                 </div>
                             @endif

@@ -570,9 +570,31 @@
                             </td>
 
                             <td class="py-3 px-4 text-center">
-                                <flux:badge :color="$product->is_active ? 'green' : 'zinc'" size="sm">
-                                    {{ $product->is_active ? 'Active' : 'Hidden' }}
-                                </flux:badge>
+                                <div class="inline-flex flex-col items-center gap-2">
+                                    <button type="button" wire:click="toggleActive({{ $product->id }})"
+                                        class="inline-flex items-center gap-2 text-xs font-semibold">
+                                        <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                                            {{ $product->is_active ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700' }}">
+                                            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                                                {{ $product->is_active ? 'translate-x-4' : 'translate-x-1' }}"></span>
+                                        </span>
+                                        <span class="{{ $product->is_active ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                            {{ $product->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </button>
+
+                                    <button type="button" wire:click="toggleAvailability({{ $product->id }})"
+                                        class="inline-flex items-center gap-2 text-xs font-semibold">
+                                        <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                                            {{ ($product->is_available ?? true) ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700' }}">
+                                            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                                                {{ ($product->is_available ?? true) ? 'translate-x-4' : 'translate-x-1' }}"></span>
+                                        </span>
+                                        <span class="{{ ($product->is_available ?? true) ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                            {{ ($product->is_available ?? true) ? 'Available' : 'Unavailable' }}
+                                        </span>
+                                    </button>
+                                </div>
                             </td>
 
                             <td class="py-3 px-4 text-right">
