@@ -104,6 +104,7 @@ class Pos extends Component
     public bool $showHeldOrdersModal = false;
     public bool $showUnpaidOrdersModal = false;
     public ?Order $selectedUnpaidOrder = null; // for collecting payment on existing order
+    public string $unpaidOrdersLayout = 'cards';
     public string $discountTab = 'discount';
     public ?int $customerId = null;
     public string $customerSearch = '';

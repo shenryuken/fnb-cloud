@@ -504,11 +504,11 @@
             {{-- Payment Options: Pay Now vs Pay Later --}}
             <div class="flex gap-2">
                 <button wire:click="placeOrderPayLater" 
-                    @disabled(empty($cart) || !$tableId)
-                    title="{{ !$tableId ? 'Select a table first' : 'Send to kitchen, pay later' }}"
+                    @disabled(empty($cart) || ($orderType === 'dine_in' && !$tableId))
+                    title="{{ ($orderType === 'dine_in' && !$tableId) ? 'Select a table first' : 'Send to kitchen, pay later' }}"
                     class="flex-1 py-3 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-200 disabled:dark:bg-zinc-800 disabled:text-zinc-400 text-white font-semibold transition-all flex items-center justify-center gap-2">
                     <flux:icon.fire class="w-4 h-4" />
-                    <span class="text-sm">KITCHEN</span>
+                    <span class="text-sm">SEND TO KITCHEN</span>
                 </button>
                 <button wire:click="startPayment" 
                     @disabled(empty($cart))
@@ -773,11 +773,11 @@
                         {{-- Payment Options: Pay Now vs Pay Later --}}
                         <div class="flex gap-2">
                             <button wire:click="placeOrderPayLater"
-                                @disabled(empty($cart) || !$tableId)
-                                title="{{ !$tableId ? 'Select a table first' : 'Send to kitchen, pay later' }}"
+                                @disabled(empty($cart) || ($orderType === 'dine_in' && !$tableId))
+                                title="{{ ($orderType === 'dine_in' && !$tableId) ? 'Select a table first' : 'Send to kitchen, pay later' }}"
                                 class="flex-1 py-3 rounded-[1.75rem] bg-amber-500 hover:bg-amber-400 disabled:bg-neutral-200 disabled:dark:bg-neutral-800 disabled:text-neutral-400 text-white font-black text-sm shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all transform active:scale-95 flex items-center justify-center gap-2 group">
                                 <flux:icon.fire class="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                KITCHEN
+                                SEND TO KITCHEN
                             </button>
                             <button wire:click="startPayment"
                                 @disabled(empty($cart))
@@ -866,62 +866,151 @@
                             <span class="text-lg font-black text-neutral-800 dark:text-neutral-100 tracking-tight">Unpaid Orders</span>
                         </div>
                     </div>
-                    <button type="button" wire:click="$set('showUnpaidOrdersModal', false)" class="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
-                        <flux:icon.x-mark class="w-5 h-5" />
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/40 overflow-hidden">
+                            <button type="button" wire:click="$set('unpaidOrdersLayout', 'cards')"
+                                class="w-10 h-10 flex items-center justify-center transition-colors
+                                    {{ ($unpaidOrdersLayout ?? 'cards') === 'cards' ? 'bg-amber-500 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800' }}"
+                                title="Card layout">
+                                <flux:icon.squares-2x2 class="w-4 h-4" />
+                            </button>
+                            <button type="button" wire:click="$set('unpaidOrdersLayout', 'table')"
+                                class="w-10 h-10 flex items-center justify-center transition-colors
+                                    {{ ($unpaidOrdersLayout ?? 'cards') === 'table' ? 'bg-amber-500 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800' }}"
+                                title="Table layout">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+                                </svg>
+                            </button>
+                        </div>
+                        <button type="button" wire:click="$set('showUnpaidOrdersModal', false)" class="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-300 transition-all border border-neutral-200 dark:border-neutral-700">
+                            <flux:icon.x-mark class="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 <div class="p-6 max-h-[60vh] overflow-y-auto">
-                    <div class="space-y-3">
-                        @forelse($this->unpaidOrders as $order)
-                            <div class="p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-900/10 flex items-center justify-between gap-4 hover:border-amber-400 transition-all">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-black text-neutral-800 dark:text-neutral-100">Order #{{ $order['id'] }}</span>
-                                        @if($order['table_number'])
-                                            <span class="px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold">
-                                                {{ $order['table_number'] }}
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-0.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
-                                                Takeaway
-                                            </span>
-                                        @endif
-                                        @if($order['kds_status'] === 'ready')
-                                            <span class="px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
-                                                Ready
-                                            </span>
-                                        @elseif($order['kds_status'] === 'preparing')
-                                            <span class="px-2 py-0.5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold">
-                                                Preparing
-                                            </span>
-                                        @endif
+                    @if(($unpaidOrdersLayout ?? 'cards') === 'table')
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-xs font-black uppercase tracking-widest text-neutral-400">
+                                        <th class="py-2 text-left">Order</th>
+                                        <th class="py-2 text-left">Type</th>
+                                        <th class="py-2 text-right">Items</th>
+                                        <th class="py-2 text-right">Total</th>
+                                        <th class="py-2 text-left">KDS</th>
+                                        <th class="py-2 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
+                                    @forelse($this->unpaidOrders as $order)
+                                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors">
+                                            <td class="py-3 pr-3">
+                                                <div class="font-black text-neutral-800 dark:text-neutral-100">#{{ $order['id'] }}</div>
+                                                <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{{ $order['created_at'] }}</div>
+                                            </td>
+                                            <td class="py-3 pr-3">
+                                                @if($order['table_number'])
+                                                    <span class="px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                                        {{ $order['table_number'] }}
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
+                                                        Takeaway
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="py-3 text-right tabular-nums font-black text-neutral-700 dark:text-neutral-200">{{ (int) $order['items_count'] }}</td>
+                                            <td class="py-3 text-right tabular-nums font-black text-amber-600">RM {{ number_format($order['total_amount'], 2) }}</td>
+                                            <td class="py-3 pr-3">
+                                                @if($order['kds_status'] === 'ready')
+                                                    <span class="px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                                                        Ready
+                                                    </span>
+                                                @elseif($order['kds_status'] === 'preparing')
+                                                    <span class="px-2 py-0.5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold">
+                                                        Preparing
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-300 text-xs font-bold">
+                                                        Pending
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="py-3 text-right">
+                                                <button type="button" 
+                                                    wire:click="selectUnpaidOrder({{ $order['id'] }})" 
+                                                    class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black shadow-lg shadow-amber-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                                    Collect
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="py-16 text-center">
+                                                <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                                                    <flux:icon.check-circle class="w-8 h-8 text-green-500" />
+                                                </div>
+                                                <div class="text-sm text-neutral-500 font-medium">All orders have been paid!</div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="space-y-3">
+                            @forelse($this->unpaidOrders as $order)
+                                <div class="p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-900/10 flex items-center justify-between gap-4 hover:border-amber-400 transition-all">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-neutral-800 dark:text-neutral-100">Order #{{ $order['id'] }}</span>
+                                            @if($order['table_number'])
+                                                <span class="px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                                    {{ $order['table_number'] }}
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-0.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
+                                                    Takeaway
+                                                </span>
+                                            @endif
+                                            @if($order['kds_status'] === 'ready')
+                                                <span class="px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                                                    Ready
+                                                </span>
+                                            @elseif($order['kds_status'] === 'preparing')
+                                                <span class="px-2 py-0.5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold">
+                                                    Preparing
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">
+                                            {{ $order['items_count'] }} items - {{ $order['created_at'] }}
+                                        </div>
                                     </div>
-                                    <div class="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">
-                                        {{ $order['items_count'] }} items - {{ $order['created_at'] }}
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <div class="text-right">
+                                            <div class="text-xs text-neutral-400">Amount Due</div>
+                                            <div class="text-lg font-black text-amber-600">RM {{ number_format($order['total_amount'], 2) }}</div>
+                                        </div>
+                                        <button type="button" 
+                                            wire:click="selectUnpaidOrder({{ $order['id'] }})" 
+                                            class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black shadow-lg shadow-amber-500/20 transition-all uppercase tracking-widest text-[10px]">
+                                            Collect
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3 shrink-0">
-                                    <div class="text-right">
-                                        <div class="text-xs text-neutral-400">Amount Due</div>
-                                        <div class="text-lg font-black text-amber-600">RM {{ number_format($order['total_amount'], 2) }}</div>
+                            @empty
+                                <div class="py-16 text-center">
+                                    <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                                        <flux:icon.check-circle class="w-8 h-8 text-green-500" />
                                     </div>
-                                    <button type="button" 
-                                        wire:click="selectUnpaidOrder({{ $order['id'] }})" 
-                                        class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black shadow-lg shadow-amber-500/20 transition-all uppercase tracking-widest text-[10px]">
-                                        Collect
-                                    </button>
+                                    <div class="text-sm text-neutral-500 font-medium">All orders have been paid!</div>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="py-16 text-center">
-                                <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                                    <flux:icon.check-circle class="w-8 h-8 text-green-500" />
-                                </div>
-                                <div class="text-sm text-neutral-500 font-medium">All orders have been paid!</div>
-                            </div>
-                        @endforelse
-                    </div>
+                            @endforelse
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
