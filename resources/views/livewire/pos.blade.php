@@ -58,6 +58,14 @@
                         title="Grid view">
                         <flux:icon.squares-2x2 class="w-4 h-4" />
                     </button>
+                    <button type="button" wire:click="$set('productLayout', 'compact')"
+                        class="h-10 w-10 flex items-center justify-center transition-colors
+                            {{ ($productLayout ?? 'grid') === 'compact' ? 'bg-pink-500 text-white' : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800' }}"
+                        title="Compact grid">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" />
+                        </svg>
+                    </button>
                     <button type="button" wire:click="$set('productLayout', 'list')"
                         class="h-10 w-10 flex items-center justify-center transition-colors
                             {{ ($productLayout ?? 'grid') === 'list' ? 'bg-pink-500 text-white' : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800' }}"
@@ -164,6 +172,85 @@
                                 @endif
                             @endif
                         </div>
+                    </div>
+                @endforeach
+            </div>
+        @elseif(($productLayout ?? 'grid') === 'compact')
+            <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 pb-4 scrollbar-hide">
+                @foreach($this->products as $product)
+                    <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
+                        class="group relative h-28 sm:h-32 lg:h-36 rounded-lg border overflow-hidden transition-all duration-200
+                            {{ ($product->is_available ?? true)
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-md hover:shadow-black/10'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                        <div class="absolute inset-0 bg-zinc-100 dark:bg-zinc-800">
+                            @if($product->image_url)
+                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            @elseif($product->tile_color)
+                                <div class="absolute inset-0" style="background-color: {{ $product->tile_color }};"></div>
+                            @else
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <flux:icon.package class="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/55"></div>
+
+                        <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-2 pointer-events-none">
+                            <div class="min-w-0">
+                                <div class="text-white font-black text-sm truncate">
+                                    {{ $product->name }}
+                                </div>
+                                <div class="text-white/80 text-[11px] font-semibold tabular-nums">
+                                    RM {{ number_format($product->price, 2) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        @if(!($product->is_available ?? true))
+                            <div class="absolute top-2 right-2 pointer-events-none">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
+                                    Unavailable
+                                </span>
+                            </div>
+                        @endif
+
+                        @php
+                            $activeVariants = ($product->variants ?? collect())->where('is_active', true)->values();
+                            $canQuickVariants = ($product->product_type ?? 'ala_carte') !== 'set'
+                                && ($product->addons?->count() ?? 0) === 0
+                                && ($product->addonGroups?->count() ?? 0) === 0
+                                && $activeVariants->count() > 0
+                                && $activeVariants->count() <= 3;
+                        @endphp
+
+                        @if(($product->is_available ?? true) && $canQuickVariants)
+                            <div class="absolute bottom-2 left-2 right-2">
+                                <div class="grid grid-cols-{{ max(1, min(3, $activeVariants->count())) }} gap-1 rounded-md border border-white/10 bg-black/35 backdrop-blur-md p-1">
+                                    @foreach($activeVariants as $variant)
+                                        <button type="button"
+                                            wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
+                                            class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors">
+                                            {{ $variant->receipt_label ?: $variant->name }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            @php
+                                $variantCount = $product->variants?->count() ?? 0;
+                                $hasVariantPricing = $variantCount > 0
+                                    ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
+                                    : false;
+                            @endphp
+                            @if(($product->is_available ?? true) && (($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0))
+                                <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
+                                    class="absolute bottom-2 left-2 right-2 py-1.5 rounded-md border border-white/10 bg-black/35 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-widest hover:bg-pink-500 transition-colors">
+                                    Customize
+                                </button>
+                            @endif
+                        @endif
                     </div>
                 @endforeach
             </div>
