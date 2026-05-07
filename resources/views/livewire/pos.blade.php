@@ -176,7 +176,7 @@
                 @endforeach
             </div>
         @elseif(($productLayout ?? 'grid') === 'compact')
-            <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 pb-4 scrollbar-hide">
+            <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-4 scrollbar-hide">
                 @foreach($this->products as $product)
                     <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
                         class="group relative h-28 sm:h-32 lg:h-36 rounded-lg border overflow-hidden transition-all duration-200
