@@ -574,18 +574,18 @@
                                     $rowActive = $rowIsActive[(string) $product->id] ?? (bool) $product->is_active;
                                     $rowAvailable = $rowIsAvailable[(string) $product->id] ?? (bool) ($product->is_available ?? true);
                                 @endphp
-                                <div class="inline-flex flex-col items-center gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <flux:switch wire:model.live="rowIsActive.{{ $product->id }}" />
+                                <div class="mx-auto w-40 space-y-1.5">
+                                    <div class="flex items-center justify-between gap-3">
                                         <span class="text-xs font-semibold {{ $rowActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-300' }}">
-                                            {{ $rowActive ? 'Active' : 'Inactive' }}
+                                            Active
                                         </span>
+                                        <flux:switch wire:model.live="rowIsActive.{{ $product->id }}" />
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <flux:switch wire:model.live="rowIsAvailable.{{ $product->id }}" />
+                                    <div class="flex items-center justify-between gap-3">
                                         <span class="text-xs font-semibold {{ $rowAvailable ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-300' }}">
-                                            {{ $rowAvailable ? 'Available' : 'Unavailable' }}
+                                            Available
                                         </span>
+                                        <flux:switch wire:model.live="rowIsAvailable.{{ $product->id }}" />
                                     </div>
                                 </div>
                             </td>
