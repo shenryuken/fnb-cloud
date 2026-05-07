@@ -33,6 +33,7 @@ class Products extends Component
     public array $set_groups = [];
     public int $sort_order = 0;
     public bool $is_active = true;
+    public bool $is_available = true;
     public array $addons = [];
 
     // Variants and Addons for the form
@@ -47,6 +48,9 @@ class Products extends Component
     public string $search = '';
     public string $categoryFilter = '';
     public string $statusFilter = '';
+
+    public array $rowIsActive = [];
+    public array $rowIsAvailable = [];
     
     // Add-ons tab state
     public string $activeAddonTab = 'addon-groups';
@@ -71,6 +75,7 @@ class Products extends Component
         'tile_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         'sort_order' => 'required|integer|min:0',
         'is_active' => 'boolean',
+        'is_available' => 'boolean',
         'set_groups' => 'array',
         'variants.*.name' => 'required|string|max:255',
         'variants.*.receipt_label' => 'nullable|string|max:10',
@@ -87,8 +92,9 @@ class Products extends Component
      */
     public function create(): void
     {
-        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'editing', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
+        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'is_available', 'editing', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
         $this->product_type = 'ala_carte';
+        $this->is_available = true;
         $this->isCreating = true;
     }
 
@@ -110,6 +116,7 @@ class Products extends Component
         $this->use_tile_color = filled($this->tile_color);
         $this->sort_order = $product->sort_order;
         $this->is_active = $product->is_active;
+        $this->is_available = (bool) ($product->is_available ?? true);
         $this->variants = $product->variants()->get()->toArray();
         $this->selectedGroups = $product->addonGroups()->pluck('addon_groups.id')->toArray();
         $this->selectedStandaloneAddons = $product->addons()->whereNull('addon_group_id')->pluck('product_addons.id')->toArray();
@@ -135,6 +142,18 @@ class Products extends Component
             ])
             ->all();
         $this->isCreating = true; // Open the modal for editing
+    }
+
+    public function updatedRowIsActive($value, $key): void
+    {
+        $id = is_string($key) && str_contains($key, '.') ? last(explode('.', $key)) : $key;
+        Product::whereKey($id)->update(['is_active' => (bool) $value]);
+    }
+
+    public function updatedRowIsAvailable($value, $key): void
+    {
+        $id = is_string($key) && str_contains($key, '.') ? last(explode('.', $key)) : $key;
+        Product::whereKey($id)->update(['is_available' => (bool) $value]);
     }
 
     /**
@@ -294,7 +313,7 @@ class Products extends Component
             }
         });
 
-        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'editing', 'isCreating', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
+        $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'is_available', 'editing', 'isCreating', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
         $this->dispatch('product-saved');
     }
 
@@ -332,6 +351,7 @@ class Products extends Component
                 'tile_color' => $product->tile_color,
                 'sort_order' => (int) $product->sort_order + 1,
                 'is_active' => false,
+                'is_available' => (bool) ($product->is_available ?? true),
             ]);
 
             $newProduct->addonGroups()->sync($product->addonGroups->pluck('id')->all());
@@ -594,8 +614,19 @@ class Products extends Component
             $query->where('is_active', false);
         }
 
+        $products = $query->orderBy('sort_order')->paginate(10);
+        foreach ($products->items() as $p) {
+            $id = (string) $p->id;
+            if (!array_key_exists($id, $this->rowIsActive)) {
+                $this->rowIsActive[$id] = (bool) $p->is_active;
+            }
+            if (!array_key_exists($id, $this->rowIsAvailable)) {
+                $this->rowIsAvailable[$id] = (bool) ($p->is_available ?? true);
+            }
+        }
+
         return view('livewire.menu.products', [
-            'products' => $query->orderBy('sort_order')->paginate(10),
+            'products' => $products,
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get(),
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'price']),
             'addonGroups' => \App\Models\AddonGroup::all(),
