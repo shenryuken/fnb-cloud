@@ -469,6 +469,7 @@ class Products extends Component
             $badge    = trim($record['badge'] ?? '');
             $status   = strtolower(trim($record['status'] ?? 'active'));
             $order    = trim($record['sort_order'] ?? '0');
+            $variantsRaw = trim($record['variants'] ?? '');
 
             $rowErrors = [];
 
@@ -482,6 +483,11 @@ class Products extends Component
                 $rowErrors[] = 'Price must be a valid non-negative number.';
             }
 
+            $parsedVariants = $this->parseVariantsString($variantsRaw);
+            foreach ($parsedVariants['errors'] as $e) {
+                $rowErrors[] = $e;
+            }
+
             $this->importPreview[] = [
                 'row'         => $row,
                 'name'        => $name,
@@ -491,6 +497,9 @@ class Products extends Component
                 'badge'       => $badge,
                 'status'      => in_array($status, ['active', '1', 'yes', 'true']) ? 'active' : 'inactive',
                 'sort_order'  => is_numeric($order) ? (int) $order : 0,
+                'variants_raw' => $variantsRaw,
+                'variants' => $parsedVariants['rows'],
+                'variants_count' => count($parsedVariants['rows']),
                 'errors'      => $rowErrors,
             ];
 
@@ -539,7 +548,7 @@ class Products extends Component
                     $categoryMap[$catName] = $cat->id;
                 }
 
-                Product::create([
+                $product = Product::create([
                     'name'        => $record['name'],
                     'category_id' => $categoryMap[$catName],
                     'price'       => (float) $record['price'],
@@ -548,7 +557,13 @@ class Products extends Component
                     'is_active'   => $record['status'] === 'active',
                     'sort_order'  => $record['sort_order'],
                     'product_type' => 'ala_carte',
+                    'is_available' => true,
                 ]);
+
+                $variantRows = is_array($record['variants'] ?? null) ? $record['variants'] : [];
+                if (!empty($variantRows)) {
+                    $product->variants()->createMany($variantRows);
+                }
 
                 $count++;
             }
@@ -588,6 +603,165 @@ class Products extends Component
         }, 'menu_import_template.csv', [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    public function downloadTemplateWithVariants(): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'name',
+                'category',
+                'price',
+                'description',
+                'badge',
+                'status',
+                'sort_order',
+                'variants',
+            ]);
+
+            fputcsv($handle, [
+                'Teh Tarik',
+                'Beverages',
+                '3.00',
+                'Freshly pulled milk tea',
+                '',
+                'active',
+                '1',
+                'Hot|HOT|3.00;Ice|AIS|3.50',
+            ]);
+
+            fputcsv($handle, [
+                'Kopi O',
+                'Beverages',
+                '2.00',
+                '',
+                '',
+                'active',
+                '2',
+                'Hot|HOT|2.00;Ice|AIS|2.50',
+            ]);
+
+            fputcsv($handle, [
+                'Burger Ayam',
+                'Burgers',
+                '8.50',
+                'Crispy fried chicken burger',
+                'HOT',
+                'active',
+                '3',
+                '',
+            ]);
+
+            fclose($handle);
+        }, 'menu_import_template_with_variants.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    public function exportMenuBackup(): StreamedResponse
+    {
+        $timestamp = now()->format('Ymd_His');
+
+        return response()->streamDownload(function () {
+            $clean = fn ($value) => trim(str_replace(['|', ';'], ' ', (string) $value));
+
+            $products = Product::query()
+                ->with(['category', 'variants'])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'name',
+                'category',
+                'price',
+                'description',
+                'badge',
+                'status',
+                'sort_order',
+                'variants',
+            ]);
+
+            foreach ($products as $p) {
+                $variantParts = [];
+                foreach (($p->variants ?? collect())->where('is_active', true)->sortBy('id') as $v) {
+                    $variantName = $clean($v->name);
+                    $label = $clean($v->receipt_label ?? '');
+                    $variantPrice = (string) $v->price;
+
+                    $variantParts[] = $label !== ''
+                        ? ($variantName . '|' . $label . '|' . $variantPrice)
+                        : ($variantName . '|' . $variantPrice);
+                }
+
+                fputcsv($handle, [
+                    $clean($p->name),
+                    $clean($p->category?->name ?? ''),
+                    (string) $p->price,
+                    (string) ($p->description ?? ''),
+                    (string) ($p->badge_text ?? ''),
+                    $p->is_active ? 'active' : 'inactive',
+                    (int) $p->sort_order,
+                    implode(';', $variantParts),
+                ]);
+            }
+
+            fclose($handle);
+        }, 'menu_products_export_' . $timestamp . '.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    private function parseVariantsString(string $raw): array
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return ['rows' => [], 'errors' => []];
+        }
+
+        $rows = [];
+        $errors = [];
+
+        $parts = array_map('trim', explode(';', $raw));
+        foreach ($parts as $index => $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            $cells = array_map('trim', explode('|', $part));
+            $name = (string) ($cells[0] ?? '');
+            $receiptLabel = '';
+            $price = '';
+            if (count($cells) >= 3) {
+                $receiptLabel = (string) ($cells[1] ?? '');
+                $price = (string) ($cells[2] ?? '');
+            } else {
+                $price = (string) ($cells[1] ?? '');
+            }
+
+            if ($name === '') {
+                $errors[] = 'Variants: missing name at position ' . ($index + 1) . '.';
+                continue;
+            }
+
+            if ($price === '' || !is_numeric($price) || (float) $price < 0) {
+                $errors[] = 'Variants: invalid price for "' . $name . '".';
+                continue;
+            }
+
+            $rows[] = [
+                'name' => $name,
+                'receipt_label' => $receiptLabel !== '' ? $receiptLabel : null,
+                'price' => (float) $price,
+                'is_active' => true,
+            ];
+        }
+
+        return ['rows' => $rows, 'errors' => $errors];
     }
 
     /**

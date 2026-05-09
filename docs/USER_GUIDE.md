@@ -96,6 +96,8 @@ The POS is where you take orders and process payments.
 - **Left Panel**: Product categories and items
 - **Right Panel**: Current cart and checkout
 - **Top Bar**: Search, table number, order type
+- **Layouts**: You can switch product display between **Grid**, **Compact Grid** (more items per row), and **List**.
+- **Sounds**: The POS plays standard audio feedback (e.g., add-to-cart). Your browser may require one click/tap before sounds can play.
 
 ### Taking an Order
 
@@ -103,6 +105,10 @@ The POS is where you take orders and process payments.
 
 **Quick Add (Simple Items):**
 - Click on any product to add it directly to the cart
+
+**Quick Variant Chips (Drinks / Sizes):**
+- If a product has a small number of variants (e.g., Hot / Ice), variant chips appear directly on the product tile.
+- Click the chip to add the item with that variant without opening the customize modal.
 
 **Products with Options:**
 - Click on a product with variants/add-ons
@@ -187,6 +193,27 @@ For orders paid with multiple methods:
 3. Click **Add Split**
 4. Repeat for remaining balance
 5. Complete when fully paid
+
+### Send to Kitchen (Pay Later)
+
+You can send orders to the kitchen without collecting payment first (common for dine-in and some takeaway workflows).
+
+1. Add items to the cart
+2. Select the order type (**Dine In** or **Takeaway**)
+3. For **Dine In**, select a table
+4. Click **Send to Kitchen**
+
+The order will be created as **Unpaid** and appears on the KDS for preparation. Payment is collected later from **Unpaid Orders**.
+
+### Unpaid Orders (Collect Payment Later)
+
+Cashiers can view unpaid orders and collect payment when the customer is ready:
+
+1. Open the **Unpaid Orders** list from POS
+2. Switch between **Card** or **Table** layout if needed
+3. Click **Collect** on the unpaid order to open the payment screen
+
+If multiple unpaid orders exist for the same table, the system supports combined payment for all unpaid orders.
 
 ### After Payment
 
@@ -321,6 +348,10 @@ The KDS shows orders for kitchen staff to prepare.
 - **Complete Order**: Mark entire order ready
 - **Bump**: Remove from display when served
 
+### KDS Alerts (Sound)
+
+The KDS plays an audio alert when new orders arrive (standard POS behavior). As with POS, your browser may require one user interaction before audio can play.
+
 ### Kitchen Busy Mode
 
 When overwhelmed:
@@ -357,6 +388,11 @@ Organize products into categories:
 4. Upload an image (optional)
 5. Save
 
+#### Visibility vs Availability (POS behavior)
+
+- **Active**: When inactive, the product is hidden from POS.
+- **Available**: When unavailable, the product still shows on POS but is disabled and labeled **Unavailable**.
+
 #### Product Types
 
 **Ala Carte**: Standard single items
@@ -376,6 +412,21 @@ Add size or style options:
 3. Add variants (e.g., Small, Medium, Large)
 4. Set price for each variant
 
+#### CSV Import (with Variants)
+
+From **Menu → Products**, use **Import CSV** to bulk-create products.
+
+- **Basic template**: imports products without variants.
+- **Variants template**: includes a `variants` column.
+
+Variants format:
+- Multiple variants separated by `;`
+- Each variant uses either `Name|Price` or `Name|Label|Price`
+
+Example:
+- `Hot|3.00;Ice|3.50`
+- `Hot|HOT|3.00;Ice|AIS|3.50`
+
 #### Add-ons
 
 Create optional extras:
@@ -384,6 +435,12 @@ Create optional extras:
 2. Create add-on items (e.g., Extra Cheese, Bacon)
 3. Set prices
 4. Assign to products or groups
+
+### Add-on Groups: Unlimited Maximum
+
+When configuring an add-on group:
+- **Minimum options**: set to `0` for optional
+- **Maximum options**: set to `0` for unlimited
 
 ---
 

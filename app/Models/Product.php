@@ -22,12 +22,14 @@ class Product extends Model
         'badge_text',
         'tile_color',
         'is_active',
+        'is_available',
         'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_available' => 'boolean',
         'sort_order' => 'integer',
     ];
 
