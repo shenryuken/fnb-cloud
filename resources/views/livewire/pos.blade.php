@@ -66,6 +66,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" />
                         </svg>
                     </button>
+                    <button type="button" wire:click="$set('productLayout', 'columns')"
+                        class="h-10 w-10 flex items-center justify-center transition-colors
+                            {{ ($productLayout ?? 'grid') === 'columns' ? 'bg-pink-500 text-white' : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800' }}"
+                        title="Compact list">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h4M4 12h4M4 18h4M10 6h10M10 12h10M10 18h10" />
+                        </svg>
+                    </button>
                     <button type="button" wire:click="$set('productLayout', 'list')"
                         class="h-10 w-10 flex items-center justify-center transition-colors
                             {{ ($productLayout ?? 'grid') === 'list' ? 'bg-pink-500 text-white' : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800' }}"
@@ -172,6 +180,85 @@
                                 @endif
                             @endif
                         </div>
+                    </div>
+                @endforeach
+            </div>
+        @elseif(($productLayout ?? 'grid') === 'columns')
+            <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pb-4 scrollbar-hide content-start items-start auto-rows-max">
+                @foreach($this->products as $product)
+                    @php
+                        $activeVariants = ($product->variants ?? collect())->where('is_active', true)->values();
+                        $canQuickVariants = ($product->product_type ?? 'ala_carte') !== 'set'
+                            && ($product->addons?->count() ?? 0) === 0
+                            && ($product->addonGroups?->count() ?? 0) === 0
+                            && $activeVariants->count() > 0
+                            && $activeVariants->count() <= 3;
+                    @endphp
+
+                    <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
+                        class="group rounded-lg border bg-white dark:bg-zinc-900 p-3 transition-all
+                            {{ ($product->is_available ?? true)
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-sm'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 relative">
+                                @if($product->image_url)
+                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                @elseif($product->tile_color)
+                                    <div class="absolute inset-0" style="background-color: {{ $product->tile_color }};"></div>
+                                @else
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <flux:icon.package class="w-6 h-6 text-zinc-300 dark:text-zinc-600" />
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="font-semibold text-sm text-zinc-800 dark:text-zinc-100 truncate">
+                                    {{ $product->name }}
+                                </div>
+                                <div class="text-[11px] text-zinc-400 truncate">
+                                    {{ $product->category->name ?? '' }}
+                                </div>
+                            </div>
+
+                            <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
+                                RM {{ number_format($product->price, 2) }}
+                            </div>
+                        </div>
+
+                        @if(!($product->is_available ?? true))
+                            <div class="mt-2">
+                                <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
+                                    Unavailable
+                                </span>
+                            </div>
+                        @endif
+
+                        @if(($product->is_available ?? true) && $canQuickVariants)
+                            <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                                @foreach($activeVariants as $variant)
+                                    <button type="button"
+                                        wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
+                                        class="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-[10px] font-black uppercase tracking-widest hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
+                                        {{ $variant->receipt_label ?: $variant->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @else
+                            @php
+                                $variantCount = $product->variants?->count() ?? 0;
+                                $hasVariantPricing = $variantCount > 0
+                                    ? $product->variants->contains(fn ($v) => (float) $v->price !== (float) $product->price)
+                                    : false;
+                            @endphp
+                            @if(($product->is_available ?? true) && (($product->product_type ?? 'ala_carte') === 'set' || $hasVariantPricing || ($product->variants?->count() ?? 0) > 1 || ($product->addons?->count() ?? 0) > 0 || ($product->addonGroups?->count() ?? 0) > 0))
+                                <button type="button" wire:click.stop="selectProduct({{ $product->id }})"
+                                    class="mt-3 w-full h-9 rounded-md bg-pink-500 hover:bg-pink-600 text-white text-[10px] font-black uppercase tracking-widest transition-colors">
+                                    Customize
+                                </button>
+                            @endif
+                        @endif
                     </div>
                 @endforeach
             </div>

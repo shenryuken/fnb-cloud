@@ -100,6 +100,24 @@ class SalesAnalysis extends Component
     }
 
     #[Computed]
+    public function summary(): array
+    {
+        $row = (clone $this->ordersBaseQuery())
+            ->selectRaw('COUNT(*) as orders_count')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as net_sales')
+            ->first();
+
+        $ordersCount = (int) ($row->orders_count ?? 0);
+        $netSales = (float) ($row->net_sales ?? 0);
+
+        return [
+            'orders_count' => $ordersCount,
+            'net_sales' => $netSales,
+            'avg_order_value' => $ordersCount > 0 ? ($netSales / $ordersCount) : 0.0,
+        ];
+    }
+
+    #[Computed]
     public function hourlyOrders(): array
     {
         $rows = (clone $this->ordersBaseQuery())
@@ -339,4 +357,3 @@ class SalesAnalysis extends Component
         return view('livewire.sales-analysis');
     }
 }
-
