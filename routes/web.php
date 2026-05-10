@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('pos/receipt/{order}', function (\App\Models\Order $order) {
         // Ensure the order belongs to the current tenant (handled by TenantScope)
         return view('pos.receipt', [
-            'order' => $order->load(['items.product', 'items.variant', 'items.addons', 'items.components', 'user']),
+            'order' => $order->load(['items.product', 'items.variant', 'items.addons', 'items.components', 'user', 'customer']),
             'tenant' => Auth::user()->tenant,
             'issuedVouchers' => \App\Models\CustomerVoucher::query()
                 ->where('issued_from_order_id', $order->id)
