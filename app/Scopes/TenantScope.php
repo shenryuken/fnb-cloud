@@ -5,7 +5,6 @@ namespace App\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Support\Facades\Session;
 
 class TenantScope implements Scope
 {
@@ -16,7 +15,7 @@ class TenantScope implements Scope
     {
         // Only apply if a tenant_id is set in the session or via identification middleware
         if (app()->bound('tenant_id')) {
-            $builder->where('tenant_id', app('tenant_id'));
+            $builder->where($model->getTable() . '.tenant_id', app('tenant_id'));
         }
     }
 }

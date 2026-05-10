@@ -11,6 +11,7 @@ use App\Livewire\Orders;
 use App\Livewire\Pos;
 use App\Livewire\Kds;
 use App\Livewire\SalesReport;
+use App\Livewire\SalesAnalysis;
 use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reports
     Route::get('reports/sales', SalesReport::class)->name('reports.sales')->middleware('permission:reports.view');
+    Route::get('reports/sales-analysis', SalesAnalysis::class)->name('reports.sales-analysis')->middleware('permission:reports.view');
     Route::get('reports/cashier', CashierReport::class)->name('reports.cashier')->middleware('permission:reports.view');
 
     // Shifts

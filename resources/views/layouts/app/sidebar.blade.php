@@ -62,6 +62,9 @@
                         <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
                             {{ __('Sales Report') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="chart-pie" :href="route('reports.sales-analysis')" :current="request()->routeIs('reports.sales-analysis')" wire:navigate>
+                            {{ __('Sales Analysis') }}
+                        </flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
                             {{ __('Cashier Report') }}
                         </flux:sidebar.item>
@@ -164,6 +167,9 @@
                         <flux:sidebar.group icon="chart-bar" :heading="__('Reports')" class="grid">
                             <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
                                 {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="chart-pie" :href="route('reports.sales-analysis')" :current="request()->routeIs('reports.sales-analysis')" wire:navigate>
+                                {{ __('Sales Analysis') }}
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
                                 {{ __('Cashier Report') }}
