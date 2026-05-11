@@ -3,6 +3,8 @@
 use App\Livewire\Settings\Receipt as ReceiptSettings;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Landlord\DashboardController as LandlordDashboard;
+use App\Livewire\Landlord\AuditLogs as LandlordAuditLogs;
+use App\Livewire\Landlord\SystemHealth as LandlordSystemHealth;
 use App\Livewire\Landlord\Tenants;
 use App\Livewire\Menu\Categories;
 use App\Livewire\Menu\Products;
@@ -36,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['landlord'])->prefix('landlord')->name('landlord.')->group(function () {
         Route::get('dashboard', [LandlordDashboard::class, 'index'])->name('dashboard');
         Route::get('tenants', Tenants::class)->name('tenants.index');
+        Route::get('audit-logs', LandlordAuditLogs::class)->name('audit-logs.index');
+        Route::get('system-health', LandlordSystemHealth::class)->name('system-health.index');
     });
     
     // POS

@@ -33,6 +33,11 @@ class Tenant extends Model
         'business_day_start_time',
         'business_day_end_time',
         'is_active',
+        'status',
+        'plan',
+        'trial_ends_at',
+        'suspended_at',
+        'suspended_reason',
         'is_busy',
     ];
 
@@ -51,6 +56,8 @@ class Tenant extends Model
         'points_promo_multiplier' => 'decimal:2',
         'points_promo_starts_at' => 'datetime',
         'points_promo_ends_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
+        'suspended_at' => 'datetime',
     ];
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Landlord;
 
+use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +33,10 @@ class Tenants extends Component
     public $receipt_header = '';
     public $receipt_footer = '';
     public $is_active = true;
+    public $status = 'active';
+    public $plan = 'standard';
+    public $trial_ends_at = null;
+    public $suspended_reason = '';
     
     // Admin user state (for new tenants)
     public $admin_name = '';
@@ -45,6 +50,10 @@ class Tenants extends Component
         'address' => 'nullable|string',
         'phone' => 'nullable|string',
         'is_active' => 'boolean',
+        'status' => 'required|in:active,trial,suspended',
+        'plan' => 'required|string|max:50',
+        'trial_ends_at' => 'nullable|date',
+        'suspended_reason' => 'nullable|string|max:255',
     ];
 
     public function updatedName($value)
@@ -56,7 +65,25 @@ class Tenants extends Component
 
     public function create()
     {
-        $this->reset(['editingTenantId', 'name', 'slug', 'domain', 'address', 'phone', 'is_active', 'admin_name', 'admin_email', 'admin_password']);
+        $this->reset([
+            'editingTenantId',
+            'name',
+            'slug',
+            'domain',
+            'address',
+            'phone',
+            'is_active',
+            'status',
+            'plan',
+            'trial_ends_at',
+            'suspended_reason',
+            'admin_name',
+            'admin_email',
+            'admin_password',
+        ]);
+        $this->is_active = true;
+        $this->status = 'active';
+        $this->plan = 'standard';
         $this->showModal = true;
     }
 
@@ -73,6 +100,10 @@ class Tenants extends Component
         $this->receipt_header = $tenant->receipt_header;
         $this->receipt_footer = $tenant->receipt_footer;
         $this->is_active = $tenant->is_active;
+        $this->status = $tenant->status ?? ($tenant->is_active ? 'active' : 'suspended');
+        $this->plan = $tenant->plan ?? 'standard';
+        $this->trial_ends_at = optional($tenant->trial_ends_at)->format('Y-m-d\TH:i');
+        $this->suspended_reason = $tenant->suspended_reason ?? '';
         $this->showModal = true;
     }
 
@@ -89,8 +120,33 @@ class Tenants extends Component
 
         $this->validate($rules);
 
+        $status = $this->status ?: 'active';
+        $isActive = $status !== 'suspended';
+        $trialEndsAt = $this->trial_ends_at ?: null;
+        $suspendedAt = $status === 'suspended' ? now() : null;
+        $suspendedReason = $status === 'suspended'
+            ? ($this->suspended_reason ?: 'Suspended by landlord')
+            : null;
+
         if ($this->editingTenantId) {
-            $tenant = Tenant::find($this->editingTenantId);
+            $tenant = Tenant::findOrFail($this->editingTenantId);
+            $before = $tenant->only([
+                'name',
+                'slug',
+                'domain',
+                'address',
+                'phone',
+                'logo_url',
+                'receipt_email',
+                'receipt_header',
+                'receipt_footer',
+                'is_active',
+                'status',
+                'plan',
+                'trial_ends_at',
+                'suspended_at',
+                'suspended_reason',
+            ]);
             $tenant->update([
                 'name' => $this->name,
                 'slug' => $this->slug,
@@ -101,7 +157,26 @@ class Tenants extends Component
                 'receipt_email' => $this->receipt_email,
                 'receipt_header' => $this->receipt_header,
                 'receipt_footer' => $this->receipt_footer,
-                'is_active' => $this->is_active,
+                'is_active' => $isActive,
+                'status' => $status,
+                'plan' => $this->plan,
+                'trial_ends_at' => $trialEndsAt,
+                'suspended_at' => $suspendedAt,
+                'suspended_reason' => $suspendedReason,
+            ]);
+
+            AuditLog::create([
+                'tenant_id' => null,
+                'actor_user_id' => auth()->id(),
+                'action' => 'landlord.tenant.updated',
+                'subject_type' => Tenant::class,
+                'subject_id' => $tenant->id,
+                'meta' => [
+                    'before' => $before,
+                    'after' => $tenant->only(array_keys($before)),
+                ],
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
             ]);
         } else {
             $tenant = Tenant::create([
@@ -114,7 +189,12 @@ class Tenants extends Component
                 'receipt_email' => $this->receipt_email,
                 'receipt_header' => $this->receipt_header,
                 'receipt_footer' => $this->receipt_footer,
-                'is_active' => $this->is_active,
+                'is_active' => $isActive,
+                'status' => $status,
+                'plan' => $this->plan,
+                'trial_ends_at' => $trialEndsAt,
+                'suspended_at' => $suspendedAt,
+                'suspended_reason' => $suspendedReason,
             ]);
 
             // Create the first admin user for this tenant
@@ -125,6 +205,31 @@ class Tenants extends Component
                 'password' => Hash::make($this->admin_password),
                 'api_token' => Str::random(80),
             ]);
+
+            AuditLog::create([
+                'tenant_id' => null,
+                'actor_user_id' => auth()->id(),
+                'action' => 'landlord.tenant.created',
+                'subject_type' => Tenant::class,
+                'subject_id' => $tenant->id,
+                'meta' => [
+                    'tenant' => $tenant->only([
+                        'id',
+                        'name',
+                        'slug',
+                        'domain',
+                        'is_active',
+                        'status',
+                        'plan',
+                        'trial_ends_at',
+                        'suspended_at',
+                        'suspended_reason',
+                    ]),
+                    'admin_email' => $this->admin_email,
+                ],
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
         }
 
         $this->showModal = false;
@@ -133,7 +238,37 @@ class Tenants extends Component
 
     public function toggleStatus(Tenant $tenant)
     {
-        $tenant->update(['is_active' => !$tenant->is_active]);
+        $before = $tenant->only(['is_active', 'status', 'suspended_at', 'suspended_reason']);
+
+        if (($tenant->status ?? 'active') === 'suspended' || !$tenant->is_active) {
+            $tenant->update([
+                'is_active' => true,
+                'status' => 'active',
+                'suspended_at' => null,
+                'suspended_reason' => null,
+            ]);
+        } else {
+            $tenant->update([
+                'is_active' => false,
+                'status' => 'suspended',
+                'suspended_at' => now(),
+                'suspended_reason' => 'Suspended by landlord',
+            ]);
+        }
+
+        AuditLog::create([
+            'tenant_id' => null,
+            'actor_user_id' => auth()->id(),
+            'action' => 'landlord.tenant.toggled',
+            'subject_type' => Tenant::class,
+            'subject_id' => $tenant->id,
+            'meta' => [
+                'before' => $before,
+                'after' => $tenant->only(array_keys($before)),
+            ],
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
     }
 
     public function render()

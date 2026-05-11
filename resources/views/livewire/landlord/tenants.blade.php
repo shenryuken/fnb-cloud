@@ -53,10 +53,27 @@
                                 </div>
                             </td>
                             <td class="px-6 py-6 text-center">
-                                <button wire:click="toggleStatus({{ $tenant->id }})" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider transition-all
-                                    {{ $tenant->is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200' }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $tenant->is_active ? 'bg-green-500' : 'bg-red-500' }}"></span>
-                                    {{ $tenant->is_active ? 'Active' : 'Inactive' }}
+                                @php
+                                    $status = $tenant->status ?? ($tenant->is_active ? 'active' : 'suspended');
+                                    $statusStyles = match ($status) {
+                                        'trial' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-200',
+                                        'suspended' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200',
+                                        default => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200',
+                                    };
+                                    $dotStyles = match ($status) {
+                                        'trial' => 'bg-amber-500',
+                                        'suspended' => 'bg-red-500',
+                                        default => 'bg-green-500',
+                                    };
+                                    $label = match ($status) {
+                                        'trial' => 'Trial',
+                                        'suspended' => 'Suspended',
+                                        default => 'Active',
+                                    };
+                                @endphp
+                                <button wire:click="toggleStatus({{ $tenant->id }})" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider transition-all {{ $statusStyles }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $dotStyles }}"></span>
+                                    {{ $label }}
                                 </button>
                             </td>
                             <td class="px-8 py-6 text-right">
@@ -163,6 +180,56 @@
                                         class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all" 
                                         placeholder="Primary Phone Number">
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <h4 class="text-xs font-black text-neutral-400 uppercase tracking-[0.2em]">Account Status</h4>
+                            <div class="grid gap-6">
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="relative group">
+                                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                                            <flux:icon.shield-check class="w-5 h-5" />
+                                        </div>
+                                        <select wire:model="status"
+                                            class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                                            <option value="active">Active</option>
+                                            <option value="trial">Trial</option>
+                                            <option value="suspended">Suspended</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative group">
+                                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                                            <flux:icon.sparkles class="w-5 h-5" />
+                                        </div>
+                                        <input type="text" wire:model="plan"
+                                            class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                                            placeholder="Plan (e.g. standard)">
+                                    </div>
+                                </div>
+                                @error('status') <span class="text-xs text-red-500 font-bold ml-4">{{ $message }}</span> @enderror
+                                @error('plan') <span class="text-xs text-red-500 font-bold ml-4">{{ $message }}</span> @enderror
+
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="relative group">
+                                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                                            <flux:icon.calendar-days class="w-5 h-5" />
+                                        </div>
+                                        <input type="datetime-local" wire:model="trial_ends_at"
+                                            class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                                            placeholder="Trial ends at">
+                                    </div>
+                                    <div class="relative group">
+                                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+                                            <flux:icon.chat-bubble-left-right class="w-5 h-5" />
+                                        </div>
+                                        <input type="text" wire:model="suspended_reason"
+                                            class="w-full rounded-[1.5rem] border-neutral-100 dark:bg-neutral-800 dark:border-neutral-800 p-5 pl-14 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                                            placeholder="Suspension reason (optional)">
+                                    </div>
+                                </div>
+                                @error('trial_ends_at') <span class="text-xs text-red-500 font-bold ml-4">{{ $message }}</span> @enderror
+                                @error('suspended_reason') <span class="text-xs text-red-500 font-bold ml-4">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
