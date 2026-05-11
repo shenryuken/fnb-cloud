@@ -7,6 +7,7 @@
         </div>
         <div class="flex items-center gap-2">
             <flux:button wire:click="openImportModal" icon="arrow-up-tray" variant="ghost">Import CSV</flux:button>
+            <flux:button wire:click="exportMenuBackup" icon="arrow-down-tray" variant="ghost">Export CSV</flux:button>
             <flux:button wire:click="create" icon="plus" variant="primary">Add New Product</flux:button>
         </div>
     </div>
@@ -58,18 +59,29 @@
                                         <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">CSV Template</p>
                                         <p class="text-xs text-zinc-400 mt-0.5">Download the template, fill in your menu items, then upload it here.</p>
                                         <div class="mt-3 flex flex-wrap gap-1.5">
-                                            @foreach(['name *', 'category *', 'price *', 'description', 'badge', 'status', 'sort_order'] as $col)
+                                            @foreach(['name *', 'category *', 'price *', 'description', 'badge', 'status', 'sort_order', 'variants'] as $col)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-xs font-mono text-zinc-600 dark:text-zinc-300">
                                                     {{ $col }}
                                                 </span>
                                             @endforeach
                                         </div>
-                                        <p class="text-xs text-zinc-400 mt-2">* Required fields. <code class="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">status</code> accepts: <strong>active</strong> or <strong>inactive</strong>.</p>
+                                        <p class="text-xs text-zinc-400 mt-2">
+                                            * Required fields.
+                                            <code class="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">status</code> accepts: <strong>active</strong> or <strong>inactive</strong>.
+                                            <code class="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">variants</code> format: <strong>Name|Label|Price</strong> separated by <strong>;</strong>
+                                            (example: <strong>Hot|HOT|3.00;Ice|AIS|3.50</strong>).
+                                        </p>
                                     </div>
-                                    <button wire:click="downloadTemplate" class="shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500 transition-all">
-                                        <flux:icon.arrow-down-tray class="w-4 h-4" />
-                                        Download Template
-                                    </button>
+                                    <div class="shrink-0 flex flex-col gap-2">
+                                        <button wire:click="downloadTemplate" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500 transition-all">
+                                            <flux:icon.arrow-down-tray class="w-4 h-4" />
+                                            Template (Basic)
+                                        </button>
+                                        <button wire:click="downloadTemplateWithVariants" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500 transition-all">
+                                            <flux:icon.arrow-down-tray class="w-4 h-4" />
+                                            Template (Variants)
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -135,6 +147,7 @@
                                                 <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Name</th>
                                                 <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Category</th>
                                                 <th class="text-right px-3 py-2 text-zinc-500 font-semibold">Price</th>
+                                                <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Variants</th>
                                                 <th class="text-center px-3 py-2 text-zinc-500 font-semibold">Status</th>
                                                 <th class="text-left px-3 py-2 text-zinc-500 font-semibold">Notes</th>
                                             </tr>
@@ -147,6 +160,16 @@
                                                     <td class="px-3 py-2 text-zinc-500">{{ $row['category'] ?: '—' }}</td>
                                                     <td class="px-3 py-2 text-right font-mono text-zinc-700 dark:text-zinc-300">
                                                         RM {{ is_numeric($row['price']) ? number_format((float)$row['price'], 2) : $row['price'] }}
+                                                    </td>
+                                                    <td class="px-3 py-2 text-zinc-500">
+                                                        @if(($row['variants_count'] ?? 0) > 0)
+                                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-semibold">
+                                                                <flux:icon.arrows-right-left class="w-3 h-3" />
+                                                                {{ (int) $row['variants_count'] }}
+                                                            </span>
+                                                        @else
+                                                            —
+                                                        @endif
                                                     </td>
                                                     <td class="px-3 py-2 text-center">
                                                         @if($row['status'] === 'active')
@@ -241,9 +264,10 @@
                     </flux:fieldset>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:select wire:model="category_id" label="Category" placeholder="Select category" icon="tag">
+                        <flux:select wire:model.live="category_id" label="Category" placeholder="Select category" icon="tag">
+                            <flux:select.option value="">Select category</flux:select.option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
@@ -377,8 +401,9 @@
                                                             <div>
                                                                 <flux:label class="text-xs text-zinc-400 mb-1">Product</flux:label>
                                                                 <flux:select wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.product_id" placeholder="Select product">
+                                                                    <flux:select.option value="">Select product</flux:select.option>
                                                                     @foreach($allProducts as $p)
-                                                                        <option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</option>
+                                                                        <flux:select.option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</flux:select.option>
                                                                     @endforeach
                                                                 </flux:select>
                                                                 @error("set_groups.$gIndex.items.$iIndex.product_id") <flux:error class="text-xs mt-1">{{ $message }}</flux:error> @enderror
@@ -522,7 +547,8 @@
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Order</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Category</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Price</th>
-                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Active</th>
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Availability</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -568,9 +594,25 @@
                             </td>
 
                             <td class="py-3 px-4 text-center">
-                                <flux:badge :color="$product->is_active ? 'green' : 'zinc'" size="sm">
-                                    {{ $product->is_active ? 'Active' : 'Hidden' }}
-                                </flux:badge>
+                                @php
+                                    $rowActive = $rowIsActive[(string) $product->id] ?? (bool) $product->is_active;
+                                    $rowAvailable = $rowIsAvailable[(string) $product->id] ?? (bool) ($product->is_available ?? true);
+                                @endphp
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <flux:switch wire:model.live="rowIsActive.{{ $product->id }}" />
+                                    <span class="text-[11px] font-semibold {{ $rowActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                        {{ $rowActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="py-3 px-4 text-center">
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <flux:switch wire:model.live="rowIsAvailable.{{ $product->id }}" />
+                                    <span class="text-[11px] font-semibold {{ $rowAvailable ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-300' }}">
+                                        {{ $rowAvailable ? 'Available' : 'Unavailable' }}
+                                    </span>
+                                </div>
                             </td>
 
                             <td class="py-3 px-4 text-right">
@@ -583,7 +625,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-24 text-center">
+                            <td colspan="7" class="py-24 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <flux:icon.cube class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
                                     <flux:heading>No products yet</flux:heading>

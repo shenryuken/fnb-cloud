@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
@@ -23,7 +24,7 @@ class SalesReport extends Component
 
     public function mount(): void
     {
-        $tenant = auth()->user()->tenant;
+        $tenant = Auth::user()->tenant;
         $this->businessDayStartTime = $tenant->business_day_start_time ? substr((string) $tenant->business_day_start_time, 0, 5) : '00:00';
         $this->businessDayEndTime = $tenant->business_day_end_time ? substr((string) $tenant->business_day_end_time, 0, 5) : '23:59';
 
@@ -160,15 +161,6 @@ class SalesReport extends Component
         }
         
         return $data;
-        $data = collect($this->daily)
-            ->map(fn ($r) => [
-                'date' => (string) $r['day'],
-                'revenue' => round((float) $r['net_sales'], 2),
-            ])
-            ->values()
-            ->toArray();
-
-        return count($data) > 0 ? $data : [];
     }
 
     #[Computed]

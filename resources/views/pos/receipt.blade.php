@@ -82,6 +82,9 @@
     <div class="item-row">
         <span>Staff: {{ $order->user?->name ?? 'N/A' }}</span>
     </div>
+    <div class="item-row">
+        <span>Customer: {{ $order->customer?->name ?? 'Walk-in' }}</span>
+    </div>
 
     <div class="divider"></div>
 
@@ -162,6 +165,13 @@
         <div class="item-row">
             <span>Points Earned</span>
             <span>+ {{ (int) $order->points_earned }} pts</span>
+        </div>
+    @endif
+    
+    @if($order->customer)
+        <div class="item-row">
+            <span>Total Points</span>
+            <span class="bold">{{ (int) $order->customer->points_balance }} pts</span>
         </div>
     @endif
 

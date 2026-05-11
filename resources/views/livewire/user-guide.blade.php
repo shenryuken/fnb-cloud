@@ -150,11 +150,27 @@
                         <ol class="space-y-2 text-sm text-zinc-300 list-decimal list-inside">
                             <li>Make sure a shift is open before taking orders.</li>
                             <li>Browse categories on the left panel and click a product to add it to the cart.</li>
-                            <li>If the product has <span class="font-medium text-zinc-100">variants</span> (e.g. size), a popup will appear to select one.</li>
+                            <li>If the product has <span class="font-medium text-zinc-100">variants</span> (e.g. size), you can either select from quick variant chips (when available) or use Customize to choose options.</li>
                             <li>If the product has <span class="font-medium text-zinc-100">add-ons</span>, select any extras before adding to the cart.</li>
                             <li>Adjust quantities in the cart using the + / - buttons.</li>
                             <li>Add an optional <span class="font-medium text-zinc-100">order note</span> using the note button.</li>
                         </ol>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Product Layouts (Faster Browsing)</h3>
+                        <ul class="space-y-2 text-sm text-zinc-400 list-disc list-inside">
+                            <li>Use the layout buttons near the search bar to switch between <span class="font-medium text-zinc-100">Grid</span>, <span class="font-medium text-zinc-100">Compact</span> (more items per row), and <span class="font-medium text-zinc-100">List</span>.</li>
+                            <li>Compact is best for fast cashier workflows when the POS has many items.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Availability vs Visibility</h3>
+                        <ul class="space-y-2 text-sm text-zinc-400 list-disc list-inside">
+                            <li><span class="font-medium text-zinc-100">Inactive</span> products are hidden from POS.</li>
+                            <li><span class="font-medium text-zinc-100">Unavailable</span> products still show but cannot be clicked and display an Unavailable label.</li>
+                        </ul>
                     </div>
 
                     <div>
@@ -180,6 +196,8 @@
                         <div class="space-y-3 text-sm text-zinc-300">
                             <p><span class="font-medium text-zinc-100">Single Payment:</span> Select Cash or Card and confirm the amount to complete the order.</p>
                             <p><span class="font-medium text-zinc-100">Split Payment:</span> Click "Split Payment" to divide the bill between multiple payment methods. Enter the amount for each method.</p>
+                            <p><span class="font-medium text-zinc-100">Send to Kitchen (Pay Later):</span> Click <span class="font-medium text-zinc-100">Send to Kitchen</span> to submit the order as unpaid, then collect payment later from <span class="font-medium text-zinc-100">Unpaid Orders</span>. Works for takeaway and dine-in (dine-in requires a table).</p>
+                            <p><span class="font-medium text-zinc-100">Unpaid Orders:</span> Cashier can view unpaid orders and switch between card or table layout, then click <span class="font-medium text-zinc-100">Collect</span> to checkout payment.</p>
                         </div>
                     </div>
 
@@ -191,6 +209,11 @@
                     <div>
                         <h3 class="text-base font-semibold text-zinc-100 mb-3">Table Numbers & Order Types</h3>
                         <p class="text-sm text-zinc-400">Select the order type (Dine In, Takeaway, Delivery) before confirming an order. For Dine In, you can assign a table number to the order.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-100 mb-3">Audio Feedback</h3>
+                        <p class="text-sm text-zinc-400">POS plays standard sound effects (e.g., add-to-cart). Some browsers require one click/tap before audio can play.</p>
                     </div>
                 </div>
             </flux:card>
@@ -326,6 +349,7 @@
                             <li>Keep the KDS screen visible at all times in the kitchen.</li>
                             <li>Orders are displayed in the order they were placed (oldest first).</li>
                             <li>Order cards are colour-coded by age to help prioritise which to prepare first.</li>
+                            <li>KDS plays a sound alert when a new order arrives. Some browsers require one click/tap before audio can play.</li>
                         </ul>
                     </div>
                 </div>
@@ -356,7 +380,9 @@
                             <li>Add a product with a name, category, price, and optional image.</li>
                             <li>Add <span class="font-medium text-zinc-100">variants</span> (e.g. Small / Medium / Large) with individual prices.</li>
                             <li>Attach <span class="font-medium text-zinc-100">add-on groups</span> to allow customers to customise the item.</li>
-                            <li>Toggle products active/inactive to temporarily remove them from the POS.</li>
+                            <li>Toggle <span class="font-medium text-zinc-100">Active</span> to show/hide from POS, and <span class="font-medium text-zinc-100">Available</span> to disable the item in POS while still showing it.</li>
+                            <li>Import products in bulk using <span class="font-medium text-zinc-100">Import CSV</span>. Download either the basic template or the variants template.</li>
+                            <li>For CSV variants, use <span class="font-medium text-zinc-100">Name|Price</span> or <span class="font-medium text-zinc-100">Name|Label|Price</span>, separated by <span class="font-medium text-zinc-100">;</span>.</li>
                         </ul>
                     </div>
 
@@ -367,6 +393,7 @@
                             <li>Create an add-on group (e.g. "Extras", "Sauce", "Toppings").</li>
                             <li>Add individual items to each group with a name and price (can be free).</li>
                             <li>Set whether the group is required or optional, and if multiple selections are allowed.</li>
+                            <li>Set <span class="font-medium text-zinc-100">Maximum Options = 0</span> for unlimited selections.</li>
                         </ul>
                     </div>
                 </div>

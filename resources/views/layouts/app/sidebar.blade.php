@@ -4,97 +4,106 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky class="hidden xl:flex border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible breakpoint="80rem" class="hidden xl:flex border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
                 @if(auth()->user()->tenant_id === null)
-                    <flux:sidebar.group :heading="__('System Admin')" class="grid">
-                        <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
-                            {{ __('Global Stats') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
-                            {{ __('Tenants') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    <div class="px-3 pt-2 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
+                        {{ __('System Admin') }}
+                    </div>
+                    <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
+                        {{ __('Global Stats') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
+                        {{ __('Tenants') }}
+                    </flux:sidebar.item>
                 @else
-                    <flux:sidebar.group :heading="__('Platform')" class="grid">
-                        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Dashboard') }}
+                    <div class="px-3 pt-2 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
+                        {{ __('Platform') }}
+                    </div>
+                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                        {{ __('Dashboard') }}
+                    </flux:sidebar.item>
+                    @if(auth()->user()->hasPermission('pos.access'))
+                        <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                            {{ __('POS') }}
                         </flux:sidebar.item>
-                        @if(auth()->user()->hasPermission('pos.access'))
-                            <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
-                                {{ __('POS') }}
-                            </flux:sidebar.item>
-                        @endif
-                        @if(auth()->user()->hasPermission('orders.manage'))
-                            <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index', 'manage.orders.unshifted')" wire:navigate>
-                                {{ __('Orders') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="clock" :href="route('manage.orders.unshifted')" :current="request()->routeIs('manage.orders.unshifted')" wire:navigate class="pl-8 text-sm">
-                                {{ __("Unshifted") }}
-                            </flux:sidebar.item>
-                        @endif
-                        @if(auth()->user()->hasPermission('kds.access'))
-                            <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
-                                {{ __('Kitchen (KDS)') }}
-                            </flux:sidebar.item>
-                        @endif
-                        @if(auth()->user()->hasPermission('pos.access'))
-                            <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
-                                {{ __('Shifts') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="squares-2x2" :href="route('manage.tables.index')" :current="request()->routeIs('manage.tables.index')" wire:navigate>
-                                {{ __('Tables') }}
-                            </flux:sidebar.item>
-                        @endif
-                    </flux:sidebar.group>
+                    @endif
+                    @if(auth()->user()->hasPermission('orders.manage'))
+                        <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index', 'manage.orders.unshifted')" wire:navigate>
+                            {{ __('Orders') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="clock" :href="route('manage.orders.unshifted')" :current="request()->routeIs('manage.orders.unshifted')" wire:navigate class="pl-8 text-sm in-data-flux-sidebar-collapsed-desktop:pl-0">
+                            {{ __("Unshifted") }}
+                        </flux:sidebar.item>
+                    @endif
+                    @if(auth()->user()->hasPermission('kds.access'))
+                        <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>
+                            {{ __('Kitchen (KDS)') }}
+                        </flux:sidebar.item>
+                    @endif
+                    @if(auth()->user()->hasPermission('pos.access'))
+                        <flux:sidebar.item icon="banknotes" :href="route('manage.shifts.index')" :current="request()->routeIs('manage.shifts.index')" wire:navigate>
+                            {{ __('Shifts') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="squares-2x2" :href="route('manage.tables.index')" :current="request()->routeIs('manage.tables.index')" wire:navigate>
+                            {{ __('Tables') }}
+                        </flux:sidebar.item>
+                    @endif
 
                     @if(auth()->user()->hasPermission('reports.view'))
-                        <flux:sidebar.group :heading="__('Reports')" class="grid">
-                            <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
-                                {{ __('Sales Report') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
-                                {{ __('Cashier Report') }}
-                            </flux:sidebar.item>
-                        </flux:sidebar.group>
+                        <div class="px-3 pt-3 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
+                            {{ __('Reports') }}
+                        </div>
+                        <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
+                            {{ __('Sales Report') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="chart-pie" :href="route('reports.sales-analysis')" :current="request()->routeIs('reports.sales-analysis')" wire:navigate>
+                            {{ __('Sales Analysis') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
+                            {{ __('Cashier Report') }}
+                        </flux:sidebar.item>
                     @endif
 
                     @if(auth()->user()->hasPermission('menu.manage'))
-                        <flux:sidebar.group :heading="__('Menu Management')" class="grid">
-                            <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
-                                {{ __('Categories') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
-                                {{ __('Products') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
-                                {{ __('Add-ons') }}
-                            </flux:sidebar.item>
-                        </flux:sidebar.group>
+                        <div class="px-3 pt-3 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
+                            {{ __('Menu') }}
+                        </div>
+                        <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="package" :href="route('manage.products.index')" :current="request()->routeIs('manage.products.index')" wire:navigate>
+                            {{ __('Products') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
+                            {{ __('Add-ons') }}
+                        </flux:sidebar.item>
                     @endif
 
                     @if(auth()->user()->hasPermission('customers.manage') || auth()->user()->hasPermission('vouchers.manage') || auth()->user()->hasPermission('settings.manage'))
-                        <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
-                            @if(auth()->user()->hasPermission('settings.manage'))
-                                <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
-                                    {{ __('Loyalty Points') }}
-                                </flux:sidebar.item>
-                            @endif
-                            @if(auth()->user()->hasPermission('customers.manage'))
-                                <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
-                                    {{ __('Customers') }}
-                                </flux:sidebar.item>
-                            @endif
-                            @if(auth()->user()->hasPermission('vouchers.manage'))
-                                <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
-                                    {{ __('Vouchers') }}
-                                </flux:sidebar.item>
-                            @endif
-                        </flux:sidebar.group>
+                        <div class="px-3 pt-3 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
+                            {{ __('Loyalty') }}
+                        </div>
+                        @if(auth()->user()->hasPermission('settings.manage'))
+                            <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
+                                {{ __('Loyalty Points') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('customers.manage'))
+                            <flux:sidebar.item icon="users" :href="route('manage.customers.index')" :current="request()->routeIs('manage.customers.index')" wire:navigate>
+                                {{ __('Customers') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('vouchers.manage'))
+                            <flux:sidebar.item icon="tag" :href="route('manage.vouchers.index')" :current="request()->routeIs('manage.vouchers.index')" wire:navigate>
+                                {{ __('Vouchers') }}
+                            </flux:sidebar.item>
+                        @endif
                     @endif
                 @endif
             </flux:sidebar.nav>
@@ -108,7 +117,7 @@
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
-        <flux:sidebar collapsible="mobile" sticky class="xl:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar collapsible="mobile" sticky breakpoint="80rem" class="xl:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse />
@@ -116,7 +125,7 @@
 
             <flux:sidebar.nav>
                 @if(auth()->user()->tenant_id === null)
-                    <flux:sidebar.group :heading="__('System Admin')" class="grid">
+                    <flux:sidebar.group icon="shield-check" :heading="__('System Admin')" class="grid">
                         <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
                             {{ __('Global Stats') }}
                         </flux:sidebar.item>
@@ -125,7 +134,7 @@
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @else
-                    <flux:sidebar.group :heading="__('Platform')" class="grid">
+                    <flux:sidebar.group icon="home" :heading="__('Platform')" class="grid">
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
@@ -155,9 +164,12 @@
                     </flux:sidebar.group>
 
                     @if(auth()->user()->hasPermission('reports.view'))
-                        <flux:sidebar.group :heading="__('Reports')" class="grid">
+                        <flux:sidebar.group icon="chart-bar" :heading="__('Reports')" class="grid">
                             <flux:sidebar.item icon="chart-bar" :href="route('reports.sales')" :current="request()->routeIs('reports.sales')" wire:navigate>
                                 {{ __('Sales Report') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="chart-pie" :href="route('reports.sales-analysis')" :current="request()->routeIs('reports.sales-analysis')" wire:navigate>
+                                {{ __('Sales Analysis') }}
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="users" :href="route('reports.cashier')" :current="request()->routeIs('reports.cashier')" wire:navigate>
                                 {{ __('Cashier Report') }}
@@ -166,7 +178,7 @@
                     @endif
 
                     @if(auth()->user()->hasPermission('menu.manage'))
-                        <flux:sidebar.group :heading="__('Menu Management')" class="grid">
+                        <flux:sidebar.group icon="layers" :heading="__('Menu Management')" class="grid">
                             <flux:sidebar.item icon="layers" :href="route('manage.categories.index')" :current="request()->routeIs('manage.categories.index')" wire:navigate>
                                 {{ __('Categories') }}
                             </flux:sidebar.item>
@@ -180,7 +192,7 @@
                     @endif
 
                     @if(auth()->user()->hasPermission('customers.manage') || auth()->user()->hasPermission('vouchers.manage') || auth()->user()->hasPermission('settings.manage'))
-                        <flux:sidebar.group :heading="__('Loyalty Program')" class="grid">
+                        <flux:sidebar.group icon="star" :heading="__('Loyalty Program')" class="grid">
                             @if(auth()->user()->hasPermission('settings.manage'))
                                 <flux:sidebar.item icon="sparkles" :href="route('manage.settings.loyalty')" :current="request()->routeIs('manage.settings.loyalty')" wire:navigate>
                                     {{ __('Loyalty Points') }}

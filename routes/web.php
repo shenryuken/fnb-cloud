@@ -11,6 +11,7 @@ use App\Livewire\Orders;
 use App\Livewire\Pos;
 use App\Livewire\Kds;
 use App\Livewire\SalesReport;
+use App\Livewire\SalesAnalysis;
 use App\Livewire\Customers;
 use App\Livewire\Vouchers;
 use App\Livewire\Shifts;
@@ -42,7 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('pos/receipt/{order}', function (\App\Models\Order $order) {
         // Ensure the order belongs to the current tenant (handled by TenantScope)
         return view('pos.receipt', [
-            'order' => $order->load(['items.product', 'items.variant', 'items.addons', 'items.components', 'user']),
+            'order' => $order->load(['items.product', 'items.variant', 'items.addons', 'items.components', 'user', 'customer']),
             'tenant' => Auth::user()->tenant,
             'issuedVouchers' => \App\Models\CustomerVoucher::query()
                 ->where('issued_from_order_id', $order->id)
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reports
     Route::get('reports/sales', SalesReport::class)->name('reports.sales')->middleware('permission:reports.view');
+    Route::get('reports/sales-analysis', SalesAnalysis::class)->name('reports.sales-analysis')->middleware('permission:reports.view');
     Route::get('reports/cashier', CashierReport::class)->name('reports.cashier')->middleware('permission:reports.view');
 
     // Shifts

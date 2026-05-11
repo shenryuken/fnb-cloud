@@ -136,7 +136,7 @@
                             <flux:text class="font-semibold">{{ $group->name }}</flux:text>
                             <div class="flex items-center gap-2 mt-1">
                                 <flux:badge color="blue" size="sm">Min: {{ $group->min_select }}</flux:badge>
-                                <flux:badge color="zinc" size="sm">Max: {{ $group->max_select }}</flux:badge>
+                                <flux:badge color="zinc" size="sm">Max: {{ (int) $group->max_select === 0 ? 'Unlimited' : $group->max_select }}</flux:badge>
                             </div>
                         </div>
                         <div class="flex items-center gap-1">
