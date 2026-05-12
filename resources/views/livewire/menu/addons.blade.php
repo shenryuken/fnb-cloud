@@ -95,8 +95,9 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>Price</flux:label>
+                        <flux:label>Price Adjustment</flux:label>
                         <flux:input type="number" step="0.01" wire:model="price" placeholder="0.00" />
+                        <flux:description>Use negative values to subtract (e.g. -1.00)</flux:description>
                         <flux:error name="price" />
                     </flux:field>
 
@@ -155,7 +156,9 @@
                                             <span class="font-semibold text-sm">{{ $item->name }}</span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <span class="font-black text-sm text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                            <span class="font-black text-sm {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
+                                                ${{ number_format((float) $item->price, 2) }}
+                                            </span>
                                         </td>
                                         <td class="py-3 px-4 text-right">
                                             <div class="flex items-center justify-end gap-1">
@@ -207,7 +210,9 @@
                                         <span class="font-semibold">{{ $item->name }}</span>
                                     </td>
                                     <td class="py-3 px-4">
-                                        <span class="font-black text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                        <span class="font-black {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
+                                            ${{ number_format((float) $item->price, 2) }}
+                                        </span>
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end gap-2">

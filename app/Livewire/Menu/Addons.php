@@ -115,7 +115,7 @@ class Addons extends Component
         $validated = $this->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:-100000|max:100000',
             'is_active' => 'boolean',
             'addon_group_id' => 'nullable|exists:addon_groups,id',
         ]);
