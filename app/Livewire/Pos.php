@@ -137,7 +137,41 @@ class Pos extends Component
     #[Computed]
     public function categories()
     {
-        return Category::where('is_active', true)->orderBy('sort_order')->get();
+        return Category::where('is_active', true)
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
+    public function childCategories()
+    {
+        $parentId = $this->selectedParentCategoryId;
+        if (!$parentId) {
+            return collect();
+        }
+
+        return Category::where('is_active', true)
+            ->where('parent_id', $parentId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
+    public function selectedParentCategoryId(): ?int
+    {
+        if (!$this->selectedCategoryId) {
+            return null;
+        }
+
+        $cat = Category::find($this->selectedCategoryId);
+        if (!$cat) {
+            return null;
+        }
+
+        return $cat->parent_id ? (int) $cat->parent_id : (int) $cat->id;
     }
 
     #[Computed]
@@ -147,7 +181,18 @@ class Pos extends Component
             ->with(['category', 'variants', 'addons', 'addonGroups.items']);
 
         if ($this->selectedCategoryId) {
-            $productsQuery->where('category_id', $this->selectedCategoryId);
+            $cat = Category::find($this->selectedCategoryId);
+            if ($cat && !$cat->parent_id) {
+                $childIds = Category::where('is_active', true)
+                    ->where('parent_id', $cat->id)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                $productsQuery->whereIn('category_id', array_values(array_unique(array_merge([(int) $cat->id], $childIds))));
+            } else {
+                $productsQuery->where('category_id', $this->selectedCategoryId);
+            }
         }
 
         if ($this->search) {

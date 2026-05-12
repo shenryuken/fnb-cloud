@@ -7,6 +7,7 @@ use App\Livewire\Landlord\AuditLogs as LandlordAuditLogs;
 use App\Livewire\Landlord\SystemHealth as LandlordSystemHealth;
 use App\Livewire\Landlord\Tenants;
 use App\Livewire\Menu\Categories;
+use App\Livewire\Menu\ProductSettings;
 use App\Livewire\Menu\Products;
 use App\Livewire\Menu\Addons;
 use App\Livewire\Orders;
@@ -80,6 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Menu Management
     Route::get('categories', Categories::class)->name('manage.categories.index')->middleware('permission:menu.manage');
     Route::get('products', Products::class)->name('manage.products.index')->middleware('permission:menu.manage');
+    Route::get('products/settings', ProductSettings::class)->name('manage.products.settings')->middleware('permission:menu.manage');
     Route::get('addons', Addons::class)->name('manage.addons.index')->middleware('permission:menu.manage');
     Route::get('customers', Customers::class)->name('manage.customers.index')->middleware('permission:customers.manage');
     Route::get('vouchers', Vouchers::class)->name('manage.vouchers.index')->middleware('permission:vouchers.manage');

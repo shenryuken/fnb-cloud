@@ -51,6 +51,9 @@ class Products extends Component
 
     public array $rowIsActive = [];
     public array $rowIsAvailable = [];
+
+    public array $selectedProductIds = [];
+    public bool $manualSort = false;
     
     // Add-ons tab state
     public string $activeAddonTab = 'addon-groups';
@@ -271,13 +274,15 @@ class Products extends Component
             $this->set_groups = [];
         }
 
-        DB::transaction(function () use ($validated) {
+        $savedProductId = null;
+        DB::transaction(function () use ($validated, &$savedProductId) {
             if ($this->editing) {
                 $this->editing->update($validated);
                 $product = $this->editing;
             } else {
                 $product = Product::create($validated);
             }
+            $savedProductId = (int) $product->id;
 
             // Sync variants
             $product->variants()->delete();
@@ -313,6 +318,11 @@ class Products extends Component
             }
         });
 
+        if ($savedProductId) {
+            $this->rowIsActive[(string) $savedProductId] = (bool) ($validated['is_active'] ?? false);
+            $this->rowIsAvailable[(string) $savedProductId] = (bool) ($validated['is_available'] ?? true);
+        }
+
         $this->reset(['product_type', 'name', 'description', 'price', 'category_id', 'image_url', 'image', 'badge_text', 'tile_color', 'use_tile_color', 'set_groups', 'sort_order', 'is_active', 'is_available', 'editing', 'isCreating', 'variants', 'selectedGroups', 'selectedStandaloneAddons']);
         $this->dispatch('product-saved');
     }
@@ -327,11 +337,137 @@ class Products extends Component
         $this->duplicateProduct($product, false);
     }
 
+    public function bulkCopyWithVariants(): void
+    {
+        $this->bulkCopy(true);
+    }
+
+    public function bulkCopyWithoutVariants(): void
+    {
+        $this->bulkCopy(false);
+    }
+
+    private function bulkCopy(bool $withVariants): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $this->selectedProductIds)));
+        if (empty($ids)) {
+            return;
+        }
+
+        $products = Product::whereIn('id', $ids)->get();
+        if ($products->isEmpty()) {
+            $this->selectedProductIds = [];
+            return;
+        }
+
+        $created = 0;
+        foreach ($products as $product) {
+            $this->duplicateProductToNew($product, $withVariants);
+            $created++;
+        }
+
+        $this->selectedProductIds = [];
+        $this->dispatch('notify', message: "Copied {$created} product(s).", type: 'success');
+    }
+
+    public function bulkDelete(): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $this->selectedProductIds)));
+        if (empty($ids)) {
+            return;
+        }
+
+        $products = Product::whereIn('id', $ids)->get();
+        if ($products->isEmpty()) {
+            $this->selectedProductIds = [];
+            return;
+        }
+
+        foreach ($products as $p) {
+            $p->delete();
+        }
+        $count = $products->count();
+        $this->selectedProductIds = [];
+        $this->dispatch('notify', message: "Deleted {$count} product(s).", type: 'success');
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedProductIds = [];
+    }
+
+    public function toggleSelectedProduct(int $productId): void
+    {
+        $productId = (int) $productId;
+        if (in_array($productId, $this->selectedProductIds, true)) {
+            $this->selectedProductIds = array_values(array_filter(
+                $this->selectedProductIds,
+                fn ($id) => (int) $id !== $productId
+            ));
+            return;
+        }
+
+        $this->selectedProductIds[] = $productId;
+        $this->selectedProductIds = array_values(array_unique(array_map('intval', $this->selectedProductIds)));
+    }
+
+    public function toggleSelectAllOnPage(array $pageIds): void
+    {
+        $pageIds = array_values(array_unique(array_map('intval', $pageIds)));
+        if (empty($pageIds)) {
+            return;
+        }
+
+        $selected = array_values(array_unique(array_map('intval', $this->selectedProductIds)));
+        $missing = array_diff($pageIds, $selected);
+
+        if (empty($missing)) {
+            $this->selectedProductIds = array_values(array_diff($selected, $pageIds));
+            return;
+        }
+
+        $this->selectedProductIds = array_values(array_unique(array_merge($selected, $pageIds)));
+    }
+
+    public function toggleManualSort(): void
+    {
+        $this->manualSort = !$this->manualSort;
+        $this->resetPage();
+        $this->selectedProductIds = [];
+    }
+
+    public function saveManualSort(array $orderedIds): void
+    {
+        if (!$this->manualSort) {
+            return;
+        }
+
+        $orderedIds = array_values(array_unique(array_map('intval', $orderedIds)));
+        if (empty($orderedIds)) {
+            return;
+        }
+
+        DB::transaction(function () use ($orderedIds) {
+            foreach ($orderedIds as $index => $id) {
+                Product::where('id', $id)->update(['sort_order' => $index]);
+            }
+        });
+
+        $this->dispatch('notify', message: 'Order updated.', type: 'success');
+    }
+
     private function duplicateProduct(Product $product, bool $withVariants): void
+    {
+        $new = $this->duplicateProductToNew($product, $withVariants);
+
+        $this->edit($new->fresh());
+    }
+
+    private function duplicateProductToNew(Product $product, bool $withVariants): Product
     {
         $product->load(['variants', 'addonGroups', 'addons', 'setGroups.items']);
 
-        $new = DB::transaction(function () use ($product, $withVariants) {
+        return DB::transaction(function () use ($product, $withVariants) {
             $baseName = (string) $product->name;
             $copyPrefix = $baseName . ' (Copy';
             $existingCount = Product::where('name', 'like', $copyPrefix . '%')->count();
@@ -391,8 +527,6 @@ class Products extends Component
 
             return $newProduct;
         });
-
-        $this->edit($new->fresh());
     }
 
     /**
@@ -778,7 +912,14 @@ class Products extends Component
 
         // Apply category filter
         if (filled($this->categoryFilter)) {
-            $query->where('category_id', $this->categoryFilter);
+            $catId = (int) $this->categoryFilter;
+            $cat = Category::find($catId);
+            if ($cat && !$cat->parent_id) {
+                $childIds = Category::where('parent_id', $cat->id)->pluck('id')->all();
+                $query->whereIn('category_id', array_values(array_unique(array_merge([$catId], array_map('intval', $childIds)))));
+            } else {
+                $query->where('category_id', $catId);
+            }
         }
 
         // Apply status filter
@@ -788,20 +929,41 @@ class Products extends Component
             $query->where('is_active', false);
         }
 
-        $products = $query->orderBy('sort_order')->paginate(10);
-        foreach ($products->items() as $p) {
+        if ($this->manualSort) {
+            $products = $query->orderBy('sort_order')->orderBy('id')->get();
+        } else {
+            $products = $query->orderBy('sort_order')->paginate(10);
+        }
+
+        $items = $products instanceof \Illuminate\Pagination\LengthAwarePaginator ? $products->items() : $products;
+        foreach ($items as $p) {
             $id = (string) $p->id;
-            if (!array_key_exists($id, $this->rowIsActive)) {
-                $this->rowIsActive[$id] = (bool) $p->is_active;
+            $currentActive = (bool) $p->is_active;
+            $currentAvailable = (bool) ($p->is_available ?? true);
+
+            if (!array_key_exists($id, $this->rowIsActive) || (bool) $this->rowIsActive[$id] !== $currentActive) {
+                $this->rowIsActive[$id] = $currentActive;
             }
-            if (!array_key_exists($id, $this->rowIsAvailable)) {
-                $this->rowIsAvailable[$id] = (bool) ($p->is_available ?? true);
+            if (!array_key_exists($id, $this->rowIsAvailable) || (bool) $this->rowIsAvailable[$id] !== $currentAvailable) {
+                $this->rowIsAvailable[$id] = $currentAvailable;
+            }
+        }
+
+        $allCategories = Category::orderBy('sort_order')->orderBy('name')->get();
+        $parents = $allCategories->whereNull('parent_id')->values();
+        $childrenByParent = $allCategories->whereNotNull('parent_id')->groupBy('parent_id');
+        $categoryOptions = [];
+        foreach ($parents as $p) {
+            $categoryOptions[] = ['id' => (int) $p->id, 'label' => (string) $p->name];
+            foreach (($childrenByParent[$p->id] ?? collect())->sortBy('sort_order')->values() as $c) {
+                $categoryOptions[] = ['id' => (int) $c->id, 'label' => (string) ($p->name . ' / ' . $c->name)];
             }
         }
 
         return view('livewire.menu.products', [
             'products' => $products,
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get(),
+            'categoryOptions' => $categoryOptions,
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'price']),
             'addonGroups' => \App\Models\AddonGroup::all(),
             'standaloneAddons' => \App\Models\ProductAddon::whereNull('addon_group_id')->get(),

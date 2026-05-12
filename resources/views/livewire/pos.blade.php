@@ -94,11 +94,33 @@
                 @foreach($this->categories as $category)
                     <button wire:click="$set('selectedCategoryId', {{ $category->id }})" 
                         class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all
-                        {{ $selectedCategoryId === $category->id ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
+                        {{ ($this->selectedParentCategoryId === $category->id) ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
                         {{ $category->name }}
                     </button>
                 @endforeach
             </div>
+
+            @php
+                $childCategories = $this->childCategories;
+                $selectedParentId = $this->selectedParentCategoryId;
+                $selectedParentName = $selectedParentId ? ($this->categories->firstWhere('id', $selectedParentId)?->name ?? null) : null;
+            @endphp
+            @if($childCategories->count() > 0 && $selectedParentId && $selectedParentName)
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                    <button wire:click="$set('selectedCategoryId', {{ $selectedParentId }})"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all
+                        {{ $selectedCategoryId === $selectedParentId ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
+                        All {{ $selectedParentName }}
+                    </button>
+                    @foreach($childCategories as $child)
+                        <button wire:click="$set('selectedCategoryId', {{ $child->id }})"
+                            class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all
+                            {{ $selectedCategoryId === $child->id ? 'bg-pink-500 text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' }}">
+                            {{ $child->name }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         @if(($productLayout ?? 'grid') === 'list')
@@ -114,10 +136,10 @@
                     @endphp
 
                     <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
-                        class="group flex items-center gap-3 rounded-lg border bg-white dark:bg-zinc-900 px-3 py-2 transition-all
+                        class="group flex items-center gap-3 rounded-lg border bg-white dark:bg-zinc-800 px-3 py-2 transition-all shadow-sm dark:shadow-black/30
                             {{ ($product->is_available ?? true)
-                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-sm'
-                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-700 hover:border-pink-500/40 hover:shadow-md'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-700/80 opacity-60' }}">
                         <div class="w-14 h-14 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 relative">
                             @if($product->image_url)
                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
@@ -196,10 +218,10 @@
                     @endphp
 
                     <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
-                        class="group rounded-lg border bg-white dark:bg-zinc-900 p-3 transition-all
+                        class="group rounded-lg border bg-white dark:bg-zinc-800 p-3 transition-all shadow-sm dark:shadow-black/30
                             {{ ($product->is_available ?? true)
-                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-sm'
-                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-700 hover:border-pink-500/40 hover:shadow-md'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-700/80 opacity-60' }}">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 relative">
                                 @if($product->image_url)
@@ -266,10 +288,10 @@
             <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-4 scrollbar-hide">
                 @foreach($this->products as $product)
                     <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
-                        class="group relative h-28 sm:h-32 lg:h-36 rounded-lg border overflow-hidden transition-all duration-200
+                        class="group relative h-28 sm:h-32 lg:h-36 rounded-lg border overflow-hidden transition-all duration-200 shadow-sm dark:shadow-black/30
                             {{ ($product->is_available ?? true)
-                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-md hover:shadow-black/10'
-                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-700 hover:border-pink-500/40 hover:shadow-md'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-700/80 opacity-60' }}">
                         <div class="absolute inset-0 bg-zinc-100 dark:bg-zinc-800">
                             @if($product->image_url)
                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -346,10 +368,10 @@
             <div class="lg:flex-1 lg:overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-4 scrollbar-hide">
                 @foreach($this->products as $product)
                     <div @if(($product->is_available ?? true)) wire:click="quickAddProduct({{ $product->id }})" @endif
-                        class="group flex flex-col h-40 sm:h-44 lg:h-48 xl:h-52 rounded-lg border bg-white dark:bg-zinc-900 overflow-hidden transition-all duration-200 relative
+                        class="group flex flex-col h-40 sm:h-44 lg:h-48 xl:h-52 rounded-lg border bg-white dark:bg-zinc-900 overflow-hidden transition-all duration-200 relative shadow-sm dark:shadow-black/30
                             {{ ($product->is_available ?? true)
-                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-800 hover:border-pink-500/40 hover:shadow-md hover:shadow-black/10'
-                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-800/80 opacity-60' }}">
+                                ? 'cursor-pointer border-zinc-200/80 dark:border-zinc-700 hover:border-pink-500/40 hover:shadow-md'
+                                : 'cursor-not-allowed border-zinc-200/60 dark:border-zinc-700/80 opacity-60' }}">
                         <div class="relative h-24 sm:h-28 lg:h-32 xl:h-36 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                             @if($product->image_url)
                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
