@@ -11,6 +11,11 @@
                 <flux:icon.clock class="w-4 h-4" />
                 Unshifted
             </a>
+            @if($this->canResetOrders)
+                <flux:button size="sm" variant="danger" icon="trash" wire:click="openResetModal">
+                    Reset Orders
+                </flux:button>
+            @endif
             <flux:badge color="blue">
                 {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
             </flux:badge>
@@ -416,6 +421,88 @@
                 </div>
             </div>
         @endif
+    </flux:modal>
+
+    <flux:modal name="orders-reset" wire:model="showResetModal" class="max-w-2xl w-full">
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.trash class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Reset Orders</flux:heading>
+                    <flux:subheading>Delete orders in a selected date range (Owner only)</flux:subheading>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" wire:click="closeResetModal" />
+            </div>
+
+            <flux:callout variant="danger" icon="exclamation-triangle" heading="This action permanently deletes orders">
+                This will remove orders (and their items) in the selected range. Use Backup to save a file first.
+            </flux:callout>
+
+            <flux:card class="p-4 space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <flux:button size="sm" variant="{{ $resetPreset === 'filtered' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('filtered')">
+                        Use Filters
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'today' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('today')">
+                        Today
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'week' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('week')">
+                        This Week
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'month' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('month')">
+                        This Month
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'custom' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('custom')">
+                        Custom
+                    </flux:button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <flux:field>
+                        <flux:label>From</flux:label>
+                        <flux:input type="date" wire:model.live="resetFrom" />
+                        <flux:error name="resetFrom" />
+                    </flux:field>
+                    <flux:field>
+                        <flux:label>To</flux:label>
+                        <flux:input type="date" wire:model.live="resetTo" />
+                        <flux:error name="resetTo" />
+                    </flux:field>
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <flux:toggle wire:model.live="resetWithBackup" />
+                        <flux:text size="sm" class="font-medium">Backup before delete</flux:text>
+                    </div>
+                    <flux:badge color="zinc" size="sm">
+                        {{ number_format((int) $this->resetOrdersCount) }} order(s)
+                    </flux:badge>
+                </div>
+            </flux:card>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Confirm with Password</flux:label>
+                    <flux:input type="password" wire:model="resetPassword" placeholder="Your password" />
+                    <flux:error name="resetPassword" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>Type DELETE to confirm</flux:label>
+                    <flux:input wire:model="resetConfirm" placeholder="DELETE" />
+                    <flux:error name="resetConfirm" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" wire:click="closeResetModal">Cancel</flux:button>
+                <flux:button variant="danger" wire:click="confirmResetOrders">
+                    Reset Now
+                </flux:button>
+            </div>
+        </div>
     </flux:modal>
 
 </div>
