@@ -19,6 +19,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 #[Title('Orders')]
 #[Lazy]
@@ -50,6 +51,14 @@ class Orders extends Component
     public string $restorePassword = '';
     public string $restoreConfirm = '';
 
+    public array $selectedOrderIds = [];
+
+    public bool $showDeleteModal = false;
+    public array $deleteOrderIds = [];
+    public bool $deleteWithBackup = true;
+    public string $deletePassword = '';
+    public string $deleteConfirm = '';
+
     protected $queryString = [
         'search'          => ['except' => ''],
         'statusFilter'    => ['except' => '', 'as' => 'status'],
@@ -61,33 +70,39 @@ class Orders extends Component
 
     public function updatingSearch(): void
     {
+        $this->clearSelection();
         $this->resetPage();
     }
 
     public function updatingStatusFilter(): void
     {
+        $this->clearSelection();
         $this->resetPage();
     }
 
     public function updatingOrderTypeFilter(): void
     {
+        $this->clearSelection();
         $this->resetPage();
     }
 
     public function updatingDateFrom(): void
     {
+        $this->clearSelection();
         $this->datePreset = '';
         $this->resetPage();
     }
 
     public function updatingDateTo(): void
     {
+        $this->clearSelection();
         $this->datePreset = '';
         $this->resetPage();
     }
 
     public function setDatePreset(string $preset): void
     {
+        $this->clearSelection();
         $preset = trim($preset);
         $now = Carbon::now();
 
@@ -114,6 +129,7 @@ class Orders extends Component
 
     public function clearFilters(): void
     {
+        $this->clearSelection();
         $this->search          = '';
         $this->statusFilter    = '';
         $this->orderTypeFilter = '';
@@ -351,6 +367,297 @@ class Orders extends Component
         fclose($handle);
 
         return [$relativePath, $fileName];
+    }
+
+    private function createOrdersBackupForIds(array $orderIds): array
+    {
+        $orderIds = array_values(array_unique(array_map('intval', $orderIds)));
+        sort($orderIds);
+
+        $tenant = auth()->user()?->tenant;
+        $tenantId = (int) (auth()->user()?->tenant_id ?? 0);
+        $tenantSlug = $tenant?->slug ?: ('tenant_' . $tenantId);
+
+        $dir = 'backups/orders/' . $tenantSlug;
+        Storage::disk('local')->makeDirectory($dir);
+
+        $fileName = 'orders_backup_selection_' . $tenantSlug . '_' . count($orderIds) . '_' . now()->format('Ymd_His') . '.jsonl';
+        $relativePath = $dir . '/' . $fileName;
+        $fullPath = storage_path('app/' . $relativePath);
+
+        $handle = fopen($fullPath, 'wb');
+
+        $meta = [
+            'type' => 'orders_backup',
+            'tenant_id' => $tenantId,
+            'selection' => [
+                'count' => count($orderIds),
+                'first_id' => $orderIds[0] ?? null,
+                'last_id' => $orderIds[count($orderIds) - 1] ?? null,
+            ],
+            'created_at' => now()->toDateTimeString(),
+        ];
+
+        fwrite($handle, json_encode($meta, JSON_UNESCAPED_UNICODE) . "\n");
+
+        if (!empty($orderIds)) {
+            Order::query()
+                ->whereIn('id', $orderIds)
+                ->with([
+                    'items',
+                    'items.product',
+                    'items.variant',
+                    'items.addons',
+                    'items.components',
+                    'customer',
+                    'user',
+                    'shift',
+                    'voucher',
+                    'table',
+                ])
+                ->orderBy('id')
+                ->chunkById(100, function ($orders) use ($handle) {
+                    foreach ($orders as $order) {
+                        fwrite($handle, json_encode($order->toArray(), JSON_UNESCAPED_UNICODE) . "\n");
+                    }
+                });
+        }
+
+        fclose($handle);
+
+        return [$relativePath, $fileName];
+    }
+
+    private function clearSelection(): void
+    {
+        $this->selectedOrderIds = [];
+    }
+
+    private function getCurrentPageOrderIds(int $perPage = 10): array
+    {
+        return $this->ordersIdQuery()
+            ->paginate($perPage)
+            ->getCollection()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    public function selectAllOnPage(): void
+    {
+        if (!$this->canResetOrders) {
+            abort(403);
+        }
+
+        $this->selectedOrderIds = $this->getCurrentPageOrderIds();
+    }
+
+    public function clearSelectedOrders(): void
+    {
+        $this->selectedOrderIds = [];
+    }
+
+    #[Computed]
+    public function selectedOrdersCount(): int
+    {
+        return count($this->selectedOrderIds);
+    }
+
+    public function openDeleteOrders(?int $orderId = null): void
+    {
+        if (!$this->canResetOrders) {
+            abort(403);
+        }
+
+        $ids = [];
+        if ($orderId) {
+            $ids = [$orderId];
+        } else {
+            $ids = array_values(array_unique(array_map('intval', $this->selectedOrderIds)));
+        }
+
+        if (empty($ids)) {
+            $this->dispatch('notify', message: 'Select at least one order first.', type: 'warning');
+            return;
+        }
+
+        $this->deleteOrderIds = $ids;
+        $this->deleteWithBackup = true;
+        $this->deletePassword = '';
+        $this->deleteConfirm = '';
+
+        $this->showDeleteModal = true;
+        $this->dispatch('modal:open', name: 'orders-delete');
+    }
+
+    public function closeDeleteModal(): void
+    {
+        $this->showDeleteModal = false;
+        $this->reset(['deleteOrderIds', 'deleteWithBackup', 'deletePassword', 'deleteConfirm']);
+        $this->dispatch('modal:close', name: 'orders-delete');
+    }
+
+    #[Computed]
+    public function deleteOrdersCount(): int
+    {
+        if (!$this->showDeleteModal || !$this->canResetOrders) {
+            return 0;
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $this->deleteOrderIds)));
+        if (empty($ids)) {
+            return 0;
+        }
+
+        return (int) Order::query()->whereIn('id', $ids)->count();
+    }
+
+    public function confirmDeleteOrders()
+    {
+        if (!$this->canResetOrders) {
+            abort(403);
+        }
+
+        $this->validate([
+            'deleteOrderIds' => 'required|array|min:1',
+            'deletePassword' => 'required|string|min:1',
+            'deleteConfirm' => 'required|string',
+            'deleteWithBackup' => 'boolean',
+        ]);
+
+        if (!Hash::check((string) $this->deletePassword, (string) auth()->user()->password)) {
+            $this->addError('deletePassword', 'Incorrect password.');
+            return;
+        }
+
+        if (trim((string) $this->deleteConfirm) !== 'DELETE') {
+            $this->addError('deleteConfirm', 'Type DELETE to confirm.');
+            return;
+        }
+
+        $orderIds = array_values(array_unique(array_map('intval', $this->deleteOrderIds)));
+        if (empty($orderIds)) {
+            $this->dispatch('notify', message: 'No orders selected for delete.', type: 'warning');
+            return;
+        }
+
+        $backupRelativePath = null;
+        $backupFileName = null;
+        if ($this->deleteWithBackup) {
+            [$backupRelativePath, $backupFileName] = $this->createOrdersBackupForIds($orderIds);
+        }
+
+        $shiftIds = [];
+        $customerIds = [];
+        $voucherIds = [];
+
+        Order::query()
+            ->whereIn('id', $orderIds)
+            ->select(['id', 'shift_id', 'customer_id', 'voucher_id'])
+            ->orderBy('id')
+            ->chunkById(500, function ($orders) use (&$shiftIds, &$customerIds, &$voucherIds) {
+                foreach ($orders as $o) {
+                    if ($o->shift_id) {
+                        $shiftIds[] = (int) $o->shift_id;
+                    }
+                    if ($o->customer_id) {
+                        $customerIds[] = (int) $o->customer_id;
+                    }
+                    if ($o->voucher_id) {
+                        $voucherIds[] = (int) $o->voucher_id;
+                    }
+                }
+            });
+
+        $shiftIds = array_values(array_unique($shiftIds));
+        $customerIds = array_values(array_unique($customerIds));
+        $voucherIds = array_values(array_unique($voucherIds));
+
+        $affectedTables = RestaurantTable::query()
+            ->whereIn('current_order_id', $orderIds)
+            ->get();
+
+        $deletedCount = 0;
+        DB::transaction(function () use ($orderIds, &$deletedCount) {
+            $deletedCount = (int) Order::query()->whereIn('id', $orderIds)->count();
+            Order::query()->whereIn('id', $orderIds)->delete();
+        });
+
+        foreach ($affectedTables as $table) {
+            $table->markDirty();
+        }
+
+        if (!empty($shiftIds)) {
+            Shift::query()
+                ->whereIn('id', $shiftIds)
+                ->get()
+                ->each(fn (Shift $s) => $s->recalculateSales());
+        }
+
+        if (!empty($customerIds)) {
+            $balances = Order::query()
+                ->whereIn('customer_id', $customerIds)
+                ->where('payment_status', 'paid')
+                ->where('status', 'completed')
+                ->selectRaw('customer_id, COALESCE(SUM(points_earned - points_redeemed), 0) as balance')
+                ->groupBy('customer_id')
+                ->pluck('balance', 'customer_id')
+                ->toArray();
+
+            Customer::query()
+                ->whereIn('id', $customerIds)
+                ->get()
+                ->each(function (Customer $c) use ($balances) {
+                    $balance = (int) ($balances[$c->id] ?? 0);
+                    $c->update(['points_balance' => max(0, $balance)]);
+                });
+        }
+
+        if (!empty($voucherIds)) {
+            $counts = Order::query()
+                ->whereIn('voucher_id', $voucherIds)
+                ->where('payment_status', 'paid')
+                ->selectRaw('voucher_id, COUNT(*) as usage_count')
+                ->groupBy('voucher_id')
+                ->pluck('usage_count', 'voucher_id')
+                ->toArray();
+
+            Voucher::query()
+                ->whereIn('id', $voucherIds)
+                ->get()
+                ->each(function (Voucher $v) use ($counts) {
+                    $usage = (int) ($counts[$v->id] ?? 0);
+                    $v->update(['usage_count' => max(0, $usage)]);
+                });
+        }
+
+        AuditLog::create([
+            'tenant_id' => auth()->user()?->tenant_id,
+            'actor_user_id' => auth()->id(),
+            'action' => 'orders.delete',
+            'subject_type' => 'orders',
+            'subject_id' => null,
+            'meta' => [
+                'deleted_orders' => $deletedCount,
+                'order_ids' => array_slice($orderIds, 0, 500),
+                'backup_file' => $backupFileName,
+                'backup_path' => $backupRelativePath,
+            ],
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        $this->closeDeleteModal();
+        $this->clearSelection();
+        $this->resetPage();
+        $this->dispatch('notify', message: 'Deleted ' . $deletedCount . ' order(s).', type: 'warning');
+
+        if ($backupRelativePath && $backupFileName) {
+            return response()->download(storage_path('app/' . $backupRelativePath), $backupFileName, [
+                'Content-Type' => 'application/x-ndjson',
+            ]);
+        }
     }
 
     public function confirmResetOrders()
@@ -794,22 +1101,18 @@ class Orders extends Component
         $this->dispatch('notify', message: 'Restore completed. Restored ' . (int) $createdOrders . ' order(s).', type: 'success');
     }
 
-    public function render()
+    private function applyOrderFilters(Builder $query): Builder
     {
-        $query = Order::with(['items.product', 'user', 'customer'])
-            ->latest();
-
         if ($this->search !== '') {
             $term = '%' . $this->search . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('id', 'like', $term)
-                  ->orWhere('table_number', 'like', $term)
-                  ->orWhere('voucher_code', 'like', $term)
-                  ->orWhereHas('customer', fn ($c) =>
-                      $c->where('name', 'like', $term)
+                    ->orWhere('table_number', 'like', $term)
+                    ->orWhere('voucher_code', 'like', $term)
+                    ->orWhereHas('customer', fn ($c) => $c
+                        ->where('name', 'like', $term)
                         ->orWhere('mobile', 'like', $term)
-                        ->orWhere('email', 'like', $term)
-                  );
+                        ->orWhere('email', 'like', $term));
             });
         }
 
@@ -829,6 +1132,29 @@ class Orders extends Component
             $query->whereDate('created_at', '<=', $this->dateTo);
         }
 
+        return $query;
+    }
+
+    private function ordersListQuery(): Builder
+    {
+        return $this->applyOrderFilters(
+            Order::query()
+                ->with(['items.product', 'user', 'customer'])
+                ->latest()
+        );
+    }
+
+    private function ordersIdQuery(): Builder
+    {
+        return $this->applyOrderFilters(
+            Order::query()
+                ->select(['id'])
+                ->latest()
+        );
+    }
+
+    public function render()
+    {
         $hasActiveFilters = $this->search !== ''
             || $this->statusFilter !== ''
             || $this->orderTypeFilter !== ''
@@ -836,7 +1162,7 @@ class Orders extends Component
             || $this->dateTo !== '';
 
         return view('livewire.orders', [
-            'orders'           => $query->paginate(10),
+            'orders'           => $this->ordersListQuery()->paginate(10),
             'hasActiveFilters' => $hasActiveFilters,
         ]);
     }
