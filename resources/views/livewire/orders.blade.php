@@ -15,6 +15,9 @@
                 <flux:button size="sm" variant="danger" icon="trash" wire:click="openResetModal">
                     Reset Orders
                 </flux:button>
+                <flux:button size="sm" variant="ghost" icon="arrow-up-tray" wire:click="openRestoreModal">
+                    Restore
+                </flux:button>
             @endif
             <flux:badge color="blue">
                 {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
@@ -474,7 +477,7 @@
 
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
-                        <flux:toggle wire:model.live="resetWithBackup" />
+                        <flux:switch wire:model.live="resetWithBackup" />
                         <flux:text size="sm" class="font-medium">Backup before delete</flux:text>
                     </div>
                     <flux:badge color="zinc" size="sm">
@@ -500,6 +503,54 @@
                 <flux:button variant="ghost" wire:click="closeResetModal">Cancel</flux:button>
                 <flux:button variant="danger" wire:click="confirmResetOrders">
                     Reset Now
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="orders-restore" wire:model="showRestoreModal" class="max-w-2xl w-full">
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.arrow-up-tray class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Restore Orders</flux:heading>
+                    <flux:subheading>Upload an orders backup file to restore (Owner only)</flux:subheading>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" wire:click="closeRestoreModal" />
+            </div>
+
+            <flux:callout variant="danger" icon="exclamation-triangle" heading="Restoring can create duplicates">
+                Restore will insert orders from the file. If you restore the same file twice, you will get duplicate orders.
+            </flux:callout>
+
+            <flux:card class="p-4 space-y-4">
+                <flux:field>
+                    <flux:label>Backup File</flux:label>
+                    <flux:input type="file" wire:model="restoreFile" accept=".jsonl,.ndjson,.txt" />
+                    <flux:description>Use the backup file downloaded from Reset Orders (JSON Lines format).</flux:description>
+                    <flux:error name="restoreFile" />
+                </flux:field>
+            </flux:card>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Confirm with Password</flux:label>
+                    <flux:input type="password" wire:model="restorePassword" placeholder="Your password" />
+                    <flux:error name="restorePassword" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>Type RESTORE to confirm</flux:label>
+                    <flux:input wire:model="restoreConfirm" placeholder="RESTORE" />
+                    <flux:error name="restoreConfirm" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" wire:click="closeRestoreModal">Cancel</flux:button>
+                <flux:button variant="primary" wire:click="confirmRestoreOrders">
+                    Restore Now
                 </flux:button>
             </div>
         </div>

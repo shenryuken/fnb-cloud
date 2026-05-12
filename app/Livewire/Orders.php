@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\RestaurantTable;
 use App\Models\Shift;
 use App\Models\Voucher;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Carbon;
 
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
 class Orders extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public bool $showOrderModal = false;
     public ?Order $viewingOrder = null;
@@ -41,6 +44,11 @@ class Orders extends Component
     public bool $resetWithBackup = true;
     public string $resetPassword = '';
     public string $resetConfirm = '';
+
+    public bool $showRestoreModal = false;
+    public ?UploadedFile $restoreFile = null;
+    public string $restorePassword = '';
+    public string $restoreConfirm = '';
 
     protected $queryString = [
         'search'          => ['except' => ''],
@@ -498,6 +506,292 @@ class Orders extends Component
                 'Content-Type' => 'application/x-ndjson',
             ]);
         }
+    }
+
+    public function openRestoreModal(): void
+    {
+        if (!$this->canResetOrders) {
+            abort(403);
+        }
+
+        $this->restoreFile = null;
+        $this->restorePassword = '';
+        $this->restoreConfirm = '';
+
+        $this->showRestoreModal = true;
+        $this->dispatch('modal:open', name: 'orders-restore');
+    }
+
+    public function closeRestoreModal(): void
+    {
+        $this->showRestoreModal = false;
+        $this->reset(['restoreFile', 'restorePassword', 'restoreConfirm']);
+        $this->dispatch('modal:close', name: 'orders-restore');
+    }
+
+    private function safeForeignId(?int $id, string $table): ?int
+    {
+        if (!$id) {
+            return null;
+        }
+
+        $exists = DB::table($table)->where('id', $id)->exists();
+        return $exists ? $id : null;
+    }
+
+    public function confirmRestoreOrders(): void
+    {
+        if (!$this->canResetOrders) {
+            abort(403);
+        }
+
+        $this->validate([
+            'restoreFile' => 'required|file|max:51200',
+            'restorePassword' => 'required|string|min:1',
+            'restoreConfirm' => 'required|string',
+        ]);
+
+        if (!Hash::check((string) $this->restorePassword, (string) auth()->user()->password)) {
+            $this->addError('restorePassword', 'Incorrect password.');
+            return;
+        }
+
+        if (trim((string) $this->restoreConfirm) !== 'RESTORE') {
+            $this->addError('restoreConfirm', 'Type RESTORE to confirm.');
+            return;
+        }
+
+        $path = $this->restoreFile?->getRealPath();
+        if (!$path || !is_file($path)) {
+            $this->addError('restoreFile', 'Upload failed. Please try again.');
+            return;
+        }
+
+        $file = new \SplFileObject($path, 'rb');
+        $file->setFlags(\SplFileObject::DROP_NEW_LINE);
+
+        $firstLine = $file->fgets();
+        $meta = json_decode((string) $firstLine, true);
+        if (!is_array($meta) || ($meta['type'] ?? null) !== 'orders_backup') {
+            $this->addError('restoreFile', 'Invalid backup file.');
+            return;
+        }
+
+        $tenantId = (int) (auth()->user()?->tenant_id ?? 0);
+        if ((int) ($meta['tenant_id'] ?? 0) !== $tenantId) {
+            $this->addError('restoreFile', 'This backup belongs to a different tenant.');
+            return;
+        }
+
+        $createdOrders = 0;
+        $shiftIds = [];
+        $customerIds = [];
+        $voucherIds = [];
+
+        DB::transaction(function () use ($file, &$createdOrders, &$shiftIds, &$customerIds, &$voucherIds) {
+            $orderFillable = (new Order())->getFillable();
+            $itemFillable = (new \App\Models\OrderItem())->getFillable();
+            $addonFillable = (new \App\Models\OrderItemAddon())->getFillable();
+            $componentFillable = (new \App\Models\OrderItemComponent())->getFillable();
+
+            while (!$file->eof()) {
+                $line = trim((string) $file->fgets());
+                if ($line === '') {
+                    continue;
+                }
+
+                $data = json_decode($line, true);
+                if (!is_array($data)) {
+                    continue;
+                }
+
+                $orderAttrs = array_intersect_key($data, array_flip($orderFillable));
+                unset($orderAttrs['tenant_id'], $orderAttrs['id']);
+
+                $orderAttrs['shift_id'] = $this->safeForeignId(isset($orderAttrs['shift_id']) ? (int) $orderAttrs['shift_id'] : null, 'shifts');
+                $orderAttrs['customer_id'] = $this->safeForeignId(isset($orderAttrs['customer_id']) ? (int) $orderAttrs['customer_id'] : null, 'customers');
+                $orderAttrs['user_id'] = $this->safeForeignId(isset($orderAttrs['user_id']) ? (int) $orderAttrs['user_id'] : null, 'users');
+                $orderAttrs['voucher_id'] = $this->safeForeignId(isset($orderAttrs['voucher_id']) ? (int) $orderAttrs['voucher_id'] : null, 'vouchers');
+                $orderAttrs['table_id'] = $this->safeForeignId(isset($orderAttrs['table_id']) ? (int) $orderAttrs['table_id'] : null, 'restaurant_tables');
+
+                $order = new Order();
+                $order->fill($orderAttrs);
+                if (!empty($data['created_at'])) {
+                    $order->created_at = Carbon::parse((string) $data['created_at']);
+                }
+                if (!empty($data['updated_at'])) {
+                    $order->updated_at = Carbon::parse((string) $data['updated_at']);
+                }
+                $order->save();
+
+                $createdOrders++;
+
+                if ($order->shift_id) {
+                    $shiftIds[] = (int) $order->shift_id;
+                }
+                if ($order->customer_id) {
+                    $customerIds[] = (int) $order->customer_id;
+                }
+                if ($order->voucher_id) {
+                    $voucherIds[] = (int) $order->voucher_id;
+                }
+
+                $items = $data['items'] ?? [];
+                if (!is_array($items)) {
+                    $items = [];
+                }
+
+                foreach ($items as $itemData) {
+                    if (!is_array($itemData)) {
+                        continue;
+                    }
+
+                    $itemAttrs = array_intersect_key($itemData, array_flip($itemFillable));
+                    unset($itemAttrs['tenant_id'], $itemAttrs['id']);
+                    $itemAttrs['order_id'] = $order->id;
+
+                    $productId = isset($itemAttrs['product_id']) ? (int) $itemAttrs['product_id'] : null;
+                    if (!$productId || !DB::table('products')->where('id', $productId)->exists()) {
+                        throw new \RuntimeException('Missing product for restored order item.');
+                    }
+
+                    if (!empty($itemAttrs['variant_id'])) {
+                        $itemAttrs['variant_id'] = $this->safeForeignId((int) $itemAttrs['variant_id'], 'product_variants');
+                    }
+
+                    $orderItem = new \App\Models\OrderItem();
+                    $orderItem->fill($itemAttrs);
+                    if (!empty($itemData['created_at'])) {
+                        $orderItem->created_at = Carbon::parse((string) $itemData['created_at']);
+                    }
+                    if (!empty($itemData['updated_at'])) {
+                        $orderItem->updated_at = Carbon::parse((string) $itemData['updated_at']);
+                    }
+                    $orderItem->save();
+
+                    $addons = $itemData['addons'] ?? [];
+                    if (is_array($addons)) {
+                        foreach ($addons as $addonData) {
+                            if (!is_array($addonData)) {
+                                continue;
+                            }
+
+                            $addonAttrs = array_intersect_key($addonData, array_flip($addonFillable));
+                            unset($addonAttrs['tenant_id'], $addonAttrs['id']);
+                            $addonAttrs['order_item_id'] = $orderItem->id;
+
+                            $addonId = isset($addonAttrs['addon_id']) ? (int) $addonAttrs['addon_id'] : null;
+                            if (!$addonId || !DB::table('product_addons')->where('id', $addonId)->exists()) {
+                                throw new \RuntimeException('Missing addon for restored order item.');
+                            }
+
+                            $orderItemAddon = new \App\Models\OrderItemAddon();
+                            $orderItemAddon->fill($addonAttrs);
+                            if (!empty($addonData['created_at'])) {
+                                $orderItemAddon->created_at = Carbon::parse((string) $addonData['created_at']);
+                            }
+                            if (!empty($addonData['updated_at'])) {
+                                $orderItemAddon->updated_at = Carbon::parse((string) $addonData['updated_at']);
+                            }
+                            $orderItemAddon->save();
+                        }
+                    }
+
+                    $components = $itemData['components'] ?? [];
+                    if (is_array($components)) {
+                        foreach ($components as $componentData) {
+                            if (!is_array($componentData)) {
+                                continue;
+                            }
+
+                            $componentAttrs = array_intersect_key($componentData, array_flip($componentFillable));
+                            unset($componentAttrs['tenant_id'], $componentAttrs['id']);
+                            $componentAttrs['order_item_id'] = $orderItem->id;
+
+                            if (!empty($componentAttrs['product_id'])) {
+                                $componentAttrs['product_id'] = $this->safeForeignId((int) $componentAttrs['product_id'], 'products');
+                            }
+
+                            $orderItemComponent = new \App\Models\OrderItemComponent();
+                            $orderItemComponent->fill($componentAttrs);
+                            if (!empty($componentData['created_at'])) {
+                                $orderItemComponent->created_at = Carbon::parse((string) $componentData['created_at']);
+                            }
+                            if (!empty($componentData['updated_at'])) {
+                                $orderItemComponent->updated_at = Carbon::parse((string) $componentData['updated_at']);
+                            }
+                            $orderItemComponent->save();
+                        }
+                    }
+                }
+            }
+        });
+
+        $shiftIds = array_values(array_unique($shiftIds));
+        $customerIds = array_values(array_unique($customerIds));
+        $voucherIds = array_values(array_unique($voucherIds));
+
+        if (!empty($shiftIds)) {
+            Shift::query()
+                ->whereIn('id', $shiftIds)
+                ->get()
+                ->each(fn (Shift $s) => $s->recalculateSales());
+        }
+
+        if (!empty($customerIds)) {
+            $balances = Order::query()
+                ->whereIn('customer_id', $customerIds)
+                ->where('payment_status', 'paid')
+                ->where('status', 'completed')
+                ->selectRaw('customer_id, COALESCE(SUM(points_earned - points_redeemed), 0) as balance')
+                ->groupBy('customer_id')
+                ->pluck('balance', 'customer_id')
+                ->toArray();
+
+            Customer::query()
+                ->whereIn('id', $customerIds)
+                ->get()
+                ->each(function (Customer $c) use ($balances) {
+                    $balance = (int) ($balances[$c->id] ?? 0);
+                    $c->update(['points_balance' => max(0, $balance)]);
+                });
+        }
+
+        if (!empty($voucherIds)) {
+            $counts = Order::query()
+                ->whereIn('voucher_id', $voucherIds)
+                ->where('payment_status', 'paid')
+                ->selectRaw('voucher_id, COUNT(*) as usage_count')
+                ->groupBy('voucher_id')
+                ->pluck('usage_count', 'voucher_id')
+                ->toArray();
+
+            Voucher::query()
+                ->whereIn('id', $voucherIds)
+                ->get()
+                ->each(function (Voucher $v) use ($counts) {
+                    $usage = (int) ($counts[$v->id] ?? 0);
+                    $v->update(['usage_count' => max(0, $usage)]);
+                });
+        }
+
+        AuditLog::create([
+            'tenant_id' => auth()->user()?->tenant_id,
+            'actor_user_id' => auth()->id(),
+            'action' => 'orders.restore',
+            'subject_type' => 'orders',
+            'subject_id' => null,
+            'meta' => [
+                'restored_orders' => (int) $createdOrders,
+                'file_name' => $this->restoreFile?->getClientOriginalName(),
+            ],
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        $this->closeRestoreModal();
+        $this->resetPage();
+        $this->dispatch('notify', message: 'Restore completed. Restored ' . (int) $createdOrders . ' order(s).', type: 'success');
     }
 
     public function render()
