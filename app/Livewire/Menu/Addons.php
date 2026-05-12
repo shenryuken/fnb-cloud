@@ -49,8 +49,14 @@ class Addons extends Component
         $this->min_select = $group->min_select;
         $this->max_select = $group->max_select;
         $this->group_is_active = $group->is_active;
-        $this->isCreatingGroup = false;
+        $this->isCreatingGroup = true;
         $this->isCreatingItem = false;
+    }
+
+    public function closeGroupModal(): void
+    {
+        $this->reset(['group_name', 'group_description', 'min_select', 'max_select', 'group_is_active', 'editingGroup', 'isCreatingGroup']);
+        $this->isCreatingGroup = false;
     }
 
     public function saveGroup(): void
@@ -89,6 +95,7 @@ class Addons extends Component
         }
 
         $this->reset(['group_name', 'group_description', 'min_select', 'max_select', 'group_is_active', 'editingGroup', 'isCreatingGroup']);
+        $this->isCreatingGroup = false;
     }
 
     public function createItem(?int $groupId = null): void
@@ -106,8 +113,14 @@ class Addons extends Component
         $this->price = $item->price;
         $this->is_active = $item->is_active;
         $this->addon_group_id = $item->addon_group_id;
-        $this->isCreatingItem = false;
+        $this->isCreatingItem = true;
         $this->isCreatingGroup = false;
+    }
+
+    public function closeItemModal(): void
+    {
+        $this->reset(['name', 'description', 'price', 'is_active', 'addon_group_id', 'editingItem', 'isCreatingItem']);
+        $this->isCreatingItem = false;
     }
 
     public function saveItem(): void
@@ -127,6 +140,7 @@ class Addons extends Component
         }
 
         $this->reset(['name', 'description', 'price', 'is_active', 'addon_group_id', 'editingItem', 'isCreatingItem']);
+        $this->isCreatingItem = false;
     }
 
     public function deleteGroup(AddonGroup $group): void
