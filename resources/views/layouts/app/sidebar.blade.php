@@ -21,6 +21,12 @@
                     <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
                         {{ __('Tenants') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
+                        {{ __('Audit Logs') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
+                        {{ __('System Health') }}
+                    </flux:sidebar.item>
                 @else
                     <div class="px-3 pt-2 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
                         {{ __('Platform') }}
@@ -131,6 +137,12 @@
                         </flux:sidebar.item>
                         <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
                             {{ __('Tenants') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
+                            {{ __('Audit Logs') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
+                            {{ __('System Health') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @else

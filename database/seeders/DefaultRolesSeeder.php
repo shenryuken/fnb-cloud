@@ -19,6 +19,7 @@ class DefaultRolesSeeder extends Seeder
         $permissionData = [
             ['name' => 'Access POS',        'slug' => 'pos.access'],
             ['name' => 'Manage Orders',     'slug' => 'orders.manage'],
+            ['name' => 'Reset Orders',      'slug' => 'orders.reset'],
             ['name' => 'Access KDS',        'slug' => 'kds.access'],
             ['name' => 'Manage Menu',       'slug' => 'menu.manage'],
             ['name' => 'View Reports',      'slug' => 'reports.view'],
@@ -79,7 +80,7 @@ class DefaultRolesSeeder extends Seeder
             [
                 'name'        => 'Manager',
                 'slug'        => 'manager',
-                'permissions' => array_keys($permissions), // all (same as owner)
+                'permissions' => array_values(array_diff(array_keys($permissions), ['orders.reset'])),
             ],
             [
                 'name'        => 'Kitchen Staff',

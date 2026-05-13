@@ -1,5 +1,100 @@
 <div class="flex flex-col gap-6 p-4 md:p-8">
 
+    <flux:modal name="addon-group-form" wire:model="isCreatingGroup" class="w-full max-w-3xl space-y-6">
+        <div class="flex items-center gap-3">
+            <flux:icon.rectangle-group class="w-8 h-8 text-blue-600" />
+            <div>
+                <flux:heading size="lg">{{ $editingGroup ? 'Update Group' : 'New Add-on Group' }}</flux:heading>
+                <flux:subheading>Define selection rules and naming.</flux:subheading>
+            </div>
+        </div>
+
+        <flux:separator />
+
+        <form wire:submit.prevent="saveGroup" class="space-y-6">
+            <div class="grid md:grid-cols-2 gap-5">
+                <flux:field>
+                    <flux:label>Group Name</flux:label>
+                    <flux:input wire:model="group_name" placeholder="e.g. Select your toppings" />
+                    <flux:error name="group_name" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Description <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                    <flux:input wire:model="group_description" placeholder="Brief group description..." />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Minimum Options</flux:label>
+                    <flux:input type="number" wire:model="min_select" placeholder="0" />
+                    <flux:description>Set 0 for optional</flux:description>
+                    <flux:error name="min_select" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Maximum Options</flux:label>
+                    <flux:input type="number" wire:model="max_select" placeholder="1" />
+                    <flux:description>Set 0 for unlimited</flux:description>
+                    <flux:error name="max_select" />
+                </flux:field>
+            </div>
+
+            <flux:separator />
+
+            <div class="flex justify-end gap-3">
+                <flux:button type="button" wire:click="closeGroupModal" variant="ghost">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">{{ $editingGroup ? 'Update Group' : 'Create Group' }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <flux:modal name="addon-item-form" wire:model="isCreatingItem" class="w-full max-w-3xl space-y-6">
+        <div class="flex items-center gap-3">
+            <flux:icon.plus-circle class="w-8 h-8 text-emerald-600" />
+            <div>
+                <flux:heading size="lg">{{ $editingItem ? 'Update Add-on' : 'New Add-on Option' }}</flux:heading>
+                <flux:subheading>Create an individual choice or extra for your products.</flux:subheading>
+            </div>
+        </div>
+
+        <flux:separator />
+
+        <form wire:submit.prevent="saveItem" class="space-y-6">
+            <div class="grid md:grid-cols-2 gap-5">
+                <flux:field>
+                    <flux:label>Name</flux:label>
+                    <flux:input wire:model="name" placeholder="e.g. Extra Cheese" />
+                    <flux:error name="name" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Price Adjustment</flux:label>
+                    <flux:input type="number" step="0.01" wire:model="price" placeholder="0.00" />
+                    <flux:description>Use negative values to subtract (e.g. -1.00)</flux:description>
+                    <flux:error name="price" />
+                </flux:field>
+
+                <flux:field class="md:col-span-2">
+                    <flux:label>Group <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                    <flux:select wire:model="addon_group_id">
+                        <flux:select.option value="">Standalone (Global Extra)</flux:select.option>
+                        @foreach(\App\Models\AddonGroup::all() as $g)
+                            <flux:select.option value="{{ $g->id }}">{{ $g->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:description>Assigned items only appear with their group.</flux:description>
+                </flux:field>
+            </div>
+
+            <flux:separator />
+
+            <div class="flex justify-end gap-3">
+                <flux:button type="button" wire:click="closeItemModal" variant="ghost">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">{{ $editingItem ? 'Update Add-on' : 'Create Add-on' }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
     {{-- Header --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -15,112 +110,6 @@
             </flux:button>
         </div>
     </div>
-
-    {{-- Group Form --}}
-    @if($isCreatingGroup || $editingGroup)
-        <flux:card>
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
-                        <flux:icon.rectangle-group class="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <flux:heading size="lg">{{ $editingGroup ? 'Update Group' : 'New Add-on Group' }}</flux:heading>
-                        <flux:subheading>Define selection rules and naming.</flux:subheading>
-                    </div>
-                </div>
-                <flux:button wire:click="$set('isCreatingGroup', false); $set('editingGroup', null)" variant="ghost" icon="x-mark" />
-            </div>
-
-            <form wire:submit.prevent="saveGroup">
-                <div class="grid md:grid-cols-2 gap-5 mb-5">
-                    <flux:field>
-                        <flux:label>Group Name</flux:label>
-                        <flux:input wire:model="group_name" placeholder="e.g. Select your toppings" />
-                        <flux:error name="group_name" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Description <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
-                        <flux:input wire:model="group_description" placeholder="Brief group description..." />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Minimum Options</flux:label>
-                        <flux:input type="number" wire:model="min_select" placeholder="0" />
-                        <flux:description>Set 0 for optional</flux:description>
-                        <flux:error name="min_select" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Maximum Options</flux:label>
-                        <flux:input type="number" wire:model="max_select" placeholder="1" />
-                        <flux:description>Set 0 for unlimited</flux:description>
-                        <flux:error name="max_select" />
-                    </flux:field>
-                </div>
-
-                <flux:separator class="mb-5" />
-
-                <div class="flex justify-end gap-3">
-                    <flux:button type="button" wire:click="$set('isCreatingGroup', false); $set('editingGroup', null)" variant="ghost">Cancel</flux:button>
-                    <flux:button type="submit" variant="primary">{{ $editingGroup ? 'Update Group' : 'Create Group' }}</flux:button>
-                </div>
-            </form>
-        </flux:card>
-    @endif
-
-    {{-- Item Form --}}
-    @if($isCreatingItem || $editingItem)
-        <flux:card>
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center shrink-0">
-                        <flux:icon.plus-circle class="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <flux:heading size="lg">{{ $editingItem ? 'Update Add-on' : 'New Add-on Option' }}</flux:heading>
-                        <flux:subheading>Create an individual choice or extra for your products.</flux:subheading>
-                    </div>
-                </div>
-                <flux:button wire:click="$set('isCreatingItem', false); $set('editingItem', null)" variant="ghost" icon="x-mark" />
-            </div>
-
-            <form wire:submit.prevent="saveItem">
-                <div class="grid md:grid-cols-2 gap-5 mb-5">
-                    <flux:field>
-                        <flux:label>Name</flux:label>
-                        <flux:input wire:model="name" placeholder="e.g. Extra Cheese" />
-                        <flux:error name="name" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Price</flux:label>
-                        <flux:input type="number" step="0.01" wire:model="price" placeholder="0.00" />
-                        <flux:error name="price" />
-                    </flux:field>
-
-                    <flux:field class="md:col-span-2">
-                        <flux:label>Group <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
-                        <flux:select wire:model="addon_group_id">
-                            <flux:select.option value="">Standalone (Global Extra)</flux:select.option>
-                            @foreach(\App\Models\AddonGroup::all() as $g)
-                                <flux:select.option value="{{ $g->id }}">{{ $g->name }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                        <flux:description>Assigned items only appear with their group.</flux:description>
-                    </flux:field>
-                </div>
-
-                <flux:separator class="mb-5" />
-
-                <div class="flex justify-end gap-3">
-                    <flux:button type="button" wire:click="$set('isCreatingItem', false); $set('editingItem', null)" variant="ghost">Cancel</flux:button>
-                    <flux:button type="submit" variant="primary">{{ $editingItem ? 'Update Add-on' : 'Create Add-on' }}</flux:button>
-                </div>
-            </form>
-        </flux:card>
-    @endif
 
     {{-- Two Column Layout: Groups + Standalone --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -155,7 +144,9 @@
                                             <span class="font-semibold text-sm">{{ $item->name }}</span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <span class="font-black text-sm text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                            <span class="font-black text-sm {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
+                                                ${{ number_format((float) $item->price, 2) }}
+                                            </span>
                                         </td>
                                         <td class="py-3 px-4 text-right">
                                             <div class="flex items-center justify-end gap-1">
@@ -207,7 +198,9 @@
                                         <span class="font-semibold">{{ $item->name }}</span>
                                     </td>
                                     <td class="py-3 px-4">
-                                        <span class="font-black text-blue-600">${{ number_format($item->price, 2) }}</span>
+                                        <span class="font-black {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
+                                            ${{ number_format((float) $item->price, 2) }}
+                                        </span>
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end gap-2">

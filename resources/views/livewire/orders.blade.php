@@ -11,6 +11,14 @@
                 <flux:icon.clock class="w-4 h-4" />
                 Unshifted
             </a>
+            @if($this->canResetOrders)
+                <flux:button size="sm" variant="danger" icon="trash" wire:click="openResetModal">
+                    Reset Orders
+                </flux:button>
+                <flux:button size="sm" variant="ghost" icon="arrow-up-tray" wire:click="openRestoreModal">
+                    Restore
+                </flux:button>
+            @endif
             <flux:badge color="blue">
                 {{ $hasActiveFilters ? 'Filtered:' : 'Total:' }} {{ $orders->total() }} orders
             </flux:badge>
@@ -93,10 +101,25 @@
 
     {{-- Table --}}
     <flux:card class="p-0 overflow-hidden">
+        @if($this->canResetOrders && $this->selectedOrdersCount > 0)
+            <div class="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <flux:badge color="zinc" size="sm">{{ (int) $this->selectedOrdersCount }} selected</flux:badge>
+                <div class="flex flex-wrap items-center gap-2">
+                    <flux:button size="sm" variant="ghost" wire:click="selectAllOnPage">Select page</flux:button>
+                    <flux:button size="sm" variant="ghost" wire:click="clearSelectedOrders">Clear</flux:button>
+                    <flux:button size="sm" variant="danger" icon="trash" wire:click="openDeleteOrders">
+                        Delete Selected
+                    </flux:button>
+                </div>
+            </div>
+        @endif
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead>
                     <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        @if($this->canResetOrders)
+                            <th class="py-3 px-4 w-10"></th>
+                        @endif
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Order</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Status</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Customer / Table</th>
@@ -109,6 +132,11 @@
                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                     @forelse($orders as $order)
                         <tr wire:click="openOrder({{ $order->id }})" class="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                            @if($this->canResetOrders)
+                                <td class="py-3 px-4" onclick="event.stopPropagation()">
+                                    <flux:checkbox wire:model.live="selectedOrderIds" value="{{ $order->id }}" />
+                                </td>
+                            @endif
                             <td class="py-3 px-4">
                                 <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
                                     #{{ $order->id }}
@@ -170,6 +198,15 @@
                                         onclick="window.open('{{ route('pos.receipt', $order) }}', '_blank', 'width=400,height=600')"
                                         title="Print Receipt"
                                     />
+                                    @if($this->canResetOrders)
+                                        <flux:button
+                                            size="sm"
+                                            variant="ghost"
+                                            icon="trash"
+                                            wire:click="openDeleteOrders({{ $order->id }})"
+                                            title="Delete Order"
+                                        />
+                                    @endif
                                     @php $orderId = $order->id; @endphp
                                     <select
                                         onchange="@this.call('updateStatus', {{ $orderId }}, this.value)"
@@ -185,7 +222,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-24 text-center">
+                            <td colspan="{{ $this->canResetOrders ? 8 : 7 }}" class="py-24 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     @if($hasActiveFilters)
                                         <flux:icon.funnel class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
@@ -416,6 +453,187 @@
                 </div>
             </div>
         @endif
+    </flux:modal>
+
+    <flux:modal name="orders-reset" wire:model="showResetModal" class="max-w-2xl w-full">
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.trash class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Reset Orders</flux:heading>
+                    <flux:subheading>Delete orders in a selected date range (Owner only)</flux:subheading>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" wire:click="closeResetModal" />
+            </div>
+
+            <flux:callout variant="danger" icon="exclamation-triangle" heading="This action permanently deletes orders">
+                This will remove orders (and their items) in the selected range. Use Backup to save a file first.
+            </flux:callout>
+
+            <flux:card class="p-4 space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <flux:button size="sm" variant="{{ $resetPreset === 'filtered' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('filtered')">
+                        Use Filters
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'today' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('today')">
+                        Today
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'week' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('week')">
+                        This Week
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'month' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('month')">
+                        This Month
+                    </flux:button>
+                    <flux:button size="sm" variant="{{ $resetPreset === 'custom' ? 'primary' : 'ghost' }}" wire:click="setResetPreset('custom')">
+                        Custom
+                    </flux:button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <flux:field>
+                        <flux:label>From</flux:label>
+                        <flux:input type="date" wire:model.live="resetFrom" />
+                        <flux:error name="resetFrom" />
+                    </flux:field>
+                    <flux:field>
+                        <flux:label>To</flux:label>
+                        <flux:input type="date" wire:model.live="resetTo" />
+                        <flux:error name="resetTo" />
+                    </flux:field>
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <flux:switch wire:model.live="resetWithBackup" />
+                        <flux:text size="sm" class="font-medium">Backup before delete</flux:text>
+                    </div>
+                    <flux:badge color="zinc" size="sm">
+                        {{ number_format((int) $this->resetOrdersCount) }} order(s)
+                    </flux:badge>
+                </div>
+            </flux:card>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Confirm with Password</flux:label>
+                    <flux:input type="password" wire:model="resetPassword" placeholder="Your password" />
+                    <flux:error name="resetPassword" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>Type DELETE to confirm</flux:label>
+                    <flux:input wire:model="resetConfirm" placeholder="DELETE" />
+                    <flux:error name="resetConfirm" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" wire:click="closeResetModal">Cancel</flux:button>
+                <flux:button variant="danger" wire:click="confirmResetOrders">
+                    Reset Now
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="orders-restore" wire:model="showRestoreModal" class="max-w-2xl w-full">
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.arrow-up-tray class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Restore Orders</flux:heading>
+                    <flux:subheading>Upload an orders backup file to restore (Owner only)</flux:subheading>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" wire:click="closeRestoreModal" />
+            </div>
+
+            <flux:callout variant="danger" icon="exclamation-triangle" heading="Restoring can create duplicates">
+                Restore will insert orders from the file. If you restore the same file twice, you will get duplicate orders.
+            </flux:callout>
+
+            <flux:card class="p-4 space-y-4">
+                <flux:field>
+                    <flux:label>Backup File</flux:label>
+                    <flux:input type="file" wire:model="restoreFile" accept=".jsonl,.ndjson,.txt" />
+                    <flux:description>Use the backup file downloaded from Reset Orders (JSON Lines format).</flux:description>
+                    <flux:error name="restoreFile" />
+                </flux:field>
+            </flux:card>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Confirm with Password</flux:label>
+                    <flux:input type="password" wire:model="restorePassword" placeholder="Your password" />
+                    <flux:error name="restorePassword" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>Type RESTORE to confirm</flux:label>
+                    <flux:input wire:model="restoreConfirm" placeholder="RESTORE" />
+                    <flux:error name="restoreConfirm" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" wire:click="closeRestoreModal">Cancel</flux:button>
+                <flux:button variant="primary" wire:click="confirmRestoreOrders">
+                    Restore Now
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="orders-delete" wire:model="showDeleteModal" class="max-w-2xl w-full">
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shrink-0">
+                    <flux:icon.trash class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Delete Orders</flux:heading>
+                    <flux:subheading>Delete selected order(s) (Owner only)</flux:subheading>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" wire:click="closeDeleteModal" />
+            </div>
+
+            <flux:callout variant="danger" icon="exclamation-triangle" heading="This action cannot be undone and may corrupt reports">
+                Deleting orders will affect sales totals, shift reports, loyalty points, and voucher usage.
+            </flux:callout>
+
+            <flux:card class="p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <flux:switch wire:model.live="deleteWithBackup" />
+                        <flux:text size="sm" class="font-medium">Backup before delete</flux:text>
+                    </div>
+                    <flux:badge color="zinc" size="sm">
+                        {{ number_format((int) $this->deleteOrdersCount) }} order(s)
+                    </flux:badge>
+                </div>
+            </flux:card>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Confirm with Password</flux:label>
+                    <flux:input type="password" wire:model="deletePassword" placeholder="Your password" />
+                    <flux:error name="deletePassword" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>Type DELETE to confirm</flux:label>
+                    <flux:input wire:model="deleteConfirm" placeholder="DELETE" />
+                    <flux:error name="deleteConfirm" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" wire:click="closeDeleteModal">Cancel</flux:button>
+                <flux:button variant="danger" wire:click="confirmDeleteOrders">
+                    Delete Now
+                </flux:button>
+            </div>
+        </div>
     </flux:modal>
 
 </div>

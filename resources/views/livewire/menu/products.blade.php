@@ -266,8 +266,8 @@
                     <div class="grid grid-cols-2 gap-4">
                         <flux:select wire:model.live="category_id" label="Category" placeholder="Select category" icon="tag">
                             <flux:select.option value="">Select category</flux:select.option>
-                            @foreach($categories as $category)
-                                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
+                            @foreach($categoryOptions as $opt)
+                                <flux:select.option value="{{ $opt['id'] }}">{{ $opt['label'] }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
@@ -525,8 +525,8 @@
             </div>
             <flux:select wire:model.live="categoryFilter" placeholder="All Categories" class="w-48">
                 <option value="">All Categories</option>
-                @foreach(\App\Models\Category::orderBy('name')->get() as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                @foreach($categoryOptions as $opt)
+                    <option value="{{ $opt['id'] }}">{{ $opt['label'] }}</option>
                 @endforeach
             </flux:select>
             <flux:select wire:model.live="statusFilter" placeholder="All Status" class="w-40">
@@ -534,15 +534,103 @@
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </flux:select>
+            <flux:button wire:click="toggleManualSort" variant="{{ $manualSort ? 'primary' : 'ghost' }}" icon="arrows-up-down" class="shrink-0">
+                Manual Sort
+            </flux:button>
         </div>
+
+        @if($manualSort || count($selectedProductIds) > 0)
+            <flux:separator class="my-4" />
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    @if($manualSort)
+                        <flux:badge color="amber" icon="hand-raised">Drag rows to reorder</flux:badge>
+                        <flux:text size="sm" class="text-zinc-500">Order saves automatically after dropping.</flux:text>
+                    @endif
+                </div>
+
+                @if(count($selectedProductIds) > 0)
+                    <div class="flex items-center gap-2">
+                        <flux:badge color="zinc">{{ count($selectedProductIds) }} selected</flux:badge>
+                        <flux:button size="sm" wire:click="bulkCopyWithVariants" variant="ghost" icon="document-duplicate">
+                            Copy
+                        </flux:button>
+                        <flux:button size="sm" wire:click="bulkDelete" variant="danger" icon="trash" wire:confirm="Delete selected products?">
+                            Delete
+                        </flux:button>
+                        <flux:button size="sm" wire:click="clearSelection" variant="ghost" icon="x-mark">
+                            Clear
+                        </flux:button>
+                    </div>
+                @endif
+            </div>
+        @endif
     </flux:card>
 
     {{-- Products Table --}}
-    <flux:card class="p-0 overflow-hidden">
-        <div class="overflow-x-auto">
+    @php
+        $isPaginated = $products instanceof \Illuminate\Pagination\LengthAwarePaginator;
+        $pageIds = $isPaginated ? collect($products->items())->pluck('id')->all() : $products->pluck('id')->all();
+        $allOnPageSelected = !empty($pageIds) && empty(array_diff($pageIds, array_map('intval', $selectedProductIds)));
+    @endphp
+
+    <flux:card class="p-0 overflow-hidden" wire:key="products-table-{{ $manualSort ? 'manual' : 'paged' }}">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+            <div>
+                <flux:heading size="lg">Products</flux:heading>
+                <flux:text size="sm" class="text-zinc-400">Manage menu items</flux:text>
+            </div>
+            <flux:button :href="route('manage.products.settings')" wire:navigate size="sm" variant="ghost" icon="adjustments-horizontal">
+                Product Settings
+            </flux:button>
+        </div>
+        <div class="overflow-x-auto" @if($manualSort) x-data="{
+                init() {
+                    const tbody = this.$refs.tbody;
+                    if (!tbody) return;
+                    let dragging = null;
+                    const onDragStart = (e) => {
+                        const row = e.target.closest('tr[data-product-id]');
+                        if (!row) return;
+                        dragging = row;
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', row.dataset.productId);
+                        row.classList.add('opacity-60');
+                    };
+                    const onDragEnd = () => {
+                        if (dragging) dragging.classList.remove('opacity-60');
+                        dragging = null;
+                    };
+                    const onDragOver = (e) => {
+                        e.preventDefault();
+                        const overRow = e.target.closest('tr[data-product-id]');
+                        if (!dragging || !overRow || overRow === dragging) return;
+                        const rect = overRow.getBoundingClientRect();
+                        const after = (e.clientY - rect.top) > rect.height / 2;
+                        overRow.parentNode.insertBefore(dragging, after ? overRow.nextSibling : overRow);
+                    };
+                    const save = () => {
+                        const ids = Array.from(tbody.querySelectorAll('tr[data-product-id]')).map(r => parseInt(r.dataset.productId));
+                        if (!ids.length) return;
+                        $wire.saveManualSort(ids);
+                    };
+                    tbody.addEventListener('dragstart', onDragStart);
+                    tbody.addEventListener('dragend', onDragEnd);
+                    tbody.addEventListener('dragover', onDragOver);
+                    tbody.addEventListener('drop', (e) => { e.preventDefault(); save(); });
+                }
+            }" x-init="init()" @endif>
             <table class="w-full text-sm text-left">
                 <thead>
                     <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest w-10">
+                            <input
+                                type="checkbox"
+                                wire:click="toggleSelectAllOnPage({{ json_encode($pageIds) }})"
+                                @checked($allOnPageSelected)
+                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-pink-600 focus:ring-pink-500 dark:bg-zinc-800"
+                            />
+                        </th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Product</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center">Order</th>
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Category</th>
@@ -552,9 +640,19 @@
                         <th class="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800" @if($manualSort) x-ref="tbody" @endif>
                     @forelse($products as $product)
-                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors {{ $manualSort ? 'cursor-move' : '' }}"
+                            @if($manualSort) draggable="true" data-product-id="{{ $product->id }}" @endif
+                        >
+                            <td class="py-3 px-4">
+                                <input
+                                    type="checkbox"
+                                    wire:click="toggleSelectedProduct({{ $product->id }})"
+                                    @checked(in_array((int) $product->id, array_map('intval', $selectedProductIds), true))
+                                    class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-pink-600 focus:ring-pink-500 dark:bg-zinc-800"
+                                />
+                            </td>
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-12 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
@@ -580,7 +678,12 @@
                             </td>
 
                             <td class="py-3 px-4 text-center">
-                                <flux:badge color="zinc" size="sm">{{ $product->sort_order }}</flux:badge>
+                                <div class="inline-flex items-center gap-2">
+                                    @if($manualSort)
+                                        <flux:icon.bars-3 class="w-4 h-4 text-zinc-400" />
+                                    @endif
+                                    <flux:badge color="zinc" size="sm">{{ $product->sort_order }}</flux:badge>
+                                </div>
                             </td>
 
                             <td class="py-3 px-4">
@@ -625,7 +728,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-24 text-center">
+                            <td colspan="8" class="py-24 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <flux:icon.cube class="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
                                     <flux:heading>No products yet</flux:heading>
@@ -638,14 +741,14 @@
             </table>
         </div>
 
-        @if($products->hasPages())
+        @if($isPaginated && $products->hasPages())
             <div class="border-t border-zinc-200 dark:border-zinc-700 px-4 py-3">
                 {{ $products->links() }}
             </div>
         @endif
     </flux:card>
 
-    @if($products->total() > 0)
+    @if($isPaginated && $products->total() > 0)
         <flux:text size="sm" class="text-zinc-500">
             Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
         </flux:text>

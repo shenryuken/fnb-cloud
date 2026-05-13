@@ -14,6 +14,7 @@ class Categories extends Component
 {
     use WithPagination;
 
+    public ?int $parent_id = null;
     public string $name = '';
     public string $description = '';
     public int $sort_order = 0;
@@ -23,6 +24,7 @@ class Categories extends Component
     public bool $isCreating = false;
 
     protected $rules = [
+        'parent_id' => 'nullable|exists:categories,id',
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'sort_order' => 'required|integer|min:0',
@@ -34,7 +36,7 @@ class Categories extends Component
      */
     public function create(): void
     {
-        $this->reset(['name', 'description', 'sort_order', 'is_active', 'editing']);
+        $this->reset(['parent_id', 'name', 'description', 'sort_order', 'is_active', 'editing']);
         $this->isCreating = true;
     }
 
@@ -44,6 +46,7 @@ class Categories extends Component
     public function edit(Category $category): void
     {
         $this->editing = $category;
+        $this->parent_id = $category->parent_id;
         $this->name = $category->name;
         $this->description = $category->description ?? '';
         $this->sort_order = $category->sort_order;
@@ -58,13 +61,39 @@ class Categories extends Component
     {
         $validated = $this->validate();
 
+        $parentId = $validated['parent_id'] ?? null;
+        if ($this->editing && $parentId === (int) $this->editing->id) {
+            $this->addError('parent_id', 'Parent category cannot be itself.');
+            return;
+        }
+
+        if ($parentId) {
+            $parent = Category::find($parentId);
+            if (!$parent) {
+                $this->addError('parent_id', 'Invalid parent category.');
+                return;
+            }
+            if ($parent->parent_id) {
+                $this->addError('parent_id', 'Only 2 levels supported. Pick a top-level parent.');
+                return;
+            }
+        }
+
+        if ($this->editing && $parentId) {
+            $hasChildren = Category::where('parent_id', $this->editing->id)->exists();
+            if ($hasChildren) {
+                $this->addError('parent_id', 'This category has children. Move or delete children first.');
+                return;
+            }
+        }
+
         if ($this->editing) {
             $this->editing->update($validated);
         } else {
             Category::create($validated);
         }
 
-        $this->reset(['name', 'description', 'sort_order', 'is_active', 'editing', 'isCreating']);
+        $this->reset(['parent_id', 'name', 'description', 'sort_order', 'is_active', 'editing', 'isCreating']);
         $this->dispatch('category-saved');
     }
 
@@ -81,8 +110,22 @@ class Categories extends Component
      */
     public function render()
     {
+        $all = Category::orderBy('sort_order')->orderBy('name')->get();
+
+        $parents = $all->whereNull('parent_id')->values();
+        $childrenByParent = $all->whereNotNull('parent_id')->groupBy('parent_id');
+
+        $flat = collect();
+        foreach ($parents as $p) {
+            $flat->push($p);
+            foreach (($childrenByParent[$p->id] ?? collect())->sortBy('sort_order')->values() as $c) {
+                $flat->push($c);
+            }
+        }
+
         return view('livewire.menu.categories', [
-            'categories' => Category::orderBy('sort_order')->paginate(10),
+            'categories' => $flat,
+            'parentOptions' => $parents,
         ]);
     }
 

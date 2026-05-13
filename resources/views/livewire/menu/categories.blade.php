@@ -30,6 +30,19 @@
             <form wire:submit.prevent="save">
                 <div class="grid md:grid-cols-2 gap-5 mb-5">
                     <flux:field>
+                        <flux:label>Parent Category <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                        <flux:select wire:model="parent_id">
+                            <option value="">None (Top-level)</option>
+                            @foreach($parentOptions as $parent)
+                                @if(!$editing || $parent->id !== $editing->id)
+                                    <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                                @endif
+                            @endforeach
+                        </flux:select>
+                        <flux:error name="parent_id" />
+                    </flux:field>
+
+                    <flux:field>
                         <flux:label>Name</flux:label>
                         <flux:input wire:model="name" placeholder="e.g. Main Course" />
                         <flux:error name="name" />
@@ -76,13 +89,32 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @php
+                        $parentMap = collect($categories)->whereNull('parent_id')->keyBy('id');
+                    @endphp
                     @forelse($categories as $category)
+                        @php
+                            $isChild = (bool) $category->parent_id;
+                            $parentName = $isChild ? ($parentMap[$category->parent_id]->name ?? null) : null;
+                        @endphp
                         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
                             <td class="py-3 px-4">
                                 <flux:badge color="zinc" size="sm">{{ $category->sort_order }}</flux:badge>
                             </td>
                             <td class="py-3 px-4">
-                                <flux:text class="font-semibold">{{ $category->name }}</flux:text>
+                                <div class="flex items-start gap-2">
+                                    @if($isChild)
+                                        <flux:icon.chevron-right class="w-4 h-4 text-zinc-400 mt-0.5" />
+                                    @endif
+                                    <div class="{{ $isChild ? 'pl-0' : '' }}">
+                                        <flux:text class="font-semibold">{{ $category->name }}</flux:text>
+                                        @if($parentName)
+                                            <flux:text size="sm" class="text-zinc-400">Under {{ $parentName }}</flux:text>
+                                        @else
+                                            <flux:text size="sm" class="text-zinc-400">Top-level</flux:text>
+                                        @endif
+                                    </div>
+                                </div>
                                 <flux:text size="sm" class="text-zinc-400">ID: #{{ $category->id }}</flux:text>
                             </td>
                             <td class="py-3 px-4">

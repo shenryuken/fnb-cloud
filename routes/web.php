@@ -3,8 +3,11 @@
 use App\Livewire\Settings\Receipt as ReceiptSettings;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Landlord\DashboardController as LandlordDashboard;
+use App\Livewire\Landlord\AuditLogs as LandlordAuditLogs;
+use App\Livewire\Landlord\SystemHealth as LandlordSystemHealth;
 use App\Livewire\Landlord\Tenants;
 use App\Livewire\Menu\Categories;
+use App\Livewire\Menu\ProductSettings;
 use App\Livewire\Menu\Products;
 use App\Livewire\Menu\Addons;
 use App\Livewire\Orders;
@@ -36,6 +39,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['landlord'])->prefix('landlord')->name('landlord.')->group(function () {
         Route::get('dashboard', [LandlordDashboard::class, 'index'])->name('dashboard');
         Route::get('tenants', Tenants::class)->name('tenants.index');
+        Route::get('audit-logs', LandlordAuditLogs::class)->name('audit-logs.index');
+        Route::get('system-health', LandlordSystemHealth::class)->name('system-health.index');
     });
     
     // POS
@@ -76,6 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Menu Management
     Route::get('categories', Categories::class)->name('manage.categories.index')->middleware('permission:menu.manage');
     Route::get('products', Products::class)->name('manage.products.index')->middleware('permission:menu.manage');
+    Route::get('products/settings', ProductSettings::class)->name('manage.products.settings')->middleware('permission:menu.manage');
     Route::get('addons', Addons::class)->name('manage.addons.index')->middleware('permission:menu.manage');
     Route::get('customers', Customers::class)->name('manage.customers.index')->middleware('permission:customers.manage');
     Route::get('vouchers', Vouchers::class)->name('manage.vouchers.index')->middleware('permission:vouchers.manage');
