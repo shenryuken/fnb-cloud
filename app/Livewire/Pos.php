@@ -57,6 +57,10 @@ class Pos extends Component
     public int $quantity = 1;
     public string $notes = '';
 
+    public bool $showCartItemNotesModal = false;
+    public ?int $cartItemNotesIndex = null;
+    public string $cartItemNotes = '';
+
     // Order details
     public string $tableNumber = '';
     
@@ -866,6 +870,71 @@ class Pos extends Component
 
         $separator = str_ends_with($current, ',') ? ' ' : ', ';
         $this->notes = $current . $separator . $text;
+    }
+
+    public function openCartItemNotes(int $index): void
+    {
+        if (!isset($this->cart[$index])) {
+            return;
+        }
+
+        if (!empty($this->cart[$index]['existing'])) {
+            $this->dispatch('notify', message: 'This item is locked.', type: 'warning');
+            return;
+        }
+
+        $this->cartItemNotesIndex = $index;
+        $this->cartItemNotes = (string) ($this->cart[$index]['notes'] ?? '');
+        $this->showCartItemNotesModal = true;
+    }
+
+    public function closeCartItemNotes(): void
+    {
+        $this->showCartItemNotesModal = false;
+        $this->cartItemNotesIndex = null;
+        $this->cartItemNotes = '';
+    }
+
+    public function saveCartItemNotes(): void
+    {
+        if (is_null($this->cartItemNotesIndex) || !isset($this->cart[$this->cartItemNotesIndex])) {
+            $this->closeCartItemNotes();
+            return;
+        }
+
+        if (!empty($this->cart[$this->cartItemNotesIndex]['existing'])) {
+            $this->dispatch('notify', message: 'This item is locked.', type: 'warning');
+            $this->closeCartItemNotes();
+            return;
+        }
+
+        $this->cart[$this->cartItemNotesIndex]['notes'] = trim((string) $this->cartItemNotes);
+        $this->closeCartItemNotes();
+    }
+
+    public function applyQuickNoteToCartItem(string $text): void
+    {
+        if (!$this->showCartItemNotesModal) {
+            return;
+        }
+
+        $text = trim($text);
+        if (!filled($text)) {
+            return;
+        }
+
+        $current = trim((string) $this->cartItemNotes);
+        if ($current === '') {
+            $this->cartItemNotes = $text;
+            return;
+        }
+
+        if (str_contains(mb_strtolower($current), mb_strtolower($text))) {
+            return;
+        }
+
+        $separator = str_ends_with($current, ',') ? ' ' : ', ';
+        $this->cartItemNotes = $current . $separator . $text;
     }
 
     /**
