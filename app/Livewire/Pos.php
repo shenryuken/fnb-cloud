@@ -300,9 +300,30 @@ class Pos extends Component
     #[Computed]
     public function availableTables()
     {
-        return RestaurantTable::where('is_active', true)
+        $query = RestaurantTable::where('is_active', true)
             ->whereNull('merged_into_id')
-            ->orderBy('sort_order')
+            ->orderBy('sort_order');
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            return $query
+                ->orderByRaw("CASE WHEN name GLOB '[0-9]*' THEN 0 ELSE 1 END")
+                ->orderByRaw('CAST(name AS INTEGER)')
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($driver === 'pgsql') {
+            return $query
+                ->orderByRaw("CASE WHEN name ~ '^[0-9]+$' THEN 0 ELSE 1 END")
+                ->orderByRaw("NULLIF(regexp_replace(name, '\\D', '', 'g'), '')::int")
+                ->orderBy('name')
+                ->get();
+        }
+
+        return $query
+            ->orderByRaw("CASE WHEN name REGEXP '^[0-9]+$' THEN 0 ELSE 1 END")
+            ->orderByRaw('CAST(name AS UNSIGNED)')
             ->orderBy('name')
             ->get();
     }

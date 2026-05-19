@@ -97,8 +97,32 @@ class Tables extends Component
         if ($this->filterStatus) {
             $query->where('status', $this->filterStatus);
         }
-        
-        return $query->orderBy('sort_order')->orderBy('name')->get();
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            return $query
+                ->orderBy('sort_order')
+                ->orderByRaw("CASE WHEN name GLOB '[0-9]*' THEN 0 ELSE 1 END")
+                ->orderByRaw('CAST(name AS INTEGER)')
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($driver === 'pgsql') {
+            return $query
+                ->orderBy('sort_order')
+                ->orderByRaw("CASE WHEN name ~ '^[0-9]+$' THEN 0 ELSE 1 END")
+                ->orderByRaw("NULLIF(regexp_replace(name, '\\D', '', 'g'), '')::int")
+                ->orderBy('name')
+                ->get();
+        }
+
+        return $query
+            ->orderBy('sort_order')
+            ->orderByRaw("CASE WHEN name REGEXP '^[0-9]+$' THEN 0 ELSE 1 END")
+            ->orderByRaw('CAST(name AS UNSIGNED)')
+            ->orderBy('name')
+            ->get();
     }
 
     #[Computed]
@@ -131,7 +155,33 @@ class Tables extends Component
     #[Computed]
     public function allTables()
     {
-        return RestaurantTable::orderBy('sort_order')->orderBy('name')->get();
+        $query = RestaurantTable::query();
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            return $query
+                ->orderBy('sort_order')
+                ->orderByRaw("CASE WHEN name GLOB '[0-9]*' THEN 0 ELSE 1 END")
+                ->orderByRaw('CAST(name AS INTEGER)')
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($driver === 'pgsql') {
+            return $query
+                ->orderBy('sort_order')
+                ->orderByRaw("CASE WHEN name ~ '^[0-9]+$' THEN 0 ELSE 1 END")
+                ->orderByRaw("NULLIF(regexp_replace(name, '\\D', '', 'g'), '')::int")
+                ->orderBy('name')
+                ->get();
+        }
+
+        return $query
+            ->orderBy('sort_order')
+            ->orderByRaw("CASE WHEN name REGEXP '^[0-9]+$' THEN 0 ELSE 1 END")
+            ->orderByRaw('CAST(name AS UNSIGNED)')
+            ->orderBy('name')
+            ->get();
     }
 
     /**

@@ -120,7 +120,8 @@ class RestaurantTable extends Model
                 if (!$this->occupied_at || $this->status !== 'occupied') {
                     return null;
                 }
-                return $this->occupied_at->diffInMinutes(now());
+                $seconds = (int) $this->occupied_at->diffInSeconds(now());
+                return max(0, intdiv($seconds, 60));
             }
         );
     }
@@ -136,14 +137,22 @@ class RestaurantTable extends Model
                 if ($minutes === null) {
                     return null;
                 }
-                
+
+                $minutes = max(0, (int) $minutes);
                 if ($minutes < 60) {
                     return $minutes . 'm';
                 }
-                
-                $hours = floor($minutes / 60);
-                $mins = $minutes % 60;
-                return $hours . 'h ' . $mins . 'm';
+
+                if ($minutes < 1440) {
+                    $hours = intdiv($minutes, 60);
+                    $mins = $minutes % 60;
+                    return $mins > 0 ? ($hours . 'h ' . $mins . 'm') : ($hours . 'h');
+                }
+
+                $days = intdiv($minutes, 1440);
+                $rem = $minutes % 1440;
+                $hours = intdiv($rem, 60);
+                return $hours > 0 ? ($days . 'd ' . $hours . 'h') : ($days . 'd');
             }
         );
     }
