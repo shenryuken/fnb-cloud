@@ -571,7 +571,7 @@
                             {{ $this->detailsTable->getStatusLabel() }}
                         </flux:badge>
                     </div>
-                    <flux:button wire:click="edit({{ $this->detailsTable->id }})" size="sm" variant="ghost" icon="pencil-square" class="shrink-0" />
+                    <flux:button wire:click="edit({{ $this->detailsTable->id }})" size="sm" variant="ghost" icon="pencil-square" />
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
