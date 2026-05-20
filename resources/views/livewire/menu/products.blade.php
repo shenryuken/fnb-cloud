@@ -159,7 +159,11 @@
                                                     <td class="px-3 py-2 font-medium text-zinc-800 dark:text-zinc-100">{{ $row['name'] ?: '—' }}</td>
                                                     <td class="px-3 py-2 text-zinc-500">{{ $row['category'] ?: '—' }}</td>
                                                     <td class="px-3 py-2 text-right font-mono text-zinc-700 dark:text-zinc-300">
-                                                        RM {{ is_numeric($row['price']) ? number_format((float)$row['price'], 2) : $row['price'] }}
+                                                        @if(is_numeric($row['price']))
+                                                            @money((float) $row['price'])
+                                                        @else
+                                                            @curr {{ $row['price'] }}
+                                                        @endif
                                                     </td>
                                                     <td class="px-3 py-2 text-zinc-500">
                                                         @if(($row['variants_count'] ?? 0) > 0)
@@ -403,7 +407,7 @@
                                                                 <flux:select wire:model.live="set_groups.{{ $gIndex }}.items.{{ $iIndex }}.product_id" placeholder="Select product">
                                                                     <flux:select.option value="">Select product</flux:select.option>
                                                                     @foreach($allProducts as $p)
-                                                                        <flux:select.option value="{{ $p->id }}">{{ $p->name }} - ${{ number_format((float) $p->price, 2) }}</flux:select.option>
+                                                                        <flux:select.option value="{{ $p->id }}">{{ $p->name }} - @money((float) $p->price)</flux:select.option>
                                                                     @endforeach
                                                                 </flux:select>
                                                                 @error("set_groups.$gIndex.items.$iIndex.product_id") <flux:error class="text-xs mt-1">{{ $message }}</flux:error> @enderror
@@ -492,7 +496,7 @@
                                             <div class="text-xs text-zinc-400 truncate">{{ $addon->description }}</div>
                                         @endif
                                     </div>
-                                    <flux:badge size="sm" color="blue" class="ml-3 shrink-0">+${{ number_format($addon->price, 2) }}</flux:badge>
+                                    <flux:badge size="sm" color="blue" class="ml-3 shrink-0">+@money($addon->price)</flux:badge>
                                 </div>
                             </div>
                         @empty
@@ -693,7 +697,7 @@
                             </td>
 
                             <td class="py-3 px-4 text-right">
-                                <span class="font-mono font-semibold">${{ number_format($product->price, 2) }}</span>
+                                <span class="font-mono font-semibold">@money($product->price)</span>
                             </td>
 
                             <td class="py-3 px-4 text-center">

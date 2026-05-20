@@ -95,12 +95,12 @@
                             @endif
                         </span>
                         <span style="flex: 1; text-align: center;">{{ $item->quantity }}</span>
-                        <span style="flex: 1; text-align: right;">${{ number_format($item->subtotal, 2) }}</span>
+                        <span style="flex: 1; text-align: right;">@money($item->subtotal)</span>
                     </div>
                     
                     @foreach($item->addons as $addon)
                         <div class="addon-row">
-                            + {{ $addon->name }} (${{ number_format($addon->price, 2) }})
+                            + {{ $addon->name }} (@money($addon->price))
                         </div>
                     @endforeach
                 @endforeach
@@ -108,7 +108,7 @@
 
             <div class="item-row bold">
                 <span>Order Total</span>
-                <span>${{ number_format($order->total_amount, 2) }}</span>
+                <span>@money($order->total_amount)</span>
             </div>
 
             @php $grandTotal += $order->total_amount; @endphp
@@ -123,7 +123,7 @@
 
     <div class="grand-total-row">
         <span>GRAND TOTAL</span>
-        <span>${{ number_format($grandTotal, 2) }}</span>
+        <span>@money($grandTotal)</span>
     </div>
 
     <div class="divider"></div>
@@ -134,7 +134,7 @@
     </div>
     <div class="item-row">
         <span>Amount Paid</span>
-        <span>${{ number_format($grandTotal, 2) }}</span>
+        <span>@money($grandTotal)</span>
     </div>
 
     <div class="divider"></div>

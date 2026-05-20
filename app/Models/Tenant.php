@@ -19,6 +19,8 @@ class Tenant extends Model
         'receipt_footer',
         'receipt_size',
         'tax_rate',
+        'currency_code',
+        'currency_symbol',
         'points_earn_rate',
         'points_redeem_value_per_100',
         'points_min_redeem',

@@ -39,22 +39,22 @@
 
         <flux:card class="p-6">
             <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Gross Sales</flux:text>
-            <flux:heading size="xl" class="mt-2 tabular-nums">${{ number_format($this->summary['gross_sales'] ?? 0, 2) }}</flux:heading>
+            <flux:heading size="xl" class="mt-2 tabular-nums">@money((float) ($this->summary['gross_sales'] ?? 0))</flux:heading>
         </flux:card>
 
         <flux:card class="p-6">
             <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Discounts</flux:text>
-            <flux:heading size="xl" class="mt-2 tabular-nums text-red-500">-${{ number_format($this->summary['discounts'] ?? 0, 2) }}</flux:heading>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-red-500">- @money((float) ($this->summary['discounts'] ?? 0))</flux:heading>
         </flux:card>
 
         <flux:card class="p-6">
             <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Tax</flux:text>
-            <flux:heading size="xl" class="mt-2 tabular-nums text-emerald-600">${{ number_format($this->summary['taxes'] ?? 0, 2) }}</flux:heading>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-emerald-600">@money((float) ($this->summary['taxes'] ?? 0))</flux:heading>
         </flux:card>
 
         <flux:card class="p-6 ring-1 ring-blue-500/30">
             <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">Net Sales</flux:text>
-            <flux:heading size="xl" class="mt-2 tabular-nums text-blue-600">${{ number_format($this->summary['net_sales'] ?? 0, 2) }}</flux:heading>
+            <flux:heading size="xl" class="mt-2 tabular-nums text-blue-600">@money((float) ($this->summary['net_sales'] ?? 0))</flux:heading>
         </flux:card>
     </div>
 
@@ -81,7 +81,7 @@
                     <flux:chart.axis.tick />
                     <flux:chart.axis.line />
                 </flux:chart.axis>
-                <flux:chart.axis axis="y" :format="['useGrouping' => true]" tick-prefix="$">
+                <flux:chart.axis axis="y" :format="['useGrouping' => true]" tick-prefix="{{ auth()->user()?->tenant?->currency_symbol ?? 'RM' }}">
                     <flux:chart.axis.grid />
                     <flux:chart.axis.tick />
                 </flux:chart.axis>
@@ -89,7 +89,7 @@
             </flux:chart.svg>
             <flux:chart.tooltip>
                 <flux:chart.tooltip.heading field="date" />
-                <flux:chart.tooltip.value field="revenue" label="Revenue" :format="['useGrouping' => true]" prefix="$" />
+                    <flux:chart.tooltip.value field="revenue" label="Revenue" :format="['useGrouping' => true]" prefix="{{ auth()->user()?->tenant?->currency_symbol ?? 'RM' }}" />
             </flux:chart.tooltip>
         </flux:chart>
     </flux:card>
@@ -120,10 +120,10 @@
                                 <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
                                     <td class="py-3 px-4 font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M Y') }}</td>
                                     <td class="py-3 px-4 text-center tabular-nums">{{ $row['orders_count'] }}</td>
-                                    <td class="py-3 px-4 text-right tabular-nums">${{ number_format($row['gross_sales'], 2) }}</td>
-                                    <td class="py-3 px-4 text-right tabular-nums text-red-500">-${{ number_format($row['discounts'], 2) }}</td>
-                                    <td class="py-3 px-4 text-right tabular-nums text-emerald-600">${{ number_format($row['taxes'], 2) }}</td>
-                                    <td class="py-3 px-4 text-right tabular-nums font-black text-blue-600">${{ number_format($row['net_sales'], 2) }}</td>
+                                    <td class="py-3 px-4 text-right tabular-nums">@money((float) $row['gross_sales'])</td>
+                                    <td class="py-3 px-4 text-right tabular-nums text-red-500">- @money((float) $row['discounts'])</td>
+                                    <td class="py-3 px-4 text-right tabular-nums text-emerald-600">@money((float) $row['taxes'])</td>
+                                    <td class="py-3 px-4 text-right tabular-nums font-black text-blue-600">@money((float) $row['net_sales'])</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -149,7 +149,7 @@
                                 <flux:text class="font-black uppercase tracking-widest text-xs">{{ strtoupper($row['payment_method']) }}</flux:text>
                                 <flux:text size="sm" class="text-zinc-400">{{ $row['orders_count'] }} orders</flux:text>
                             </div>
-                            <flux:text class="font-black text-blue-600 tabular-nums">${{ number_format($row['net_sales'], 2) }}</flux:text>
+                            <flux:text class="font-black text-blue-600 tabular-nums">@money((float) $row['net_sales'])</flux:text>
                         </div>
                     @empty
                         <flux:text class="text-zinc-400 italic text-sm p-2">No payment data.</flux:text>
@@ -169,7 +169,7 @@
                                 <flux:text class="font-semibold truncate">{{ $row['product_name'] }}</flux:text>
                                 <flux:text size="sm" class="font-black uppercase tracking-widest text-zinc-400">{{ $row['quantity_sold'] }} sold</flux:text>
                             </div>
-                            <flux:text class="font-black text-blue-600 tabular-nums shrink-0 ml-2">${{ number_format($row['gross_sales'], 2) }}</flux:text>
+                            <flux:text class="font-black text-blue-600 tabular-nums shrink-0 ml-2">@money((float) $row['gross_sales'])</flux:text>
                         </div>
                     @empty
                         <flux:text class="text-zinc-400 italic text-sm p-2">No product data.</flux:text>

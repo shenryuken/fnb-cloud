@@ -139,6 +139,36 @@
                     </div>
                 </flux:card>
 
+                {{-- Currency --}}
+                <flux:card class="flex flex-col gap-5">
+                    <flux:heading size="sm" class="text-zinc-400 uppercase tracking-widest text-xs font-black">Currency</flux:heading>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>Main Currency</flux:label>
+                            <flux:select wire:model.live="currency_code">
+                                <flux:select.option value="MYR">MYR — Malaysian Ringgit (RM)</flux:select.option>
+                                <flux:select.option value="SGD">SGD — Singapore Dollar (S$)</flux:select.option>
+                                <flux:select.option value="USD">USD — US Dollar ($)</flux:select.option>
+                                <flux:select.option value="EUR">EUR — Euro (€)</flux:select.option>
+                                <flux:select.option value="GBP">GBP — British Pound (£)</flux:select.option>
+                                <flux:select.option value="IDR">IDR — Indonesian Rupiah (Rp)</flux:select.option>
+                                <flux:select.option value="THB">THB — Thai Baht (฿)</flux:select.option>
+                                <flux:select.option value="PHP">PHP — Philippine Peso (₱)</flux:select.option>
+                                <flux:select.option value="AUD">AUD — Australian Dollar (A$)</flux:select.option>
+                                <flux:select.option value="NZD">NZD — New Zealand Dollar (NZ$)</flux:select.option>
+                                <flux:select.option value="BND">BND — Brunei Dollar (B$)</flux:select.option>
+                            </flux:select>
+                            <flux:error name="currency_code" />
+                        </flux:field>
+                        <flux:field>
+                            <flux:label>Currency Symbol</flux:label>
+                            <flux:input wire:model="currency_symbol" placeholder="e.g. RM" />
+                            <flux:error name="currency_symbol" />
+                        </flux:field>
+                    </div>
+                </flux:card>
+
                 {{-- Business Day --}}
                 <flux:card class="flex flex-col gap-5">
                     <flux:heading size="sm" class="text-zinc-400 uppercase tracking-widest text-xs font-black">Business Day</flux:heading>
@@ -236,21 +266,21 @@
                             <div class="flex justify-between font-black border-b border-zinc-100 dark:border-zinc-800 pb-1">
                                 <span>ITEM</span><span>TOTAL</span>
                             </div>
-                            <div class="flex justify-between"><span>Truffle Burger</span><span>$12.50</span></div>
-                            <div class="flex justify-between"><span>Large Fries x2</span><span>$8.00</span></div>
+                            <div class="flex justify-between"><span>Truffle Burger</span><span>{{ $currency_symbol }} {{ number_format(12.50, 2) }}</span></div>
+                            <div class="flex justify-between"><span>Large Fries x2</span><span>{{ $currency_symbol }} {{ number_format(8.00, 2) }}</span></div>
                         </div>
 
                         <div class="border-b-2 border-dashed border-zinc-200 dark:border-zinc-700 my-3"></div>
 
                         <div class="space-y-1">
-                            <div class="flex justify-between opacity-70"><span>SUBTOTAL</span><span>$20.50</span></div>
+                            <div class="flex justify-between opacity-70"><span>SUBTOTAL</span><span>{{ $currency_symbol }} {{ number_format(20.50, 2) }}</span></div>
                             <div class="flex justify-between opacity-70">
                                 <span>TAX ({{ number_format((float)($tax_rate ?? 0), 2) }}%)</span>
-                                <span>${{ number_format(20.50 * ((float)($tax_rate ?? 0) / 100), 2) }}</span>
+                                <span>{{ $currency_symbol }} {{ number_format(20.50 * ((float)($tax_rate ?? 0) / 100), 2) }}</span>
                             </div>
                             <div class="flex justify-between font-black pt-1 border-t border-zinc-100 dark:border-zinc-800">
                                 <span>TOTAL</span>
-                                <span>${{ number_format(20.50 + (20.50 * ((float)($tax_rate ?? 0) / 100)), 2) }}</span>
+                                <span>{{ $currency_symbol }} {{ number_format(20.50 + (20.50 * ((float)($tax_rate ?? 0) / 100)), 2) }}</span>
                             </div>
                         </div>
 

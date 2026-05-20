@@ -107,22 +107,22 @@
                     <span style="font-size: 10px; color: #f97316; font-weight: bold;">[PACK]</span>
                 @endif
                 <div style="font-size: 10px; color: #666; margin-top: 2px;">
-                    ${{ number_format($each, 2) }}
+                    @money($each)
                 </div>
             </span>
             <span style="flex: 1; text-align: center;">{{ $item->quantity }}</span>
-            <span style="flex: 1; text-align: right;">${{ number_format($item->subtotal, 2) }}</span>
+            <span style="flex: 1; text-align: right;">@money($item->subtotal)</span>
         </div>
         
         @foreach($item->addons as $addon)
             <div class="addon-row">
-                + {{ $addon->name }} (${{ number_format($addon->price, 2) }})
+                + {{ $addon->name }} (@money($addon->price))
             </div>
         @endforeach
 
         @foreach($item->components as $component)
             <div class="addon-row">
-                Set: {{ $component->name }}@if(((float) ($component->extra_price ?? 0)) > 0) (+${{ number_format((float) $component->extra_price, 2) }})@endif
+                Set: {{ $component->name }}@if(((float) ($component->extra_price ?? 0)) > 0) (+@money((float) $component->extra_price))@endif
             </div>
         @endforeach
         
@@ -137,13 +137,13 @@
 
     <div class="item-row">
         <span>Subtotal</span>
-        <span>${{ number_format($order->subtotal_amount ?? $order->total_amount, 2) }}</span>
+        <span>@money($order->subtotal_amount ?? $order->total_amount)</span>
     </div>
 
     @if(($order->discount_amount ?? 0) > 0)
         <div class="item-row">
             <span>Discount</span>
-            <span>- ${{ number_format($order->discount_amount, 2) }}</span>
+            <span>- @money($order->discount_amount)</span>
         </div>
     @endif
 
@@ -227,29 +227,29 @@
             @foreach($breakdown as $row)
                 <div class="item-row">
                     <span>{{ $row['name'] }}({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                    <span>${{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                    <span>@money((float) ($row['amount'] ?? 0))</span>
                 </div>
             @endforeach
             <div class="item-row">
                 <span>Tax Total</span>
-                <span>${{ number_format($taxTotal, 2) }}</span>
+                <span>@money($taxTotal)</span>
             </div>
         @elseif(count($breakdown) === 1)
             <div class="item-row">
                 <span>{{ $breakdown[0]['name'] }}({{ rtrim(rtrim(number_format((float) ($breakdown[0]['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                <span>${{ number_format($taxTotal, 2) }}</span>
+                <span>@money($taxTotal)</span>
             </div>
         @else
             <div class="item-row">
                 <span>Tax({{ rtrim(rtrim(number_format((float) ($order->tax_rate ?? 0), 2), '0'), '.') }}%)</span>
-                <span>${{ number_format($taxTotal, 2) }}</span>
+                <span>@money($taxTotal)</span>
             </div>
         @endif
     @endif
     
     <div class="total-row">
         <span>TOTAL</span>
-        <span>${{ number_format($order->total_amount, 2) }}</span>
+        <span>@money($order->total_amount)</span>
     </div>
 
     <div class="divider"></div>
@@ -260,12 +260,12 @@
     </div>
     <div class="item-row">
         <span>Amount Paid</span>
-        <span>${{ number_format($order->amount_paid, 2) }}</span>
+        <span>@money($order->amount_paid)</span>
     </div>
     @if($order->change_amount > 0)
         <div class="item-row">
             <span>Change</span>
-            <span>${{ number_format($order->change_amount, 2) }}</span>
+            <span>@money($order->change_amount)</span>
         </div>
     @endif
 

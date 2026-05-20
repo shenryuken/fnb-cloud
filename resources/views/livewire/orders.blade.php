@@ -182,7 +182,7 @@
                                 </div>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="font-black">${{ number_format($order->total_amount, 2) }}</span>
+                                <span class="font-black">@money($order->total_amount)</span>
                                 <div class="text-xs text-zinc-400 uppercase">{{ $order->payment_method }}</div>
                             </td>
                             <td class="py-3 px-4">
@@ -318,7 +318,7 @@
                                             <flux:badge size="sm" color="yellow" class="mt-1">{{ $item->notes }}</flux:badge>
                                         @endif
                                     </div>
-                                    <flux:text class="font-black tabular-nums shrink-0">${{ number_format((float) $item->subtotal, 2) }}</flux:text>
+                                    <flux:text class="font-black tabular-nums shrink-0">@money((float) $item->subtotal)</flux:text>
                                 </div>
                             @endforeach
                         </div>
@@ -331,24 +331,24 @@
                         <flux:text class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Summary</flux:text>
                         <div class="flex justify-between">
                             <flux:text size="sm" class="text-zinc-500">Subtotal</flux:text>
-                            <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format((float) $viewingOrder->subtotal_amount, 2) }}</flux:text>
+                            <flux:text size="sm" class="font-semibold tabular-nums">@money((float) $viewingOrder->subtotal_amount)</flux:text>
                         </div>
                         @if((float) ($viewingOrder->discount_amount ?? 0) > 0)
                             <div class="flex justify-between">
                                 <flux:text size="sm" class="text-zinc-500">Discount</flux:text>
-                                <flux:text size="sm" class="font-semibold text-red-500 tabular-nums">- ${{ number_format((float) $viewingOrder->discount_amount, 2) }}</flux:text>
+                                <flux:text size="sm" class="font-semibold text-red-500 tabular-nums">- @money((float) $viewingOrder->discount_amount)</flux:text>
                             </div>
                         @endif
                         @if((float) ($viewingOrder->tax_amount ?? 0) > 0)
                             <div class="flex justify-between">
                                 <flux:text size="sm" class="text-zinc-500">Tax</flux:text>
-                                <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">${{ number_format((float) $viewingOrder->tax_amount, 2) }}</flux:text>
+                                <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">@money((float) $viewingOrder->tax_amount)</flux:text>
                             </div>
                         @endif
                         <flux:separator />
                         <div class="flex justify-between items-baseline">
                             <flux:text class="font-black uppercase tracking-widest text-sm">Total</flux:text>
-                            <flux:heading size="xl" class="text-blue-600 tabular-nums">${{ number_format((float) $viewingOrder->total_amount, 2) }}</flux:heading>
+                            <flux:heading size="xl" class="text-blue-600 tabular-nums">@money((float) $viewingOrder->total_amount)</flux:heading>
                         </div>
                     </flux:card>
 
@@ -358,7 +358,7 @@
                             @foreach($viewingOrder->payment_splits as $split)
                                 <div class="flex justify-between">
                                     <flux:text size="sm" class="text-zinc-500 uppercase">{{ $split['method'] }}</flux:text>
-                                    <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format($split['amount'], 2) }}</flux:text>
+                                    <flux:text size="sm" class="font-semibold tabular-nums">@money($split['amount'])</flux:text>
                                 </div>
                             @endforeach
                             <flux:badge size="sm" color="blue">Split Payment</flux:badge>
@@ -369,12 +369,12 @@
                             </div>
                             <div class="flex justify-between">
                                 <flux:text size="sm" class="text-zinc-500">Paid</flux:text>
-                                <flux:text size="sm" class="font-semibold tabular-nums">${{ number_format((float) ($viewingOrder->amount_paid ?? 0), 2) }}</flux:text>
+                                <flux:text size="sm" class="font-semibold tabular-nums">@money((float) ($viewingOrder->amount_paid ?? 0))</flux:text>
                             </div>
                             @if((float) ($viewingOrder->change_amount ?? 0) > 0)
                                 <div class="flex justify-between">
                                     <flux:text size="sm" class="text-zinc-500">Change</flux:text>
-                                    <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">${{ number_format((float) $viewingOrder->change_amount, 2) }}</flux:text>
+                                    <flux:text size="sm" class="font-semibold text-emerald-600 tabular-nums">@money((float) $viewingOrder->change_amount)</flux:text>
                                 </div>
                             @endif
                         @endif

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureBladeDirectives();
     }
 
     /**
@@ -46,5 +48,16 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function configureBladeDirectives(): void
+    {
+        Blade::directive('curr', function () {
+            return "<?php echo e(auth()->user()?->tenant?->currency_symbol ?? 'RM'); ?>";
+        });
+
+        Blade::directive('money', function ($expression) {
+            return "<?php \$__sym = (string) (auth()->user()?->tenant?->currency_symbol ?? 'RM'); \$__amt = (float) ($expression); echo e(trim(\$__sym) . ' ' . number_format(\$__amt, 2)); ?>";
+        });
     }
 }

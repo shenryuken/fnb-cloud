@@ -20,12 +20,35 @@ class Receipt extends Component
     public $receipt_footer;
     public $receipt_size;
     public $tax_rate;
+    public string $currency_code = 'MYR';
+    public string $currency_symbol = 'RM';
     public $business_day_start_time;
     public $business_day_end_time;
     public array $business_hours = [];
     public array $taxes = [];
     public $logo;
     public $logo_url;
+
+    public function updatedCurrencyCode(): void
+    {
+        $code = strtoupper(trim((string) $this->currency_code));
+        $map = [
+            'MYR' => 'RM',
+            'SGD' => 'S$',
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'IDR' => 'Rp',
+            'THB' => '฿',
+            'PHP' => '₱',
+            'AUD' => 'A$',
+            'NZD' => 'NZ$',
+            'BND' => 'B$',
+        ];
+
+        $this->currency_code = array_key_exists($code, $map) ? $code : 'MYR';
+        $this->currency_symbol = $map[$this->currency_code] ?? 'RM';
+    }
 
     public function mount()
     {
@@ -38,6 +61,8 @@ class Receipt extends Component
         $this->receipt_footer = $tenant->receipt_footer;
         $this->receipt_size = $tenant->receipt_size ?? '80mm';
         $this->tax_rate = (float) ($tenant->tax_rate ?? 0);
+        $this->currency_code = (string) ($tenant->currency_code ?? 'MYR');
+        $this->currency_symbol = (string) ($tenant->currency_symbol ?? 'RM');
         $this->business_day_start_time = $tenant->business_day_start_time ? substr((string) $tenant->business_day_start_time, 0, 5) : '00:00';
         $this->business_day_end_time = $tenant->business_day_end_time ? substr((string) $tenant->business_day_end_time, 0, 5) : '23:59';
         $this->logo_url = $tenant->logo_url;
@@ -94,6 +119,8 @@ class Receipt extends Component
             'receipt_footer' => 'nullable|string',
             'receipt_size' => 'required|in:58mm,80mm',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'currency_code' => 'required|string|size:3|in:MYR,SGD,USD,EUR,GBP,IDR,THB,PHP,AUD,NZD,BND',
+            'currency_symbol' => 'required|string|max:10',
             'business_day_start_time' => 'required|date_format:H:i',
             'business_day_end_time' => 'required|date_format:H:i',
             'business_hours' => 'required|array|size:7',
@@ -113,6 +140,8 @@ class Receipt extends Component
             'receipt_footer' => $this->receipt_footer,
             'receipt_size' => $this->receipt_size,
             'tax_rate' => (float) ($this->tax_rate ?? 0),
+            'currency_code' => strtoupper(trim((string) $this->currency_code)),
+            'currency_symbol' => trim((string) $this->currency_symbol),
             'business_day_start_time' => $this->business_day_start_time,
             'business_day_end_time' => $this->business_day_end_time,
         ];

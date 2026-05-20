@@ -163,7 +163,7 @@
                                     </div>
                                 </div>
                                 <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                    RM {{ number_format($product->price, 2) }}
+                                    @money($product->price)
                                 </div>
                             </div>
 
@@ -184,7 +184,7 @@
                                             wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
                                             class="h-10 px-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors flex flex-col items-center justify-center leading-none">
                                             <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
-                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">RM {{ number_format((float) $variant->price, 2) }}</span>
+                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">@money((float) $variant->price)</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -246,7 +246,7 @@
                             </div>
 
                             <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                RM {{ number_format($product->price, 2) }}
+                                @money($product->price)
                             </div>
                         </div>
 
@@ -265,7 +265,7 @@
                                         wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
                                         class="h-10 px-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors flex flex-col items-center justify-center leading-none">
                                         <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
-                                        <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">RM {{ number_format((float) $variant->price, 2) }}</span>
+                                        <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">@money((float) $variant->price)</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -314,7 +314,7 @@
                                     {{ $product->name }}
                                 </div>
                                 <div class="text-white/80 text-[11px] font-semibold tabular-nums">
-                                    RM {{ number_format($product->price, 2) }}
+                                    @money($product->price)
                                 </div>
                             </div>
                         </div>
@@ -344,7 +344,7 @@
                                             wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
                                             class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white transition-colors flex flex-col items-center justify-center leading-none">
                                             <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
-                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">RM {{ number_format((float) $variant->price, 2) }}</span>
+                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">@money((float) $variant->price)</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -428,7 +428,7 @@
                                                 wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
                                                 class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white transition-colors flex flex-col items-center justify-center leading-none">
                                                 <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
-                                                <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">RM {{ number_format((float) $variant->price, 2) }}</span>
+                                                <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">@money((float) $variant->price)</span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -454,7 +454,7 @@
                                     {{ $product->name }}
                                 </h3>
                                 <span class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                    RM {{ number_format($product->price, 2) }}
+                                    @money($product->price)
                                 </span>
                             </div>
                             <div class="mt-1 text-[11px] text-zinc-400 truncate">
@@ -628,8 +628,8 @@
                         @endif
 
                         <div class="text-right">
-                            <div class="text-xs text-zinc-400 tabular-nums">RM {{ number_format($eachPrice, 2) }} ea</div>
-                            <div class="font-bold text-sm text-zinc-900 dark:text-zinc-100 tabular-nums">RM {{ number_format($item['subtotal'], 2) }}</div>
+                            <div class="text-xs text-zinc-400 tabular-nums">@money($eachPrice) ea</div>
+                            <div class="font-bold text-sm text-zinc-900 dark:text-zinc-100 tabular-nums">@money((float) $item['subtotal'])</div>
                         </div>
                     </div>
                 </div>
@@ -648,20 +648,24 @@
             <div class="space-y-1.5">
                 <div class="flex justify-between text-zinc-500 text-sm">
                     <span>Subtotal</span>
-                    <span class="font-semibold">RM {{ number_format($subTotalAmount, 2) }}</span>
+                    <span class="font-semibold">@money($subTotalAmount)</span>
                 </div>
 
                 <button type="button" wire:click="openDiscountModal" class="w-full flex items-center justify-between text-zinc-500 text-sm rounded-lg hover:bg-white dark:hover:bg-zinc-900 px-2 py-1.5 -mx-2 transition-all">
                     <span>Discount / Voucher / Points</span>
                     <span class="{{ $discountAmount > 0 ? 'text-red-500 font-semibold' : 'text-pink-500' }}">
-                        {{ $discountAmount > 0 ? '- RM ' . number_format($discountAmount, 2) : 'Add' }}
+                        @if($discountAmount > 0)
+                            - @money($discountAmount)
+                        @else
+                            Add
+                        @endif
                     </span>
                 </button>
 
                 @if(($manualDiscountAmount ?? 0) > 0)
                     <div class="flex justify-between text-zinc-400 text-xs">
                         <span>Manual Discount</span>
-                        <span class="tabular-nums">- RM {{ number_format((float) $manualDiscountAmount, 2) }}</span>
+                        <span class="tabular-nums">- @money((float) $manualDiscountAmount)</span>
                     </div>
                 @endif
                 @if(filled($appliedVoucherCode))
@@ -686,23 +690,23 @@
                     @foreach($taxBreakdown as $row)
                         <div class="flex justify-between text-zinc-500 text-sm">
                             <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                            <span class="text-green-600 tabular-nums">RM {{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                            <span class="text-green-600 tabular-nums">@money((float) ($row['amount'] ?? 0))</span>
                         </div>
                     @endforeach
                     <div class="flex justify-between text-zinc-500 text-sm">
                         <span>Tax Total</span>
-                        <span class="text-green-600 tabular-nums">RM {{ number_format($taxAmount, 2) }}</span>
+                        <span class="text-green-600 tabular-nums">@money($taxAmount)</span>
                     </div>
                 @else
                     <div class="flex justify-between text-zinc-500 text-sm">
                         <span>Tax ({{ $taxLabel }})</span>
-                        <span class="text-green-600 tabular-nums">RM {{ number_format($taxAmount, 2) }}</span>
+                        <span class="text-green-600 tabular-nums">@money($taxAmount)</span>
                     </div>
                 @endif
 
                 <div class="flex justify-between items-baseline pt-3 mt-2 border-t border-zinc-200 dark:border-zinc-700">
                     <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase">Total</span>
-                    <span class="text-xl font-bold text-pink-500 tabular-nums">RM {{ number_format($totalAmount, 2) }}</span>
+                    <span class="text-xl font-bold text-pink-500 tabular-nums">@money($totalAmount)</span>
                 </div>
             </div>
 
@@ -895,8 +899,8 @@
                                             </div>
 
                                             <div class="text-right leading-none">
-                                                <div class="text-[9px] font-black text-neutral-400 uppercase tracking-widest tabular-nums">${{ number_format($eachPrice, 2) }} each</div>
-                                                <div class="mt-1 font-black text-[15px] text-neutral-900 dark:text-neutral-100 tracking-tighter tabular-nums">${{ number_format($item['subtotal'], 2) }}</div>
+                                                <div class="text-[9px] font-black text-neutral-400 uppercase tracking-widest tabular-nums">@money($eachPrice) each</div>
+                                                <div class="mt-1 font-black text-[15px] text-neutral-900 dark:text-neutral-100 tracking-tighter tabular-nums">@money((float) $item['subtotal'])</div>
                                             </div>
                                         </div>
                                     </div>
@@ -922,20 +926,24 @@
                         <div class="space-y-1.5">
                             <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
                                 <span>Subtotal</span>
-                                <span class="font-black">${{ number_format($subTotalAmount, 2) }}</span>
+                                <span class="font-black">@money($subTotalAmount)</span>
                             </div>
 
                             <button type="button" wire:click="openDiscountModal" class="w-full flex items-center justify-between gap-3 text-neutral-500 font-black tracking-tight text-sm rounded-xl hover:bg-white/60 dark:hover:bg-neutral-900/40 px-2 py-2 transition-all">
                                 <span>Discount / Voucher / Points</span>
                                 <span class="{{ $discountAmount > 0 ? 'text-red-500' : 'text-blue-600 dark:text-blue-400' }}">
-                                    {{ $discountAmount > 0 ? '- $' . number_format($discountAmount, 2) : 'Add' }}
+                                    @if($discountAmount > 0)
+                                        - @money($discountAmount)
+                                    @else
+                                        Add
+                                    @endif
                                 </span>
                             </button>
 
                             @if(($manualDiscountAmount ?? 0) > 0)
                                 <div class="flex justify-between text-neutral-500 font-black tracking-tight text-[10px]">
                                     <span>Manual Discount</span>
-                                    <span class="font-black text-neutral-400 tabular-nums">- ${{ number_format((float) $manualDiscountAmount, 2) }}</span>
+                                    <span class="font-black text-neutral-400 tabular-nums">- @money((float) $manualDiscountAmount)</span>
                                 </div>
                             @endif
                             @if(filled($appliedVoucherCode))
@@ -960,23 +968,23 @@
                                 @foreach($taxBreakdown as $row)
                                     <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
                                         <span>{{ $row['name'] }} ({{ rtrim(rtrim(number_format((float) ($row['rate'] ?? 0), 2), '0'), '.') }}%)</span>
-                                        <span class="font-black text-emerald-600 tabular-nums">${{ number_format((float) ($row['amount'] ?? 0), 2) }}</span>
+                                        <span class="font-black text-emerald-600 tabular-nums">@money((float) ($row['amount'] ?? 0))</span>
                                     </div>
                                 @endforeach
                                 <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
                                     <span>Tax Total</span>
-                                    <span class="font-black text-emerald-600 tabular-nums">${{ number_format($taxAmount, 2) }}</span>
+                                    <span class="font-black text-emerald-600 tabular-nums">@money($taxAmount)</span>
                                 </div>
                             @else
                                 <div class="flex justify-between text-neutral-500 font-black tracking-tight text-sm">
                                     <span>Tax ({{ $taxLabel }})</span>
-                                    <span class="font-black text-emerald-600 tabular-nums">${{ number_format($taxAmount, 2) }}</span>
+                                    <span class="font-black text-emerald-600 tabular-nums">@money($taxAmount)</span>
                                 </div>
                             @endif
 
                             <div class="flex justify-between items-baseline pt-2 border-t border-neutral-200 dark:border-neutral-800">
                                 <span class="text-sm font-black text-neutral-900 dark:text-neutral-100 tracking-widest uppercase">Total</span>
-                                <span class="text-2xl font-black text-blue-600 tracking-tighter shadow-blue-500/10 tabular-nums">${{ number_format($totalAmount, 2) }}</span>
+                                <span class="text-2xl font-black text-blue-600 tracking-tighter shadow-blue-500/10 tabular-nums">@money($totalAmount)</span>
                             </div>
                         </div>
 
@@ -1363,7 +1371,7 @@
                                 <div class="flex items-center gap-2">
                                     <input type="number" wire:model.live="pointsToRedeem"
                                         @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
-                                        class="flex-1 rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-semibold focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all disabled:opacity-50 text-sm" placeholder="Points ({{ (int) $pointsRedeemPoints }} = RM {{ number_format((float) $pointsRedeemAmount, 2) }})">
+                                        class="flex-1 rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2.5 font-semibold focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all disabled:opacity-50 text-sm" placeholder="Points ({{ (int) $pointsRedeemPoints }} = @money((float) $pointsRedeemAmount))">
                                     <button type="button" wire:click="applyPoints"
                                         @disabled(filled($appliedVoucherCode) && !(bool) ($appliedVoucherMeta['can_combine_with_points'] ?? false))
                                         class="px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all text-sm disabled:opacity-40">
@@ -1379,7 +1387,7 @@
                                     @if((int) $pointsMinRedeem > 0)
                                         Min {{ (int) $pointsMinRedeem }} pts |
                                     @endif
-                                    {{ (int) $pointsRedeemPoints }} pts = RM {{ number_format((float) $pointsRedeemAmount, 2) }}
+                                    {{ (int) $pointsRedeemPoints }} pts = @money((float) $pointsRedeemAmount)
                                 </p>
 
                                 @if(($appliedPoints ?? 0) > 0)
@@ -1665,7 +1673,7 @@
                                     @foreach([5, 10, 20, 50, 100] as $amount)
                                         <button type="button" wire:click="addQuickAmount({{ $amount }})"
                                             class="px-4 py-2 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-pink-500 hover:text-pink-500 transition-all">
-                                            +RM{{ $amount }}
+                                            +@curr {{ $amount }}
                                         </button>
                                     @endforeach
                                 </div>
@@ -1673,7 +1681,7 @@
                                 {{-- Amount input and change display --}}
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-zinc-400">RM</span>
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-zinc-400">@curr</span>
                                         <input type="number" step="0.01" min="0" wire:model.live="amountReceived"
                                             class="w-full pl-12 pr-10 py-3 text-2xl font-bold rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-zinc-800 dark:text-zinc-100 text-right"
                                             placeholder="0.00"
@@ -1688,7 +1696,7 @@
                                     <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
                                         <div>
                                             <span class="text-xs text-green-600 block">Change</span>
-                                            <span class="text-xl font-bold text-green-600">RM {{ number_format($changeAmount, 2) }}</span>
+                                            <span class="text-xl font-bold text-green-600">@money($changeAmount)</span>
                                         </div>
                                         <flux:icon.banknotes class="w-6 h-6 text-green-400" />
                                     </div>
@@ -1708,7 +1716,7 @@
                                     {{ $splitRemaining <= 0.001 ? 'Fully Covered' : 'Remaining' }}
                                 </span>
                                 <span class="text-lg font-bold {{ $splitRemaining <= 0.001 ? 'text-green-600' : 'text-amber-600' }}">
-                                    RM {{ number_format($splitRemaining, 2) }}
+                                    @money($splitRemaining)
                                 </span>
                             </div>
 
@@ -2076,7 +2084,7 @@
                             @endphp
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 truncate">{{ $selectingProduct->name }}</h3>
-                                <span class="text-xl font-bold text-pink-500 shrink-0">RM {{ number_format($displayPrice, 2) }}</span>
+                                <span class="text-xl font-bold text-pink-500 shrink-0">@money($displayPrice)</span>
                             </div>
                             @if($selectingProduct->description)
                                 <p class="text-zinc-400 text-sm mt-0.5 truncate">{{ $selectingProduct->description }}</p>
@@ -2099,7 +2107,7 @@
                                         <span class="font-semibold text-sm {{ is_null($selectedVariantId) ? 'text-pink-600' : 'text-zinc-800 dark:text-zinc-100' }}">Regular</span>
                                         <span class="text-xs text-zinc-400 mt-0.5">Base price</span>
                                     </div>
-                                    <span class="text-sm font-bold {{ is_null($selectedVariantId) ? 'text-pink-600' : 'text-zinc-500' }}">RM {{ number_format($selectingProduct->price, 2) }}</span>
+                                    <span class="text-sm font-bold {{ is_null($selectedVariantId) ? 'text-pink-600' : 'text-zinc-500' }}">@money($selectingProduct->price)</span>
                                     @if(is_null($selectedVariantId))
                                         <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-500"></div>
                                     @endif
@@ -2112,9 +2120,9 @@
                                             <span class="font-semibold text-sm {{ $selectedVariantId == $variant->id ? 'text-pink-600' : 'text-zinc-800 dark:text-zinc-100' }}">
                                                 {{ $variant->name }}
                                             </span>
-                                            <span class="text-xs text-zinc-400 mt-0.5">+RM {{ number_format($variant->price - $selectingProduct->price, 2) }}</span>
+                                            <span class="text-xs text-zinc-400 mt-0.5">+@money($variant->price - $selectingProduct->price)</span>
                                         </div>
-                                        <span class="text-sm font-bold {{ $selectedVariantId == $variant->id ? 'text-pink-600' : 'text-zinc-500' }}">RM {{ number_format($variant->price, 2) }}</span>
+                                        <span class="text-sm font-bold {{ $selectedVariantId == $variant->id ? 'text-pink-600' : 'text-zinc-500' }}">@money($variant->price)</span>
                                         @if($selectedVariantId == $variant->id)
                                             <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-500"></div>
                                         @endif
@@ -2158,7 +2166,7 @@
                                                     <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $choice->name }}</span>
                                                 </div>
                                                 @if($extra > 0)
-                                                    <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($extra, 2) }}</span>
+                                                    <span class="text-sm font-semibold text-pink-500">+@money($extra)</span>
                                                 @else
                                                     <span class="text-sm text-zinc-400">Included</span>
                                                 @endif
@@ -2192,7 +2200,7 @@
                                                 class="w-4 h-4 rounded border-zinc-300 text-pink-500 focus:ring-pink-500/20">
                                             <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $addon->name }}</span>
                                         </div>
-                                        <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($addon->price, 2) }}</span>
+                                        <span class="text-sm font-semibold text-pink-500">+@money($addon->price)</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -2212,7 +2220,7 @@
                                                 class="w-4 h-4 rounded border-zinc-300 text-pink-500 focus:ring-pink-500/20">
                                             <span class="font-medium text-sm text-zinc-700 dark:text-zinc-200">{{ $addon->name }}</span>
                                         </div>
-                                        <span class="text-sm font-semibold text-pink-500">+RM {{ number_format($addon->price, 2) }}</span>
+                                        <span class="text-sm font-semibold text-pink-500">+@money($addon->price)</span>
                                     </label>
                                 @endforeach
                             </div>

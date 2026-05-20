@@ -145,7 +145,7 @@
                                         </td>
                                         <td class="py-3 px-4">
                                             <span class="font-black text-sm {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
-                                                ${{ number_format((float) $item->price, 2) }}
+                                                @money((float) $item->price)
                                             </span>
                                         </td>
                                         <td class="py-3 px-4 text-right">
@@ -199,7 +199,7 @@
                                     </td>
                                     <td class="py-3 px-4">
                                         <span class="font-black {{ (float) $item->price < 0 ? 'text-emerald-600' : 'text-blue-600' }}">
-                                            ${{ number_format((float) $item->price, 2) }}
+                                            @money((float) $item->price)
                                         </span>
                                     </td>
                                     <td class="py-3 px-4 text-right">

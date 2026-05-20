@@ -66,7 +66,7 @@
 
         <flux:card class="p-4">
             <div class="text-sm text-zinc-400 mb-1">Total Sales</div>
-            <div class="text-2xl font-bold">${{ number_format($totalSalesSum, 2) }}</div>
+            <div class="text-2xl font-bold">@money((float) $totalSalesSum)</div>
         </flux:card>
 
         <flux:card class="p-4">
@@ -82,7 +82,7 @@
         <flux:card class="p-4">
             <div class="text-sm text-zinc-400 mb-1">Cash Variance</div>
             <div class="text-2xl font-bold {{ $totalVariance >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                ${{ number_format($totalVariance, 2) }}
+                @money((float) $totalVariance)
             </div>
         </flux:card>
     </div>
@@ -114,13 +114,13 @@
                             <div class="font-medium">{{ $stat['user']->name }}</div>
                         </td>
                         <td class="text-right py-3 px-4">{{ $stat['shiftsCount'] }}</td>
-                        <td class="text-right py-3 px-4 font-semibold">${{ number_format($stat['totalSales'], 2) }}</td>
+                        <td class="text-right py-3 px-4 font-semibold">@money((float) $stat['totalSales'])</td>
                         <td class="text-right py-3 px-4">{{ $stat['totalOrders'] }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($stat['avgOrderValue'], 2) }}</td>
+                        <td class="text-right py-3 px-4">@money((float) $stat['avgOrderValue'])</td>
                         <td class="text-right py-3 px-4">{{ intdiv($stat['avgShiftDuration'], 60) }}h {{ $stat['avgShiftDuration'] % 60 }}m</td>
                         <td class="text-right py-3 px-4">
                             <span class="{{ $stat['totalCashVariance'] >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                                ${{ number_format($stat['totalCashVariance'], 2) }}
+                                @money((float) $stat['totalCashVariance'])
                             </span>
                         </td>
                         <td class="text-right py-3 px-4">
@@ -175,12 +175,12 @@
                             @endif
                         </td>
                         <td class="text-right py-3 px-4">{{ $shift->order_count }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($shift->total_sales, 2) }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($shift->opening_cash, 2) }}</td>
-                        <td class="text-right py-3 px-4">${{ number_format($shift->expected_cash, 2) }}</td>
+                        <td class="text-right py-3 px-4">@money((float) $shift->total_sales)</td>
+                        <td class="text-right py-3 px-4">@money((float) $shift->opening_cash)</td>
+                        <td class="text-right py-3 px-4">@money((float) $shift->expected_cash)</td>
                         <td class="text-right py-3 px-4">
                             @if($shift->closed_at)
-                                ${{ number_format($shift->actual_cash, 2) }}
+                                @money((float) $shift->actual_cash)
                             @else
                                 <span class="text-zinc-500">-</span>
                             @endif
@@ -188,7 +188,7 @@
                         <td class="text-right py-3 px-4">
                             @if($shift->closed_at)
                                 <span class="{{ $shift->difference >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                                    ${{ number_format($shift->difference, 2) }}
+                                    @money((float) $shift->difference)
                                 </span>
                             @else
                                 <span class="text-zinc-500">-</span>

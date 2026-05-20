@@ -46,7 +46,7 @@
                         <flux:icon.banknotes class="w-5 h-5 text-pink-500" />
                     </div>
                 </div>
-                <flux:heading size="xl" class="mb-1 tabular-nums">${{ number_format((float) ($this->summary['net_sales'] ?? 0), 2) }}</flux:heading>
+                <flux:heading size="xl" class="mb-1 tabular-nums">@money((float) ($this->summary['net_sales'] ?? 0))</flux:heading>
                 <flux:text size="sm" class="text-zinc-400">Selected range</flux:text>
             </div>
         </flux:card>
@@ -61,7 +61,7 @@
                     </div>
                 </div>
                 <flux:heading size="xl" class="mb-1 tabular-nums">{{ number_format((int) ($this->summary['orders_count'] ?? 0)) }}</flux:heading>
-                <flux:text size="sm" class="text-zinc-400">Avg: ${{ number_format((float) ($this->summary['avg_order_value'] ?? 0), 2) }}</flux:text>
+                <flux:text size="sm" class="text-zinc-400">Avg: @money((float) ($this->summary['avg_order_value'] ?? 0))</flux:text>
             </div>
         </flux:card>
 
@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <flux:heading size="lg" class="mb-1 truncate">{{ $this->peakHours['by_sales']['label'] ?? '—' }}</flux:heading>
-                <flux:text size="sm" class="text-zinc-400">${{ number_format((float) ($this->peakHours['by_sales']['net_sales'] ?? 0), 2) }}</flux:text>
+                <flux:text size="sm" class="text-zinc-400">@money((float) ($this->peakHours['by_sales']['net_sales'] ?? 0))</flux:text>
             </div>
         </flux:card>
     </div>
@@ -142,7 +142,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3 px-4 text-right tabular-nums">
-                                        <div class="font-semibold">${{ number_format((float) $row['net_sales'], 2) }}</div>
+                                        <div class="font-semibold">@money((float) $row['net_sales'])</div>
                                         <div class="mt-1 h-1.5 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/60 overflow-hidden">
                                             <div class="h-full rounded-full {{ $isPeakSales ? 'bg-blue-500' : 'bg-blue-300/80 dark:bg-blue-400/60' }}" style="width: {{ $salesPct }}%"></div>
                                         </div>
@@ -188,7 +188,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3 px-4 text-right tabular-nums">
-                                        <div class="font-black {{ $isTopWeekSales ? 'text-blue-700 dark:text-blue-300' : 'text-blue-600' }}">${{ number_format((float) $row['net_sales'], 2) }}</div>
+                                        <div class="font-black {{ $isTopWeekSales ? 'text-blue-700 dark:text-blue-300' : 'text-blue-600' }}">@money((float) $row['net_sales'])</div>
                                         <div class="mt-1 h-1.5 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/60 overflow-hidden">
                                             <div class="h-full rounded-full {{ $isTopWeekSales ? 'bg-blue-600' : 'bg-blue-300/80 dark:bg-blue-400/60' }}" style="width: {{ $salesPct }}%"></div>
                                         </div>
@@ -242,7 +242,7 @@
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest {{ $rankClass }}">#{{ $rank }}</span>
                                                     <span class="truncate">{{ $p['product_name'] }}</span>
                                                 </div>
-                                                <span class="font-mono tabular-nums text-zinc-500 shrink-0">{{ (int) $p['quantity_sold'] }} • ${{ number_format((float) $p['gross_sales'], 2) }}</span>
+                                                <span class="font-mono tabular-nums text-zinc-500 shrink-0">{{ (int) $p['quantity_sold'] }} • @money((float) $p['gross_sales'])</span>
                                             </div>
                                         @endforeach
                                     </div>
@@ -300,7 +300,7 @@
                                                         {{ (int) $row['quantity_sold'] }}
                                                     </span>
                                                 </td>
-                                                <td class="py-2 px-3 text-right tabular-nums font-semibold text-blue-600">${{ number_format((float) $row['gross_sales'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right tabular-nums font-semibold text-blue-600">@money((float) $row['gross_sales'])</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -326,7 +326,7 @@
                                             <tr>
                                                 <td class="py-2 px-3 font-semibold">{{ \Carbon\Carbon::parse($row['day'])->format('d M') }}</td>
                                                 <td class="py-2 px-3 text-center tabular-nums">{{ (int) $row['quantity_sold'] }}</td>
-                                                <td class="py-2 px-3 text-right tabular-nums">${{ number_format((float) $row['gross_sales'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right tabular-nums">@money((float) $row['gross_sales'])</td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="3" class="py-8 text-center text-zinc-400 italic">No data.</td></tr>
@@ -354,7 +354,7 @@
                                             <tr>
                                                 <td class="py-2 px-3 font-semibold">{{ \Carbon\Carbon::parse($row['week_start'])->format('d M') }}</td>
                                                 <td class="py-2 px-3 text-center tabular-nums">{{ (int) $row['quantity_sold'] }}</td>
-                                                <td class="py-2 px-3 text-right tabular-nums">${{ number_format((float) $row['gross_sales'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right tabular-nums">@money((float) $row['gross_sales'])</td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="3" class="py-8 text-center text-zinc-400 italic">No data.</td></tr>
