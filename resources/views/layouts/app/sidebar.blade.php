@@ -43,9 +43,6 @@
                         <flux:sidebar.item icon="clipboard-list" :href="route('manage.orders.index')" :current="request()->routeIs('manage.orders.index', 'manage.orders.unshifted')" wire:navigate>
                             {{ __('Orders') }}
                         </flux:sidebar.item>
-                        <flux:sidebar.item icon="clock" :href="route('manage.orders.unshifted')" :current="request()->routeIs('manage.orders.unshifted')" wire:navigate class="pl-8 text-sm in-data-flux-sidebar-collapsed-desktop:pl-0">
-                            {{ __("Unshifted") }}
-                        </flux:sidebar.item>
                     @endif
                     @if(auth()->user()->hasPermission('kds.access'))
                         <flux:sidebar.item icon="fire" :href="route('kds.index')" :current="request()->routeIs('kds.index')" wire:navigate>

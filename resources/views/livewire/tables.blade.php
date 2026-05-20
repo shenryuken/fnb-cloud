@@ -564,7 +564,7 @@
     <flux:modal wire:model="showDetailsModal" class="max-w-lg">
         @if($this->detailsTable)
             <div class="space-y-6">
-                <div class="flex items-start justify-between">
+                <div class="flex items-start justify-between pr-10">
                     <div>
                         <flux:heading size="lg">{{ $this->detailsTable->name }}</flux:heading>
                         <flux:badge :color="$this->detailsTable->getStatusColor()" class="mt-2">

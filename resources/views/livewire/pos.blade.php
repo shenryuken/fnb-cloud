@@ -182,8 +182,9 @@
                                     @foreach($activeVariants as $variant)
                                         <button type="button"
                                             wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
-                                            class="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-[10px] font-black uppercase tracking-widest hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
-                                            {{ $variant->receipt_label ?: $variant->name }}
+                                            class="h-10 px-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors flex flex-col items-center justify-center leading-none">
+                                            <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
+                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">RM {{ number_format((float) $variant->price, 2) }}</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -262,8 +263,9 @@
                                 @foreach($activeVariants as $variant)
                                     <button type="button"
                                         wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
-                                        class="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-[10px] font-black uppercase tracking-widest hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
-                                        {{ $variant->receipt_label ?: $variant->name }}
+                                        class="h-10 px-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 hover:border-pink-500/40 hover:text-pink-600 dark:hover:text-pink-400 transition-colors flex flex-col items-center justify-center leading-none">
+                                        <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
+                                        <span class="mt-0.5 text-[10px] font-black tabular-nums text-zinc-500 dark:text-zinc-300">RM {{ number_format((float) $variant->price, 2) }}</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -340,8 +342,9 @@
                                     @foreach($activeVariants as $variant)
                                         <button type="button"
                                             wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
-                                            class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors">
-                                            {{ $variant->receipt_label ?: $variant->name }}
+                                            class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white transition-colors flex flex-col items-center justify-center leading-none">
+                                            <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
+                                            <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">RM {{ number_format((float) $variant->price, 2) }}</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -423,8 +426,9 @@
                                         @foreach($activeVariants as $variant)
                                             <button type="button"
                                                 wire:click.stop="quickAddVariant({{ $product->id }}, {{ $variant->id }})"
-                                                class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors">
-                                                {{ $variant->receipt_label ?: $variant->name }}
+                                                class="py-1 rounded-sm bg-white/10 hover:bg-pink-500 text-white transition-colors flex flex-col items-center justify-center leading-none">
+                                                <span class="text-[10px] font-black uppercase tracking-widest">{{ $variant->receipt_label ?: $variant->name }}</span>
+                                                <span class="mt-0.5 text-[10px] font-black tabular-nums text-white/90">RM {{ number_format((float) $variant->price, 2) }}</span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -589,13 +593,18 @@
                                 <p class="text-xs text-zinc-400 truncate mt-0.5">Set: {{ $item['set_summary'] }}</p>
                             @endif
                             @if(!empty($item['notes']))
-                                <p class="text-xs text-zinc-400 truncate mt-0.5 italic">{{ $item['notes'] }}</p>
+                                <p class="text-xs text-zinc-400 truncate mt-0.5 italic">Note: {{ $item['notes'] }}</p>
                             @endif
                         </div>
                         @if(!$isExisting)
-                            <button type="button" wire:click="removeFromCart({{ $index }})" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:bg-red-500 hover:text-white transition-all">
-                                <flux:icon.x-mark class="w-4 h-4" />
-                            </button>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" wire:click="openCartItemNotes({{ $index }})" title="{{ empty($item['notes']) ? 'Add note' : 'Edit note' }}" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all">
+                                    <flux:icon.pencil-square class="w-4 h-4" />
+                                </button>
+                                <button type="button" wire:click="removeFromCart({{ $index }})" class="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 hover:bg-red-500 hover:text-white transition-all">
+                                    <flux:icon.x-mark class="w-4 h-4" />
+                                </button>
+                            </div>
                         @else
                             <span class="text-xs text-blue-500 font-medium">In Kitchen</span>
                         @endif
@@ -864,9 +873,14 @@
                                                     </div>
                                                 @endif
                                             </div>
-                                            <button type="button" wire:click="removeFromCart({{ $index }})" class="w-7 h-7 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                                                <flux:icon.x-mark class="w-4 h-4" />
-                                            </button>
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" wire:click="openCartItemNotes({{ $index }})" title="{{ empty($item['notes']) ? 'Add note' : 'Edit note' }}" class="w-7 h-7 flex items-center justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/40 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
+                                                    <flux:icon.pencil-square class="w-4 h-4" />
+                                                </button>
+                                                <button type="button" wire:click="removeFromCart({{ $index }})" class="w-7 h-7 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                                    <flux:icon.x-mark class="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div class="mt-2.5 flex items-center justify-between gap-3">
@@ -2247,6 +2261,57 @@
                     <button type="button" wire:click="addToCart" class="flex-1 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all flex items-center justify-center gap-2">
                         <flux:icon.plus-circle class="w-5 h-5" />
                         Add to Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showCartItemNotesModal)
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center">
+                            <flux:icon.pencil-square class="w-5 h-5 text-white" />
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100">Item Note</h3>
+                            <p class="text-xs text-zinc-400 truncate">
+                                @php
+                                    $noteItem = (!is_null($cartItemNotesIndex) && isset($cart[$cartItemNotesIndex])) ? $cart[$cartItemNotesIndex] : null;
+                                @endphp
+                                {{ $noteItem ? ($noteItem['product_name'] ?? 'Item') : 'Item' }}
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeCartItemNotes" class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors">
+                        <flux:icon.x-mark class="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div class="p-4 space-y-3">
+                    <textarea wire:model.live="cartItemNotes" rows="3" placeholder="No spicy, extra ice..."
+                        class="w-full rounded-lg border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"></textarea>
+
+                    @if(count($this->quickNotes) > 0)
+                        <div class="flex flex-wrap gap-1.5">
+                            @foreach($this->quickNotes as $label)
+                                <button type="button" wire:click="applyQuickNoteToCartItem(@js($label))"
+                                    class="px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-medium text-zinc-500 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/30 transition-all">
+                                    {{ $label }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="p-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-2">
+                    <button type="button" wire:click="closeCartItemNotes" class="flex-1 py-2.5 rounded-lg font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="saveCartItemNotes" class="flex-1 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold transition-all">
+                        Save Note
                     </button>
                 </div>
             </div>
