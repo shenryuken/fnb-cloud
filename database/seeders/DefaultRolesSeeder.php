@@ -27,6 +27,10 @@ class DefaultRolesSeeder extends Seeder
             ['name' => 'Manage Roles',      'slug' => 'roles.manage'],
             ['name' => 'Manage Customers',  'slug' => 'customers.manage'],
             ['name' => 'Manage Vouchers',   'slug' => 'vouchers.manage'],
+            ['name' => 'View Landlord Dashboard',   'slug' => 'landlord.dashboard.view'],
+            ['name' => 'Manage Tenants',            'slug' => 'landlord.tenants.manage'],
+            ['name' => 'View Audit Logs',           'slug' => 'landlord.audit.view'],
+            ['name' => 'View System Health',        'slug' => 'landlord.system-health.view'],
         ];
 
         $permissions = [];
@@ -40,21 +44,20 @@ class DefaultRolesSeeder extends Seeder
             [
                 'name'        => 'Super Admin',
                 'slug'        => 'superadmin',
-                'permissions' => array_keys($permissions), // all
+                'permissions' => array_keys($permissions),
             ],
             [
                 'name'        => 'Admin',
                 'slug'        => 'admin',
                 'permissions' => [
-                    'pos.access', 'orders.manage', 'kds.access',
-                    'menu.manage', 'reports.view', 'settings.manage',
-                    'customers.manage', 'vouchers.manage',
+                    'landlord.dashboard.view', 'landlord.tenants.manage',
+                    'landlord.audit.view', 'landlord.system-health.view',
                 ],
             ],
             [
                 'name'        => 'Staff',
                 'slug'        => 'staff',
-                'permissions' => ['pos.access', 'orders.manage', 'kds.access'],
+                'permissions' => ['landlord.dashboard.view'],
             ],
         ];
 

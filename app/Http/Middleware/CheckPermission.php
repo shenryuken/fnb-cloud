@@ -22,8 +22,15 @@ class CheckPermission
             return redirect()->route('login');
         }
 
-        // Landlord users (tenant_id = null) have all permissions
-        if (is_null($user->tenant_id)) {
+        if (
+            $user->tenant_id === null
+            && (
+                $request->routeIs('landlord.*')
+                || $request->is('landlord')
+                || $request->is('landlord/*')
+                || preg_match('~(^|/)landlord(/|$)~', $request->path())
+            )
+        ) {
             return $next($request);
         }
 

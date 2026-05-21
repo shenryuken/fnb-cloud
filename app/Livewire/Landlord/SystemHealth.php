@@ -2,12 +2,10 @@
 
 namespace App\Livewire\Landlord;
 
-use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('System Health')]
-#[Lazy]
 class SystemHealth extends Component
 {
     public array $checks = [];
@@ -99,4 +97,3 @@ class SystemHealth extends Component
         ]);
     }
 }
-

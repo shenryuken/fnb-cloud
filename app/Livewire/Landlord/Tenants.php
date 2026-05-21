@@ -8,12 +8,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Title('Manage Tenants')]
-#[Lazy]
 class Tenants extends Component
 {
     use WithPagination;

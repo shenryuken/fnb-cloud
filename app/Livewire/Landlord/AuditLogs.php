@@ -3,13 +3,11 @@
 namespace App\Livewire\Landlord;
 
 use App\Models\AuditLog;
-use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Title('Audit Logs')]
-#[Lazy]
 class AuditLogs extends Component
 {
     use WithPagination;
@@ -103,4 +101,3 @@ class AuditLogs extends Component
         ]);
     }
 }
-

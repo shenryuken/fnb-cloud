@@ -15,18 +15,26 @@
                     <div class="px-3 pt-2 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
                         {{ __('System Admin') }}
                     </div>
-                    <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
-                        {{ __('Global Stats') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
-                        {{ __('Tenants') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
-                        {{ __('Audit Logs') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
-                        {{ __('System Health') }}
-                    </flux:sidebar.item>
+                    @if(auth()->user()->hasPermission('landlord.dashboard.view'))
+                        <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
+                            {{ __('Global Stats') }}
+                        </flux:sidebar.item>
+                    @endif
+                    @if(auth()->user()->hasPermission('landlord.tenants.manage'))
+                        <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
+                            {{ __('Tenants') }}
+                        </flux:sidebar.item>
+                    @endif
+                    @if(auth()->user()->hasPermission('landlord.audit.view'))
+                        <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
+                            {{ __('Audit Logs') }}
+                        </flux:sidebar.item>
+                    @endif
+                    @if(auth()->user()->hasPermission('landlord.system-health.view'))
+                        <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
+                            {{ __('System Health') }}
+                        </flux:sidebar.item>
+                    @endif
                 @else
                     <div class="px-3 pt-2 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
                         {{ __('Platform') }}
@@ -129,18 +137,26 @@
             <flux:sidebar.nav>
                 @if(auth()->user()->tenant_id === null)
                     <flux:sidebar.group icon="shield-check" :heading="__('System Admin')" class="grid">
-                        <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
-                            {{ __('Global Stats') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
-                            {{ __('Tenants') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
-                            {{ __('Audit Logs') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
-                            {{ __('System Health') }}
-                        </flux:sidebar.item>
+                        @if(auth()->user()->hasPermission('landlord.dashboard.view'))
+                            <flux:sidebar.item icon="home" :href="route('landlord.dashboard')" :current="request()->routeIs('landlord.dashboard')" wire:navigate>
+                                {{ __('Global Stats') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('landlord.tenants.manage'))
+                            <flux:sidebar.item icon="users" :href="route('landlord.tenants.index')" :current="request()->routeIs('landlord.tenants.index')" wire:navigate>
+                                {{ __('Tenants') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('landlord.audit.view'))
+                            <flux:sidebar.item icon="clipboard-document-check" :href="route('landlord.audit-logs.index')" :current="request()->routeIs('landlord.audit-logs.index')" wire:navigate>
+                                {{ __('Audit Logs') }}
+                            </flux:sidebar.item>
+                        @endif
+                        @if(auth()->user()->hasPermission('landlord.system-health.view'))
+                            <flux:sidebar.item icon="wrench-screwdriver" :href="route('landlord.system-health.index')" :current="request()->routeIs('landlord.system-health.index')" wire:navigate>
+                                {{ __('System Health') }}
+                            </flux:sidebar.item>
+                        @endif
                     </flux:sidebar.group>
                 @else
                     <flux:sidebar.group icon="home" :heading="__('Platform')" class="grid">

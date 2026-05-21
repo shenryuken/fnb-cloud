@@ -41,24 +41,18 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-        // If tenant_id is null, it's a landlord/admin who has all permissions
-        if (is_null($this->tenant_id)) {
+        if ($this->tenant_id === null && $this->hasRole('superadmin')) {
             return true;
         }
 
-        // Use withoutGlobalScopes to check both global roles (tenant_id = null) 
-        // and tenant-specific custom roles
-        return Role::withoutGlobalScopes()
-            ->whereHas('users', fn($q) => $q->where('users.id', $this->id))
+        return $this->roles()
             ->whereHas('permissions', fn($q) => $q->where('slug', $permission))
             ->exists();
     }
 
     public function hasRole(string $role): bool
     {
-        // Use withoutGlobalScopes to check both global and custom roles
-        return Role::withoutGlobalScopes()
-            ->whereHas('users', fn($q) => $q->where('users.id', $this->id))
+        return $this->roles()
             ->where('slug', $role)
             ->exists();
     }

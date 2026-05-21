@@ -14,7 +14,12 @@ class TenantIdentification
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('landlord') || $request->is('landlord/*')) {
+        if (
+            $request->routeIs('landlord.*')
+            || $request->is('landlord')
+            || $request->is('landlord/*')
+            || preg_match('~(^|/)landlord(/|$)~', $request->path())
+        ) {
             return $next($request);
         }
 
@@ -25,10 +30,25 @@ class TenantIdentification
             $tenantId = $request->user()->tenant_id;
         }
 
-        // If a logged-in user has no tenant_id, treat them as a landlord/system user and avoid binding
-        // a tenant based on host/header (prevents cross-scope issues on admin pages).
+        // If a logged-in user has no tenant_id, treat them as a landlord/system user.
+        // Landlord users must not access tenant-scoped pages (POS/KDS/Orders/Menu/etc) without impersonation.
         if (!$tenantId && $request->user()) {
-            return $next($request);
+            if (
+                $request->is('dashboard')
+                || $request->is('settings')
+                || $request->is('settings/*')
+                || $request->is('logout')
+                || $request->is('livewire/*')
+                || $request->is('up')
+            ) {
+                return $next($request);
+            }
+
+            if ($request->expectsJson()) {
+                abort(403, 'Access denied.');
+            }
+
+            return redirect()->route('landlord.dashboard');
         }
 
         // 2. Fallback to header (API)
