@@ -17,6 +17,14 @@ class Tenants extends Component
     use WithPagination;
 
     public $search = '';
+    public ?int $editTenantId = null;
+    public bool $createTenant = false;
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'editTenantId' => ['except' => null, 'as' => 'edit'],
+        'createTenant' => ['except' => false, 'as' => 'create'],
+    ];
     
     // Create/Edit Tenant state
     public $showModal = false;
@@ -54,6 +62,18 @@ class Tenants extends Component
         'suspended_reason' => 'nullable|string|max:255',
     ];
 
+    public function mount(): void
+    {
+        if ($this->editTenantId) {
+            $this->edit($this->editTenantId);
+            return;
+        }
+
+        if ($this->createTenant) {
+            $this->create();
+        }
+    }
+
     public function updatedName($value)
     {
         if (!$this->editingTenantId) {
@@ -63,6 +83,8 @@ class Tenants extends Component
 
     public function create()
     {
+        $this->editTenantId = null;
+        $this->createTenant = true;
         $this->reset([
             'editingTenantId',
             'name',
@@ -85,24 +107,44 @@ class Tenants extends Component
         $this->showModal = true;
     }
 
-    public function edit(Tenant $tenant)
+    public function edit(int $tenantId)
     {
-        $this->editingTenantId = $tenant->id;
-        $this->name = $tenant->name;
-        $this->slug = $tenant->slug;
-        $this->domain = $tenant->domain;
-        $this->address = $tenant->address;
-        $this->phone = $tenant->phone;
-        $this->logo_url = $tenant->logo_url;
-        $this->receipt_email = $tenant->receipt_email;
-        $this->receipt_header = $tenant->receipt_header;
-        $this->receipt_footer = $tenant->receipt_footer;
-        $this->is_active = $tenant->is_active;
-        $this->status = $tenant->status ?? ($tenant->is_active ? 'active' : 'suspended');
-        $this->plan = $tenant->plan ?? 'standard';
-        $this->trial_ends_at = optional($tenant->trial_ends_at)->format('Y-m-d\TH:i');
-        $this->suspended_reason = $tenant->suspended_reason ?? '';
-        $this->showModal = true;
+        try {
+            $tenant = Tenant::find($tenantId);
+
+            if (!$tenant) {
+                $this->dispatch('notify', message: 'Tenant not found.', type: 'error');
+                return;
+            }
+
+            $this->editTenantId = $tenant->id;
+            $this->editingTenantId = $tenant->id;
+            $this->name = $tenant->name;
+            $this->slug = $tenant->slug;
+            $this->domain = $tenant->domain;
+            $this->address = $tenant->address;
+            $this->phone = $tenant->phone;
+            $this->logo_url = $tenant->logo_url;
+            $this->receipt_email = $tenant->receipt_email;
+            $this->receipt_header = $tenant->receipt_header;
+            $this->receipt_footer = $tenant->receipt_footer;
+            $this->is_active = $tenant->is_active;
+            $this->status = $tenant->status ?? ($tenant->is_active ? 'active' : 'suspended');
+            $this->plan = $tenant->plan ?? 'standard';
+            $this->trial_ends_at = optional($tenant->trial_ends_at)->format('Y-m-d\TH:i');
+            $this->suspended_reason = $tenant->suspended_reason ?? '';
+            $this->showModal = true;
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
+        }
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->editingTenantId = null;
+        $this->editTenantId = null;
+        $this->createTenant = false;
     }
 
     public function save()
@@ -234,39 +276,49 @@ class Tenants extends Component
         $this->dispatch('notify', message: 'Tenant saved successfully.', type: 'success');
     }
 
-    public function toggleStatus(Tenant $tenant)
+    public function toggleStatus(int $tenantId)
     {
-        $before = $tenant->only(['is_active', 'status', 'suspended_at', 'suspended_reason']);
+        try {
+            $tenant = Tenant::find($tenantId);
+            if (!$tenant) {
+                $this->dispatch('notify', message: 'Tenant not found.', type: 'error');
+                return;
+            }
 
-        if (($tenant->status ?? 'active') === 'suspended' || !$tenant->is_active) {
-            $tenant->update([
-                'is_active' => true,
-                'status' => 'active',
-                'suspended_at' => null,
-                'suspended_reason' => null,
+            $before = $tenant->only(['is_active', 'status', 'suspended_at', 'suspended_reason']);
+
+            if (($tenant->status ?? 'active') === 'suspended' || !$tenant->is_active) {
+                $tenant->update([
+                    'is_active' => true,
+                    'status' => 'active',
+                    'suspended_at' => null,
+                    'suspended_reason' => null,
+                ]);
+            } else {
+                $tenant->update([
+                    'is_active' => false,
+                    'status' => 'suspended',
+                    'suspended_at' => now(),
+                    'suspended_reason' => 'Suspended by landlord',
+                ]);
+            }
+
+            AuditLog::create([
+                'tenant_id' => null,
+                'actor_user_id' => auth()->id(),
+                'action' => 'landlord.tenant.toggled',
+                'subject_type' => Tenant::class,
+                'subject_id' => $tenant->id,
+                'meta' => [
+                    'before' => $before,
+                    'after' => $tenant->only(array_keys($before)),
+                ],
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
             ]);
-        } else {
-            $tenant->update([
-                'is_active' => false,
-                'status' => 'suspended',
-                'suspended_at' => now(),
-                'suspended_reason' => 'Suspended by landlord',
-            ]);
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
         }
-
-        AuditLog::create([
-            'tenant_id' => null,
-            'actor_user_id' => auth()->id(),
-            'action' => 'landlord.tenant.toggled',
-            'subject_type' => Tenant::class,
-            'subject_id' => $tenant->id,
-            'meta' => [
-                'before' => $before,
-                'after' => $tenant->only(array_keys($before)),
-            ],
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
     }
 
     public function render()

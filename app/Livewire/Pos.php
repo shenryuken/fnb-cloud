@@ -1924,6 +1924,8 @@ class Pos extends Component
         $this->isSplitPayment = false;
         $this->paymentSplits = [];
         $this->showUnpaidOrdersModal = false;
+        $this->showHeldOrdersModal = false;
+        $this->showCartMobile = false;
         $this->isPaying = true;
     }
 
@@ -2059,6 +2061,7 @@ class Pos extends Component
         $this->selectedUnpaidOrder = null;
         $this->ordersToPayTogether = [];
         $this->isPaying = false;
+        $this->showCartMobile = true;
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
     }
 
