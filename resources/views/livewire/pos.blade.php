@@ -153,17 +153,17 @@
                         </div>
 
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0">
-                                    <div class="font-semibold text-sm text-zinc-800 dark:text-zinc-100 leading-tight break-words whitespace-normal overflow-hidden max-h-10">
-                                        {{ $product->name }}
-                                    </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-sm text-zinc-800 dark:text-zinc-100 leading-tight break-words whitespace-normal overflow-hidden max-h-10">
+                                    {{ $product->name }}
+                                </div>
+                                <div class="mt-0.5 flex items-center justify-between gap-2">
                                     <div class="text-[11px] text-zinc-400 truncate">
                                         {{ $product->category->name ?? '' }}
                                     </div>
-                                </div>
-                                <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                    @money($product->price)
+                                    <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
+                                        @money($product->price)
+                                    </div>
                                 </div>
                             </div>
 
@@ -237,16 +237,17 @@
                             </div>
 
                             <div class="min-w-0 flex-1">
-                                <div class="font-semibold text-sm text-zinc-800 dark:text-zinc-100 truncate">
+                                <div class="font-semibold text-sm text-zinc-800 dark:text-zinc-100 leading-tight break-words whitespace-normal overflow-hidden max-h-10">
                                     {{ $product->name }}
                                 </div>
-                                <div class="text-[11px] text-zinc-400 truncate">
-                                    {{ $product->category->name ?? '' }}
+                                <div class="mt-0.5 flex items-center justify-between gap-2">
+                                    <div class="text-[11px] text-zinc-400 truncate">
+                                        {{ $product->category->name ?? '' }}
+                                    </div>
+                                    <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
+                                        @money($product->price)
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                @money($product->price)
                             </div>
                         </div>
 
@@ -308,12 +309,12 @@
 
                         <div class="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/55"></div>
 
-                        <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-2 pointer-events-none">
+                        <div class="absolute top-2 left-2 right-2 pointer-events-none">
                             <div class="min-w-0">
-                                <div class="text-white font-black text-sm truncate">
+                                <div class="text-white font-black text-sm leading-tight break-words whitespace-normal overflow-hidden max-h-10">
                                     {{ $product->name }}
                                 </div>
-                                <div class="text-white/80 text-[11px] font-semibold tabular-nums">
+                                <div class="mt-0.5 text-white/80 text-[11px] font-semibold tabular-nums">
                                     @money($product->price)
                                 </div>
                             </div>
@@ -449,16 +450,18 @@
                             @endif
                         </div>
                         <div class="flex-1 px-3 py-2.5">
-                            <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
                                 <h3 class="font-semibold text-zinc-800 dark:text-zinc-100 text-sm leading-tight break-words whitespace-normal overflow-hidden max-h-10">
                                     {{ $product->name }}
                                 </h3>
-                                <span class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
-                                    @money($product->price)
-                                </span>
-                            </div>
-                            <div class="mt-1 text-[11px] text-zinc-400 truncate">
-                                {{ $product->category->name ?? '' }}
+                                <div class="mt-1 flex items-center justify-between gap-2">
+                                    <div class="text-[11px] text-zinc-400 truncate">
+                                        {{ $product->category->name ?? '' }}
+                                    </div>
+                                    <span class="shrink-0 text-sm font-black text-pink-600 dark:text-pink-400 tabular-nums">
+                                        @money($product->price)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
