@@ -45,7 +45,7 @@ multi-tenant restaurant POS platform.
   middleware. Default landlord roles (Super Admin, Admin, Staff) and restaurant
   roles (Owner, Manager, Kitchen Staff, Waiter, Cashier).
 - **Landlord (platform) side** — global stats dashboard, tenant management,
-  audit logs, and system health monitoring.
+ain   audit logs, and system health monitoring.
 - **Point of Sale (POS)** — menu grid with categories, cart with variants,
   add-ons, set/combo products, dine-in and takeaway, discounts, vouchers,
   loyalty redemption, split payments, hold/recall orders, pay-later, and
