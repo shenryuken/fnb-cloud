@@ -27,6 +27,10 @@ use Illuminate\Support\Str;
 #[Lazy]
 class Pos extends Component
 {
+    protected $listeners = [
+        'payment-collected' => 'refreshAfterPayment'
+    ];
+
     public $search = '';
     public $selectedCategoryId = null;
 
@@ -1907,26 +1911,16 @@ class Pos extends Component
      */
     public function selectUnpaidOrder(int $orderId): void
     {
-        $order = Order::with(['items.product', 'items.variant', 'items.addons', 'table'])
-            ->where('payment_status', 'unpaid')
-            ->find($orderId);
-
-        if (!$order) {
-            $this->dispatch('notify', message: 'Order not found or already paid.', type: 'error');
-            return;
-        }
-
-        $this->selectedUnpaidOrder = $order;
-        $this->totalAmount = (float) $order->total_amount;
-        $this->amountReceived = 0;
-        $this->changeAmount = 0;
-        $this->paymentMethod = 'cash';
-        $this->isSplitPayment = false;
-        $this->paymentSplits = [];
         $this->showUnpaidOrdersModal = false;
         $this->showHeldOrdersModal = false;
         $this->showCartMobile = false;
-        $this->isPaying = true;
+        $this->dispatch('open-collect-payment', orderId: $orderId);
+    }
+
+    public function refreshAfterPayment(): void
+    {
+        // Refresh orders data
+        unset($this->unpaidOrders);
     }
 
     /**

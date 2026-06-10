@@ -170,6 +170,8 @@ class Orders extends Component
         }
     }
 
+
+
     public function openOrder(Order $order): void
     {
         $this->viewingOrder = $order->load([

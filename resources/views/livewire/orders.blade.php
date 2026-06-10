@@ -182,7 +182,17 @@
                                 </div>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="font-black">@money($order->total_amount)</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-black">@money($order->total_amount)</span>
+                                    @php
+                                        $paymentStatusColor = match($order->payment_status) {
+                                            'paid' => 'green',
+                                            'unpaid' => 'yellow',
+                                            default => 'zinc',
+                                        };
+                                    @endphp
+                                    <flux:badge :color="$paymentStatusColor" size="sm">{{ $order->payment_status }}</flux:badge>
+                                </div>
                                 <div class="text-xs text-zinc-400 uppercase">{{ $order->payment_method }}</div>
                             </td>
                             <td class="py-3 px-4">
@@ -198,6 +208,16 @@
                                         onclick="window.open('{{ route('pos.receipt', $order) }}', '_blank', 'width=400,height=600')"
                                         title="Print Receipt"
                                     />
+                                    @if($order->payment_status === 'unpaid')
+                                        <flux:button
+                                            size="sm"
+                                            variant="primary"
+                                            icon="credit-card"
+                                            wire:click="$dispatch('open-collect-payment', { orderId: {{ $order->id }} })"
+                                        >
+                                            Collect
+                                        </flux:button>
+                                    @endif
                                     @if($this->canResetOrders)
                                         <flux:button
                                             size="sm"
@@ -635,5 +655,7 @@
             </div>
         </div>
     </flux:modal>
+
+    <livewire:collect-payment />
 
 </div>
