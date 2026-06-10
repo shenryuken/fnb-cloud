@@ -8,7 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- _Work in progress for v2.0.0._
+- **Domain layer (Actions / Services / DTOs)** — order business logic extracted
+  into `CreateOrderAction`, `BuildOrderDataAction`, `OrderPricingService`,
+  `VoucherService`, and `LoyaltyService`, with `CreateOrderData` / `CartItemData`
+  DTOs. Web (Livewire) and the API now share one canonical order-creation path.
+- **Sanctum API authentication** — per-device, revocable, scoped personal access
+  tokens replace the legacy single-token guard. Default abilities: `orders:read`,
+  `orders:write`, `catalog:read`.
+- **Versioned REST API (`/api/v1`)** — thin controllers delegating to the domain
+  layer: menu catalog (with `?since=` delta), order list/show/create. Server-side
+  authoritative pricing — client-sent prices are never trusted.
+- **Offline sync (idempotent, create-only)** — `GET /api/v1/sync/bootstrap` delta
+  pull and `POST /api/v1/sync/orders` batch replay, deduplicated on a per-order
+  `client_uuid`. New `client_uuid`, `synced_at`, and `source` columns on orders.
+- **API documentation** — `docs/API.md` covering architecture, auth, endpoints,
+  and the offline sync contract.
+- **Inventory management** — per-product and per-variant stock tracking with
+  configurable low-stock thresholds. New `Inventory` management screen (stat
+  cards, search/filter, inline tracking toggle, restock/stock-take adjustments,
+  and a recent-movements feed) gated behind a new `inventory.manage` permission.
+- **Stock movement audit trail** — every stock change (sale, restock, adjustment,
+  void return) is recorded in `stock_movements` with a point-in-time balance.
+- **Automatic stock deduction** — `CreateOrderAction` deducts tracked items on
+  every order (POS and API alike) via the new `InventoryService`; cancelling an
+  order returns the stock. Stock fields ride along in the `/api/v1/menu` payload
+  so offline clients see live availability.
+
+### Changed
+- `Pos::checkout()` now delegates persistence to `CreateOrderAction`, shrinking the
+  component by ~220 lines while preserving transaction and row-lock semantics.
+
+### Removed
+- Legacy `Api\OrderController` and `Api\MenuController` (superseded by `Api\V1`),
+  eliminating the divergent duplicate order logic.
 
 ## [1.0.0] - 2026-06-10
 
@@ -23,7 +55,7 @@ multi-tenant restaurant POS platform.
   middleware. Default landlord roles (Super Admin, Admin, Staff) and restaurant
   roles (Owner, Manager, Kitchen Staff, Waiter, Cashier).
 - **Landlord (platform) side** — global stats dashboard, tenant management,
-  audit logs, and system health monitoring.
+ain   audit logs, and system health monitoring.
 - **Point of Sale (POS)** — menu grid with categories, cart with variants,
   add-ons, set/combo products, dine-in and takeaway, discounts, vouchers,
   loyalty redemption, split payments, hold/recall orders, pay-later, and
