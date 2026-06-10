@@ -126,6 +126,10 @@
             </flux:sidebar.item>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+
+            <div class="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden">
+                {{ __('FnB Cloud') }} &middot; v{{ config('app.version') }}
+            </div>
         </flux:sidebar>
 
         <flux:sidebar collapsible="mobile" sticky breakpoint="80rem" class="xl:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
@@ -243,6 +247,10 @@
             <flux:sidebar.item icon="book-open" :href="route('guide.index')" :current="request()->routeIs('guide.index')" wire:navigate class="text-zinc-400">
                 {{ __('User Guide') }}
             </flux:sidebar.item>
+
+            <div class="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                {{ __('FnB Cloud') }} &middot; v{{ config('app.version') }}
+            </div>
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
