@@ -96,6 +96,12 @@
                         </flux:sidebar.item>
                     @endif
 
+                    @if(auth()->user()->hasPermission('inventory.manage'))
+                        <flux:sidebar.item icon="cube" :href="route('manage.inventory.index')" :current="request()->routeIs('manage.inventory.index')" wire:navigate>
+                            {{ __('Inventory') }}
+                        </flux:sidebar.item>
+                    @endif
+
                     @if(auth()->user()->hasPermission('customers.manage') || auth()->user()->hasPermission('vouchers.manage') || auth()->user()->hasPermission('settings.manage'))
                         <div class="px-3 pt-3 pb-1 text-[11px] font-black text-zinc-400 uppercase tracking-widest in-data-flux-sidebar-collapsed-desktop:hidden">
                             {{ __('Loyalty') }}
@@ -216,6 +222,14 @@
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="plus-circle" :href="route('manage.addons.index')" :current="request()->routeIs('manage.addons.index')" wire:navigate>
                                 {{ __('Add-ons') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
+
+                    @if(auth()->user()->hasPermission('inventory.manage'))
+                        <flux:sidebar.group icon="cube" :heading="__('Inventory')" class="grid">
+                            <flux:sidebar.item icon="cube" :href="route('manage.inventory.index')" :current="request()->routeIs('manage.inventory.index')" wire:navigate>
+                                {{ __('Stock Levels') }}
                             </flux:sidebar.item>
                         </flux:sidebar.group>
                     @endif

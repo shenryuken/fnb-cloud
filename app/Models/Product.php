@@ -23,6 +23,9 @@ class Product extends Model
         'tile_color',
         'is_active',
         'is_available',
+        'track_stock',
+        'stock_quantity',
+        'low_stock_threshold',
         'sort_order',
     ];
 
@@ -30,8 +33,36 @@ class Product extends Model
         'price' => 'decimal:2',
         'is_active' => 'boolean',
         'is_available' => 'boolean',
+        'track_stock' => 'boolean',
+        'stock_quantity' => 'integer',
+        'low_stock_threshold' => 'integer',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * Whether this product (without a tracked variant) is currently low on stock.
+     */
+    public function isLowStock(): bool
+    {
+        return $this->track_stock
+            && $this->stock_quantity <= $this->low_stock_threshold;
+    }
+
+    /**
+     * Whether this product is out of stock at the product level.
+     */
+    public function isOutOfStock(): bool
+    {
+        return $this->track_stock && $this->stock_quantity <= 0;
+    }
+
+    /**
+     * Get the stock movements for the product.
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 
     /**
      * Get the category that owns the product.

@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `client_uuid`. New `client_uuid`, `synced_at`, and `source` columns on orders.
 - **API documentation** — `docs/API.md` covering architecture, auth, endpoints,
   and the offline sync contract.
+- **Inventory management** — per-product and per-variant stock tracking with
+  configurable low-stock thresholds. New `Inventory` management screen (stat
+  cards, search/filter, inline tracking toggle, restock/stock-take adjustments,
+  and a recent-movements feed) gated behind a new `inventory.manage` permission.
+- **Stock movement audit trail** — every stock change (sale, restock, adjustment,
+  void return) is recorded in `stock_movements` with a point-in-time balance.
+- **Automatic stock deduction** — `CreateOrderAction` deducts tracked items on
+  every order (POS and API alike) via the new `InventoryService`; cancelling an
+  order returns the stock. Stock fields ride along in the `/api/v1/menu` payload
+  so offline clients see live availability.
 
 ### Changed
 - `Pos::checkout()` now delegates persistence to `CreateOrderAction`, shrinking the

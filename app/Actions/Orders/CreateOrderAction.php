@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductAddon;
 use App\Models\RestaurantTable;
+use App\Services\InventoryService;
 use App\Services\LoyaltyService;
 use App\Services\VoucherService;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ class CreateOrderAction
     public function __construct(
         private VoucherService $vouchers,
         private LoyaltyService $loyalty,
+        private InventoryService $inventory,
     ) {}
 
     public function execute(CreateOrderData $data): Order
@@ -115,6 +117,9 @@ class CreateOrderAction
             }
 
             $this->persistItems($order, $data->items);
+
+            // Deduct stock for tracked items (no-op for untracked products/variants).
+            $this->inventory->deductForOrder($order);
 
             if ($customer) {
                 $issuedCodes = $this->vouchers->issueOnSpend($customer, $order);
