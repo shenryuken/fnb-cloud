@@ -33,10 +33,12 @@ class AuthController extends Controller
         }
 
         $deviceName = $request->input('device_name', 'api');
-        $token = $user->createToken($deviceName)->plainTextToken;
+        $token = $user->createToken($deviceName, self::defaultAbilities())->plainTextToken;
 
         return response()->json([
             'token' => $token,
+            'token_type' => 'Bearer',
+            'abilities' => self::defaultAbilities(),
             'user' => $user->only(['id', 'name', 'email', 'tenant_id']),
             'tenant' => $user->tenant?->only(['id', 'name', 'slug']),
         ]);
@@ -75,13 +77,25 @@ class AuthController extends Controller
         [$tenant, $user] = $result;
 
         $deviceName = $validated['device_name'] ?? 'api';
-        $token = $user->createToken($deviceName)->plainTextToken;
+        $token = $user->createToken($deviceName, self::defaultAbilities())->plainTextToken;
 
         return response()->json([
             'token' => $token,
+            'token_type' => 'Bearer',
+            'abilities' => self::defaultAbilities(),
             'user' => $user->only(['id', 'name', 'email', 'tenant_id']),
             'tenant' => $tenant->only(['id', 'name', 'slug']),
         ], 201);
+    }
+
+    /**
+     * Default abilities granted to a freshly issued device token.
+     *
+     * @return array<int, string>
+     */
+    private static function defaultAbilities(): array
+    {
+        return ['orders:read', 'orders:write', 'catalog:read'];
     }
 
     /**
