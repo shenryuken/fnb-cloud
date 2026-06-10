@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value is the current release version of FnB Cloud, following
+    | Semantic Versioning (MAJOR.MINOR.PATCH). Bump this with each release
+    | and keep CHANGELOG.md in sync. Can be overridden via the APP_VERSION
+    | environment variable for build-specific tagging.
+    |
+    */
+
+    'version' => env('APP_VERSION', '1.0.0'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
