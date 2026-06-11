@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **QR self-ordering** — guests scan a per-table QR code to reach a public,
+  mobile-first ordering page (`/order/{token}`) with no login. Orders flow
+  through the same `BuildOrderDataAction` + `CreateOrderAction` pipeline as the
+  POS (server-authoritative pricing, `source = 'qr'`, `payment_status = 'unpaid'`),
+  landing in KDS/Orders like any staff order. Each table carries an unguessable
+  `qr_token`; a venue-wide `qr_ordering_enabled` toggle gates the feature, and
+  the Tables screen gains a printable QR code (with regenerate) per table.
 - **Domain layer (Actions / Services / DTOs)** — order business logic extracted
   into `CreateOrderAction`, `BuildOrderDataAction`, `OrderPricingService`,
   `VoucherService`, and `LoyaltyService`, with `CreateOrderData` / `CartItemData`

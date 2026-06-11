@@ -378,6 +378,7 @@
                                             <flux:menu>
                                                 <flux:menu.item icon="eye" wire:click="viewDetails({{ $table->id }})">View Details</flux:menu.item>
                                                 <flux:menu.item icon="pencil-square" wire:click="edit({{ $table->id }})">Edit Table</flux:menu.item>
+                                                <flux:menu.item icon="qr-code" wire:click="showQrCode({{ $table->id }})">QR Code</flux:menu.item>
                                                 @if($table->status === 'available')
                                                     <flux:menu.item icon="clock" wire:click="openReservationModal({{ $table->id }})">Make Reservation</flux:menu.item>
                                                     <flux:menu.item icon="squares-plus" wire:click="openMergeModal({{ $table->id }})">Merge Tables</flux:menu.item>
@@ -915,6 +916,78 @@
                     <flux:icon.trash class="w-4 h-4 mr-1" />
                     Void Orders & Clear Table
                 </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- QR code modal --}}
+    <flux:modal wire:model="showQrModal" class="max-w-md">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">Table QR Code</flux:heading>
+                <flux:subheading>Guests scan this to view the menu and order from their table.</flux:subheading>
+            </div>
+
+            @if(!$this->qrOrderingEnabled)
+                <div class="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    QR self-ordering is currently <strong>off</strong>. Turn it on with the toggle in the header so guests can place orders.
+                </div>
+            @endif
+
+            @if($qrUrl)
+                <div
+                    wire:key="qr-{{ $qrToken }}"
+                    x-data="{
+                        render() {
+                            const el = this.$refs.canvas;
+                            el.innerHTML = '';
+                            const draw = () => new QRCode(el, {
+                                text: @js($qrUrl),
+                                width: 220,
+                                height: 220,
+                                correctLevel: QRCode.CorrectLevel.M,
+                            });
+                            if (window.QRCode) { draw(); }
+                            else {
+                                const s = document.createElement('script');
+                                s.src = 'https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js';
+                                s.onload = draw;
+                                document.head.appendChild(s);
+                            }
+                        }
+                    }"
+                    x-init="$nextTick(() => render())"
+                    @qr-token-updated.window="$nextTick(() => render())"
+                    class="flex flex-col items-center gap-4"
+                >
+                    <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-zinc-200" x-ref="canvas" id="qr-print-area"></div>
+
+                    <div class="w-full rounded-lg bg-zinc-50 px-3 py-2 text-center dark:bg-zinc-800">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Ordering link</p>
+                        <p class="break-all text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $qrUrl }}</p>
+                    </div>
+
+                    <div class="flex w-full items-center gap-2">
+                        <flux:button class="flex-1" icon="printer"
+                            x-on:click="
+                                const w = window.open('', '_blank');
+                                w.document.write('<html><head><title>Table QR</title></head><body style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;\'>' + document.getElementById('qr-print-area').innerHTML + '<p style=\'margin-top:16px;font-size:18px;\'>Scan to order</p></body></html>');
+                                w.document.close();
+                                w.focus();
+                                w.print();
+                            "
+                        >Print</flux:button>
+                        <flux:button class="flex-1" variant="ghost" icon="arrow-path"
+                            wire:click="rotateQrToken"
+                            x-on:click="$nextTick(() => $dispatch('qr-token-updated'))"
+                            wire:confirm="Regenerate this QR code? Previously printed codes will stop working."
+                        >Regenerate</flux:button>
+                    </div>
+                </div>
+            @endif
+
+            <div class="flex justify-end">
+                <flux:button wire:click="closeQrModal" variant="ghost">Close</flux:button>
             </div>
         </div>
     </flux:modal>
