@@ -14,8 +14,6 @@ class Order extends Model
 
     protected $fillable = [
         'tenant_id',
-        'client_uuid',
-        'source',
         'shift_id',
         'customer_id',
         'user_id',

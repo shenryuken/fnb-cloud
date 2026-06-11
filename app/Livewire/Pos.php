@@ -21,6 +21,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 #[Title('POS')]
 #[Lazy]
@@ -1417,59 +1418,280 @@ class Pos extends Component
             }
         }
 
-        $data = new \App\DTOs\CreateOrderData(
-            items: array_map(
-                fn ($item) => \App\DTOs\CartItemData::fromCartArray($item),
-                $this->cart,
-            ),
-            orderType: $this->orderType,
-            customerId: $this->customerId,
-            tableId: $this->tableId,
-            tableNumber: $this->tableNumber,
-            notes: $this->orderNotes,
-            shiftId: $this->currentShift?->id,
-            userId: Auth::id(),
-            subtotalAmount: $this->subTotalAmount,
-            totalAmount: $this->totalAmount,
-            discountType: $this->discountType,
-            discountValue: $this->discountValue,
-            discountAmount: $this->discountAmount,
-            manualDiscountAmount: $this->manualDiscountAmount,
-            taxRate: $this->taxRate,
-            taxAmount: $this->taxAmount,
-            voucherCode: filled($this->appliedVoucherCode) ? $this->appliedVoucherCode : null,
-            pointsRedeemed: max(0, (int) $this->appliedPoints),
-            pointsRedeemPoints: (float) $this->pointsRedeemPoints,
-            pointsRedeemAmount: (float) $this->pointsRedeemAmount,
-            pointsEarnRate: (float) $this->pointsEarnRate,
-            pointsPromoMultiplier: $this->currentPointsPromoMultiplier(),
-            paymentMethod: $this->paymentMethod,
-            isSplitPayment: $this->isSplitPayment,
-            paymentSplits: $this->isSplitPayment ? $this->paymentSplits : null,
-            amountReceived: $this->amountReceived,
-            changeAmount: $this->changeAmount,
-            paymentStatus: 'paid',
-            status: 'completed',
-            source: 'web',
-        );
+        $issuedCodes = [];
 
-        try {
-            $this->lastOrder = app(\App\Actions\Orders\CreateOrderAction::class)->execute($data);
-        } catch (\App\Exceptions\OrderException $e) {
-            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
-            return;
-        }
+        $this->lastOrder = DB::transaction(function () use (&$issuedCodes) {
+            $voucherCode = filled($this->appliedVoucherCode) ? strtoupper(trim($this->appliedVoucherCode)) : null;
+            $points = max(0, (int) $this->appliedPoints);
+            $earnedPoints = 0;
+            $voucher = null;
+            $customerVoucher = null;
+
+            if ($voucherCode) {
+                $customerVoucher = CustomerVoucher::query()->where('code', $voucherCode)->lockForUpdate()->first();
+                if ($customerVoucher) {
+                    $voucher = Voucher::query()->where('id', $customerVoucher->voucher_id)->lockForUpdate()->first();
+                } else {
+                    $voucher = Voucher::query()->where('code', $voucherCode)->lockForUpdate()->first();
+                }
+
+                if (
+                    !$voucher
+                    || !(bool) $voucher->is_active
+                    || ($voucher->starts_at && now()->lt($voucher->starts_at))
+                    || ($voucher->ends_at && now()->gt($voucher->ends_at))
+                    || ($voucher->usage_limit !== null && (int) $voucher->usage_count >= (int) $voucher->usage_limit)
+                ) {
+                    $this->dispatch('notify', message: 'Voucher code is not valid.', type: 'error');
+                    return null;
+                }
+            }
+
+            $customer = null;
+            if ($this->customerId) {
+                $customer = Customer::where('id', $this->customerId)->lockForUpdate()->first();
+            }
+
+            if ($voucher && $customerVoucher) {
+                if (!$customer) {
+                    $this->dispatch('notify', message: 'Select a customer to use this voucher.', type: 'error');
+                    return null;
+                }
+                if ((int) $customerVoucher->customer_id !== (int) $customer->id) {
+                    $this->dispatch('notify', message: 'This voucher is not assigned to this customer.', type: 'error');
+                    return null;
+                }
+                if ($customerVoucher->used_at !== null || $customerVoucher->used_order_id !== null) {
+                    $this->dispatch('notify', message: 'This voucher has already been used.', type: 'error');
+                    return null;
+                }
+                if ($customerVoucher->expires_at && now()->gt($customerVoucher->expires_at)) {
+                    $this->dispatch('notify', message: 'This voucher has expired.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && ($voucher->per_customer_limit !== null || (bool) $voucher->first_time_only)) {
+                if (!$customer) {
+                    $this->dispatch('notify', message: 'Select a customer to use this voucher.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && !(bool) $voucher->can_combine_with_points && $points > 0) {
+                $this->dispatch('notify', message: 'This voucher cannot be combined with points.', type: 'error');
+                return null;
+            }
+            if ($voucher && !(bool) $voucher->can_combine_with_manual_discount && (float) $this->manualDiscountAmount > 0) {
+                $this->dispatch('notify', message: 'This voucher cannot be combined with manual discount.', type: 'error');
+                return null;
+            }
+
+            if ($voucher && $customer && (bool) $voucher->first_time_only) {
+                $hasOrders = Order::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('payment_status', 'paid')
+                    ->exists();
+                if ($hasOrders) {
+                    $this->dispatch('notify', message: 'This voucher is only for first-time customers.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($voucher && $customer && $voucher->per_customer_limit !== null) {
+                $used = Order::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('voucher_id', $voucher->id)
+                    ->where('payment_status', 'paid')
+                    ->lockForUpdate()
+                    ->count();
+                if ($used >= (int) $voucher->per_customer_limit) {
+                    $this->dispatch('notify', message: 'This voucher has already been used by this customer.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($points > 0) {
+                if (!$customer) {
+                    $this->dispatch('notify', message: 'Select a customer to redeem points.', type: 'error');
+                    return null;
+                }
+
+                if ((int) $customer->points_balance < $points) {
+                    $this->dispatch('notify', message: 'Customer does not have enough points.', type: 'error');
+                    return null;
+                }
+            }
+
+            if ($customer && $this->pointsEarnRate > 0) {
+                $subTotal = round(max(0, (float) $this->subTotalAmount), 2);
+                $discount = round(max(0, (float) $this->discountAmount), 2);
+                $earnBase = round(max(0, $subTotal - $discount), 2);
+                $multiplier = $this->currentPointsPromoMultiplier();
+                $earnedPoints = (int) floor($earnBase * (float) $this->pointsEarnRate * $multiplier);
+                $earnedPoints = max(0, $earnedPoints);
+
+                $newBalance = (int) $customer->points_balance - $points + $earnedPoints;
+                $customer->update(['points_balance' => max(0, $newBalance)]);
+            } elseif ($customer && $points > 0) {
+                $customer->update(['points_balance' => max(0, (int) $customer->points_balance - $points)]);
+            }
+
+            $order = Order::create([
+                'shift_id' => $this->currentShift?->id,
+                'user_id' => Auth::id(),
+                'customer_id' => $this->customerId,
+                'table_id' => $this->orderType === 'dine_in' ? $this->tableId : null,
+                'table_number' => $this->orderType === 'dine_in' ? $this->tableNumber : null,
+                'order_type' => $this->orderType,
+                'notes' => $this->orderNotes,
+                'status' => 'completed', // POS orders are usually completed immediately
+                'total_amount' => $this->totalAmount,
+                'subtotal_amount' => $this->subTotalAmount,
+                'discount_type' => $this->discountType,
+                'discount_value' => $this->discountValue,
+                'discount_amount' => $this->discountAmount,
+                'voucher_id' => $voucher?->id,
+                'voucher_code' => $voucherCode,
+                'points_redeemed' => $points,
+                'points_earned' => $earnedPoints,
+                'tax_rate' => $this->taxRate,
+                'tax_amount' => $this->taxAmount,
+                'payment_method' => $this->isSplitPayment
+                    ? implode('+', array_unique(array_column($this->paymentSplits, 'method')))
+                    : $this->paymentMethod,
+                'payment_splits' => $this->isSplitPayment ? $this->paymentSplits : null,
+                'payment_status' => 'paid',
+                'amount_paid' => $this->isSplitPayment
+                    ? round(collect($this->paymentSplits)->sum('amount'), 2)
+                    : $this->amountReceived,
+                'change_amount' => $this->isSplitPayment ? 0 : $this->changeAmount,
+            ]);
+
+            if ($voucherCode) {
+                Voucher::where('id', $voucher->id)->lockForUpdate()->increment('usage_count');
+                if ($customerVoucher) {
+                    $customerVoucher->update([
+                        'used_order_id' => $order->id,
+                        'used_at' => now(),
+                    ]);
+                }
+            }
+
+            foreach ($this->cart as $item) {
+                $orderItem = $order->items()->create([
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => $item['subtotal'],
+                    'notes' => $item['notes'],
+                ]);
+
+                if (!empty($item['addon_ids'])) {
+                    foreach ($item['addon_ids'] as $addonId) {
+                        $addon = ProductAddon::find($addonId);
+                        $orderItem->addons()->create([
+                            'addon_id' => $addon->id,
+                            'name' => $addon->name,
+                            'price' => $addon->price,
+                        ]);
+                    }
+                }
+
+                if (!empty($item['set_items'])) {
+                    foreach ($item['set_items'] as $component) {
+                        $orderItem->components()->create([
+                            'product_id' => $component['product_id'] ?? null,
+                            'group_name' => $component['group_name'] ?? null,
+                            'name' => $component['name'] ?? '',
+                            'quantity' => 1,
+                            'extra_price' => $component['extra_price'] ?? 0,
+                        ]);
+                    }
+                }
+            }
+
+            if ($customer) {
+                $issuable = Voucher::query()
+                    ->whereNotNull('issue_on_min_spend')
+                    ->where('is_active', true)
+                    ->where(function ($q) {
+                        $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                    })
+                    ->get();
+
+                foreach ($issuable as $v) {
+                    $minSpend = (float) ($v->issue_on_min_spend ?? 0);
+                    if ($minSpend <= 0) {
+                        continue;
+                    }
+                    if ((float) $order->total_amount < $minSpend) {
+                        continue;
+                    }
+
+                    $expiresAt = null;
+                    if ($v->issue_expires_in_days !== null) {
+                        $expiresAt = now()->addDays((int) $v->issue_expires_in_days);
+                    }
+                    if ($v->ends_at && (!$expiresAt || $v->ends_at->lt($expiresAt))) {
+                        $expiresAt = $v->ends_at;
+                    }
+
+                    $prefix = strtoupper(trim((string) ($v->code ?? 'VOUCHER')));
+                    $generated = null;
+                    for ($i = 0; $i < 5; $i++) {
+                        $candidate = $prefix . '-' . now()->format('ymd') . '-' . strtoupper(Str::random(6));
+                        if (!CustomerVoucher::where('code', $candidate)->exists()) {
+                            $generated = $candidate;
+                            break;
+                        }
+                    }
+                    if (!$generated) {
+                        continue;
+                    }
+
+                    CustomerVoucher::create([
+                        'voucher_id' => $v->id,
+                        'customer_id' => $customer->id,
+                        'code' => $generated,
+                        'issued_from_order_id' => $order->id,
+                        'issued_at' => now(),
+                        'expires_at' => $expiresAt,
+                    ]);
+
+                    $issuedCodes[] = [
+                        'code' => $generated,
+                        'expires_at' => $expiresAt?->toDateString(),
+                    ];
+                }
+            }
+
+            return $order;
+        });
 
         if (!$this->lastOrder) {
             return;
         }
 
-        // Refresh cached current shift after sales recalculation in the action.
-        if ($this->currentShift) {
+        // Update table status to dirty after order completion
+        if ($this->tableId && $this->orderType === 'dine_in') {
+            $table = RestaurantTable::find($this->tableId);
+            if ($table) {
+                $table->markDirty();
+            }
+        }
+
+        // Update shift sales totals
+        if ($shift = $this->currentShift) {
+            $shift->recalculateSales();
             unset($this->currentShift);
         }
 
-        $this->issuedVoucherCodes = $this->lastOrder->getAttribute('issuedVoucherCodes') ?? [];
+        $this->issuedVoucherCodes = $issuedCodes;
 
         $this->reset(['cart', 'subTotalAmount', 'totalAmount', 'discountType', 'discountValue', 'discountAmount', 'manualDiscountAmount', 'voucherCode', 'appliedVoucherCode', 'appliedVoucherId', 'appliedVoucherMeta', 'voucherDiscountType', 'voucherDiscountValue', 'voucherDiscountAmount', 'pointsToRedeem', 'appliedPoints', 'pointsDiscountAmount', 'customerId', 'customerSearch', 'newCustomerName', 'newCustomerEmail', 'newCustomerMobile', 'showDiscountModal', 'discountTab', 'taxBreakdown', 'taxAmount', 'tableNumber', 'tableId', 'orderNotes', 'isPaying', 'showCartMobile']);
         $this->reset(['amountReceived', 'changeAmount', 'paymentMethod', 'isSplitPayment', 'paymentSplits', 'splitMethod', 'splitAmount', 'splitRemaining']);
