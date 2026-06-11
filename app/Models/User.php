@@ -12,14 +12,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'pin', 'tenant_id', 'api_token'])]
 #[Hidden(['password', 'pin', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'api_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, BelongsToTenant, HasApiTokens;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, BelongsToTenant;
 
     /**
      * Get the attributes that should be cast.

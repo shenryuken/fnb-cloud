@@ -17,35 +17,12 @@ class ProductVariant extends Model
         'receipt_label',
         'price',
         'is_active',
-        'track_stock',
-        'stock_quantity',
-        'low_stock_threshold',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
-        'track_stock' => 'boolean',
-        'stock_quantity' => 'integer',
-        'low_stock_threshold' => 'integer',
     ];
-
-    /**
-     * Whether this variant is currently low on stock.
-     */
-    public function isLowStock(): bool
-    {
-        return $this->track_stock
-            && $this->stock_quantity <= $this->low_stock_threshold;
-    }
-
-    /**
-     * Whether this variant is out of stock.
-     */
-    public function isOutOfStock(): bool
-    {
-        return $this->track_stock && $this->stock_quantity <= 0;
-    }
 
     /**
      * Get the product that owns the variant.

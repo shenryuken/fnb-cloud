@@ -10,7 +10,6 @@ use App\Livewire\Menu\Categories;
 use App\Livewire\Menu\ProductSettings;
 use App\Livewire\Menu\Products;
 use App\Livewire\Menu\Addons;
-use App\Livewire\Inventory;
 use App\Livewire\Orders;
 use App\Livewire\Pos;
 use App\Livewire\QrOrder;
@@ -89,7 +88,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('products', Products::class)->name('manage.products.index')->middleware('permission:menu.manage');
     Route::get('products/settings', ProductSettings::class)->name('manage.products.settings')->middleware('permission:menu.manage');
     Route::get('addons', Addons::class)->name('manage.addons.index')->middleware('permission:menu.manage');
-    Route::get('inventory', Inventory::class)->name('manage.inventory.index')->middleware('permission:inventory.manage');
     Route::get('customers', Customers::class)->name('manage.customers.index')->middleware('permission:customers.manage');
     Route::get('vouchers', Vouchers::class)->name('manage.vouchers.index')->middleware('permission:vouchers.manage');
     

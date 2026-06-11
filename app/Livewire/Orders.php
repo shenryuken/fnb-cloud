@@ -142,14 +142,8 @@ class Orders extends Component
     public function updateStatus(Order $order, string $status): void
     {
         if (in_array($status, ['pending', 'processing', 'completed', 'cancelled'])) {
-            $wasCancelled = $order->status === 'cancelled';
             $order->update(['status' => $status]);
-
-            // Return deducted stock when an order is newly cancelled (once only).
-            if ($status === 'cancelled' && !$wasCancelled) {
-                app(\App\Services\InventoryService::class)->returnForOrder($order, 'Order cancelled');
-            }
-
+            
             // Clean up table when order is cancelled or completed
             if (in_array($status, ['cancelled', 'completed']) && $order->table_id) {
                 $table = \App\Models\RestaurantTable::find($order->table_id);
