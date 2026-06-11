@@ -25,14 +25,26 @@ class TenantIdentification
 
         $tenantId = null;
 
+        // Resolve the authenticated user. For API/native clients the user is
+        // authenticated via a Sanctum bearer token, which the default (session)
+        // guard won't see during this group-middleware pass — so consult the
+        // sanctum guard explicitly as a fallback.
+        $user = $request->user();
+        if (!$user && $request->bearerToken()) {
+            $user = auth('sanctum')->user();
+            if ($user) {
+                $request->setUserResolver(fn () => $user);
+            }
+        }
+
         // 1. Check if user is authenticated and has a tenant_id
-        if ($request->user() && $request->user()->tenant_id) {
-            $tenantId = $request->user()->tenant_id;
+        if ($user && $user->tenant_id) {
+            $tenantId = $user->tenant_id;
         }
 
         // If a logged-in user has no tenant_id, treat them as a landlord/system user.
         // Landlord users must not access tenant-scoped pages (POS/KDS/Orders/Menu/etc) without impersonation.
-        if (!$tenantId && $request->user()) {
+        if (!$tenantId && $user) {
             if (
                 $request->is('dashboard')
                 || $request->is('settings')

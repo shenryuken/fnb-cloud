@@ -22,6 +22,7 @@ class DefaultRolesSeeder extends Seeder
             ['name' => 'Reset Orders',      'slug' => 'orders.reset'],
             ['name' => 'Access KDS',        'slug' => 'kds.access'],
             ['name' => 'Manage Menu',       'slug' => 'menu.manage'],
+            ['name' => 'Manage Inventory',  'slug' => 'inventory.manage'],
             ['name' => 'View Reports',      'slug' => 'reports.view'],
             ['name' => 'Manage Settings',   'slug' => 'settings.manage'],
             ['name' => 'Manage Roles',      'slug' => 'roles.manage'],
