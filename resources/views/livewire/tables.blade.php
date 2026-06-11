@@ -6,6 +6,13 @@
             <flux:subheading>Manage floor layout, table status, and reservations</flux:subheading>
         </div>
         <div class="flex items-center gap-2">
+            <flux:button
+                wire:click="toggleQrOrdering"
+                icon="qr-code"
+                :variant="$this->qrOrderingEnabled ? 'filled' : 'ghost'"
+            >
+                QR Ordering: {{ $this->qrOrderingEnabled ? 'On' : 'Off' }}
+            </flux:button>
             <flux:button wire:click="create" icon="plus" variant="primary">Add Table</flux:button>
         </div>
     </div>
