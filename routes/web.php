@@ -12,7 +12,6 @@ use App\Livewire\Menu\Products;
 use App\Livewire\Menu\Addons;
 use App\Livewire\Orders;
 use App\Livewire\Pos;
-use App\Livewire\QrOrder;
 use App\Livewire\Kds;
 use App\Livewire\SalesReport;
 use App\Livewire\SalesAnalysis;
@@ -31,10 +30,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::view('/', 'welcome')->name('home');
-
-// Public QR self-ordering (no auth). The table token resolves both the table
-// and its tenant; tenant scoping is bound inside the component from the token.
-Route::get('order/{token}', QrOrder::class)->name('qr.order');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Shared Dashboard (redirects based on role if needed, or handles both)

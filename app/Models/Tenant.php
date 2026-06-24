@@ -41,15 +41,11 @@ class Tenant extends Model
         'suspended_at',
         'suspended_reason',
         'is_busy',
-        'qr_ordering_enabled',
-        'qr_ordering_requires_name',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_busy' => 'boolean',
-        'qr_ordering_enabled' => 'boolean',
-        'qr_ordering_requires_name' => 'boolean',
         'tax_rate' => 'decimal:2',
         'points_earn_rate' => 'decimal:4',
         'points_redeem_value_per_100' => 'decimal:2',

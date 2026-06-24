@@ -17,7 +17,6 @@ class RestaurantTable extends Model
         'tenant_id',
         'name',
         'code',
-        'qr_token',
         'capacity',
         'status',
         'shape',
@@ -301,44 +300,5 @@ class RestaurantTable extends Model
             'dirty' => 'Needs Cleaning',
             default => ucfirst($this->status),
         };
-    }
-
-    /**
-     * Ensure this table has a QR ordering token, generating one if missing.
-     * The token is unguessable and unique across all tables (global unique index).
-     */
-    public function ensureQrToken(): string
-    {
-        if (blank($this->qr_token)) {
-            do {
-                $token = bin2hex(random_bytes(16)); // 32-char hex
-            } while (static::withoutGlobalScopes()->where('qr_token', $token)->exists());
-
-            $this->forceFill(['qr_token' => $token])->save();
-        }
-
-        return $this->qr_token;
-    }
-
-    /**
-     * Rotate the QR token, invalidating any previously printed QR codes.
-     */
-    public function rotateQrToken(): string
-    {
-        $this->forceFill(['qr_token' => null])->save();
-
-        return $this->ensureQrToken();
-    }
-
-    /**
-     * Absolute public URL a guest reaches by scanning the table's QR code.
-     */
-    public function getQrOrderUrlAttribute(): ?string
-    {
-        if (blank($this->qr_token)) {
-            return null;
-        }
-
-        return route('qr.order', ['token' => $this->qr_token]);
     }
 }

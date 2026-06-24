@@ -61,12 +61,6 @@ class Tables extends Component
     // Order details modal
     public bool $showOrderModal = false;
     public ?Order $viewingOrder = null;
-
-    // QR self-ordering modal
-    public bool $showQrModal = false;
-    public ?int $qrTableId = null;
-    public ?string $qrToken = null;
-    public ?string $qrUrl = null;
     
     // Void/Clear table modal (for tables with unpaid orders)
     public bool $showVoidModal = false;
@@ -736,71 +730,6 @@ class Tables extends Component
             'table' => $order->table_id,
             'pay' => $order->id,
         ]);
-    }
-
-    /**
-     * Whether the venue has QR self-ordering enabled.
-     */
-    #[Computed]
-    public function qrOrderingEnabled(): bool
-    {
-        return (bool) (auth()->user()?->tenant?->qr_ordering_enabled);
-    }
-
-    /**
-     * Toggle QR self-ordering on/off for the whole venue.
-     */
-    public function toggleQrOrdering(): void
-    {
-        $tenant = auth()->user()->tenant;
-        $tenant->update(['qr_ordering_enabled' => !$tenant->qr_ordering_enabled]);
-        unset($this->qrOrderingEnabled);
-
-        $this->dispatch('notify',
-            message: $tenant->qr_ordering_enabled ? 'QR self-ordering enabled' : 'QR self-ordering disabled',
-            type: 'success'
-        );
-    }
-
-    /**
-     * Open the QR code modal for a table, generating a token if needed.
-     */
-    public function showQrCode(int $tableId): void
-    {
-        $table = RestaurantTable::findOrFail($tableId);
-        $table->ensureQrToken();
-
-        $this->qrTableId = $table->id;
-        $this->qrToken = $table->qr_token;
-        $this->qrUrl = $table->qr_order_url;
-        $this->showQrModal = true;
-    }
-
-    /**
-     * Rotate a table's QR token, invalidating previously printed codes.
-     */
-    public function rotateQrToken(): void
-    {
-        if (!$this->qrTableId) {
-            return;
-        }
-
-        $table = RestaurantTable::findOrFail($this->qrTableId);
-        $table->rotateQrToken();
-
-        $this->qrToken = $table->qr_token;
-        $this->qrUrl = $table->qr_order_url;
-        unset($this->tables);
-
-        $this->dispatch('notify', message: 'QR code regenerated. Reprint and replace the old one.', type: 'success');
-    }
-
-    public function closeQrModal(): void
-    {
-        $this->showQrModal = false;
-        $this->qrTableId = null;
-        $this->qrToken = null;
-        $this->qrUrl = null;
     }
 
     public function render()
